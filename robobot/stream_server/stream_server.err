@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/local/svn/robobot/stream_server/stream_server.py", line 59, in <module>
+    """.format(hostname)
+               ^^^^^^^^
+NameError: name 'hostname' is not defined
