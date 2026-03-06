@@ -1,0 +1,1335 @@
+% logfile for Python side
+% 1 time (sec)
+% 2 Mission state
+% 3,4,5 (x,y,h) (m,m,rad)
+% 6 Camera frame count
+% 7-9 Line sensor: line position, e*kp, control y (rad/s), validCnt
+%     Line sensor: Kp=1.0, tau_z=0.8s, tau_p=0.25s
+% 10,11 trip A (distance and heading change)
+% 12,13 trip B (distance and heading change)
+% 1772816566.2847686 robobot/cmd/ti log 1
+% 1772816566.2850082 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816566.3346891 0  /RR pose (x, y, h): 0.039 0.011 0.400  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.400  /RR trip B distance and heading change: 0.0000 0.4001
+1772816566.3737752 0  /RR pose (x, y, h): 0.039 0.011 0.400  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.400  /RR trip B distance and heading change: 0.0000 0.4001
+1772816566.3838267 0  /RR pose (x, y, h): 0.039 0.011 0.400  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.400  /RR trip B distance and heading change: 0.0000 0.4001
+1772816566.4340918 0  /RR pose (x, y, h): 0.039 0.011 0.400  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.400  /RR trip B distance and heading change: 0.0000 0.4001
+% 1772816566.4658062 robobot/cmd/T0 enc0
+% 1772816566.4659138 robobot/cmd/T0 confw 0.074 0.074 19 92 0.23
+% 1772816566.4660938 robobot/cmd/T0 confi
+1772816566.4737763 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.4844425 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.5335696 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.575173 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.5856557 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.6345313 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.6750808 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.6837666 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.7339878 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.77527 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.7841234 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816566.7866316 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816566.8349075 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.8747065 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.8843622 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.9345138 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.9752538 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816566.985085 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.0350173 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.0752826 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.0853796 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.1359825 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.1758518 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.1867142 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.2351403 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.275048 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772816567.2848163 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816567.2884574 robobot/cmd/T0 lip 1
+% 1772816567.2885418 robobot/cmd/T0 sub livn 10
+% 1772816567.2885764 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+% 1772816567.3087797 robobot/cmd/T0 liwi
+% 1772816567.3290758 robobot/cmd/T0 liwi
+1772816567.3354297 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816567.3494172 robobot/cmd/T0 leds 16 30 30 0
+% 1772816567.349536 robobot/cmd/T0 leds 16 0 100 0
+% 1772816567.3496277 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3498135 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.349896 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.349966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3500307 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3500948 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.350157 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3502185 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3502796 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3503468 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.350411 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.350473 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3505292 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3505838 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.350636 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.350684 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3507297 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3508086 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3508844 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3509398 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3510299 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3510988 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3511555 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.351212 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.351267 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.351319 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3513725 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3514266 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.35148 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3515337 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3515847 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3516376 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3517 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3517563 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3518238 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3519034 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3519592 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3520164 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3520713 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.352127 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3521802 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3522336 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3522868 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.352338 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3523908 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3524432 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.352494 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3525443 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3525956 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3526466 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3526988 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3527603 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3528235 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.352885 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.352951 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3530214 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3530784 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3531315 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.353184 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3532372 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3532972 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3533516 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3534055 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.353458 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3535097 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.353563 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.353615 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3536658 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3537161 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3537672 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3538291 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3538966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3539672 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.354022 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.354076 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3541565 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3544228 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.35449 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3545966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3546808 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3548288 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3549273 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3550842 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.355163 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3552606 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3553305 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.355386 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3554306 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3554738 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3555195 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3555667 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.355611 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.35566 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3557096 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3557618 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3558185 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.355872 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3559265 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3559883 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3560503 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3561025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3561518 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.356209 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3562763 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3565369 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3566332 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3567114 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3571193 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3572042 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3572838 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.35734 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3574307 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3574996 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3575451 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3576207 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3578572 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.357956 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.358039 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.358133 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3582094 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.358288 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.358363 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3584287 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3584964 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3585718 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3586462 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3587198 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3587892 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3588753 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3589532 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3590026 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3590465 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3590915 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.359137 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3592 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3592522 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3593123 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3594036 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3594723 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3595264 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.35983 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3600214 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3601027 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3601646 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.360309 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3603687 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3604162 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3604634 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.360509 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3605525 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.360868 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3610854 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.361203 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3613083 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.361381 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.361457 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3615296 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3615994 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3617592 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3618386 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3619213 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3619745 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3620195 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3621578 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.362226 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3623865 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3624485 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.362496 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3625393 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3625863 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.36263 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.362675 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3627243 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3627672 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3628116 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3628778 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3629606 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.363025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3630712 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3631184 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3632743 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.363343 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3633945 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3634646 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3635538 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3636227 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3636699 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3637474 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3638556 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.363927 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3640025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3640888 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3641396 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3642085 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3642673 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3643296 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.364387 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3644354 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.364479 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3645205 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.364561 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3646026 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3646433 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3646872 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.364734 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3647754 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3648164 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3648615 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3649065 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3649454 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3649955 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3650432 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.365087 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3651333 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3651814 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.365226 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3652694 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3653126 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3653753 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3655453 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3656714 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3657255 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3657818 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3658323 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3658857 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3659317 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.365977 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3660285 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3660815 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3661306 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3661802 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3662348 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.366282 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3663647 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3664372 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3664849 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.366549 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3690681 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.369282 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3693728 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3694654 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3695607 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3696475 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3697295 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3697946 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3709686 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3710628 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3711817 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3712418 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3713586 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3714573 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3715425 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3716278 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3720722 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.372276 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3723788 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.37245 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.372515 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3725948 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3726447 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3727093 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3727849 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3728383 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3728905 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.372999 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3730795 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3731382 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3731966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.373297 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3733666 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3734424 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3734918 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3735416 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3736513 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3737664 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3738892 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3739703 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.374031 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3740826 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.374186 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.374256 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3743541 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3744495 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.374542 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3746192 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3746874 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3748312 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3749332 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.37504 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.375134 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3752253 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3752832 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3753335 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3753853 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3754401 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3754852 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.375589 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3757951 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3758845 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3759441 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3760252 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3760924 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.376161 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3762221 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.376266 robobot/cmd/ti rc 0.05 0.0
+1772816567.3763945 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816567.3764715 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3765259 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3765724 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.376664 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.376725 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3767872 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3768504 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3769314 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.377005 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3770783 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.377146 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.377201 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.377275 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3773403 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3773973 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3774886 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.37758 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3776371 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3777285 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3778334 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.377966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3780446 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3781025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3781574 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.378211 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3782718 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3783739 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.378456 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3785546 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3786383 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3789604 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3792186 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3795688 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.379689 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3797684 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3798215 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3798757 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.379929 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3799784 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3800476 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.380122 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3804538 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.380631 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3807461 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3808048 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.380858 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3809056 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3809543 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3810143 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.381066 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.381115 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3811793 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3813004 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3813825 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3814597 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3815317 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3816023 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.381674 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.381747 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3818185 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3818889 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3819485 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3820057 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3820662 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3821194 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3821707 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.382219 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3822706 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3823385 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3824277 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.382505 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3825803 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3826535 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.382716 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.382802 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3829074 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.382998 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3830605 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.383122 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3831713 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3832173 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3832726 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3833258 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3833842 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3834944 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3835812 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.383662 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3837125 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3837595 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.383803 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3838458 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3838887 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.383932 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3839917 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.38407 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3841324 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.384184 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3842418 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3842883 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3843322 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3843756 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3844194 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3844602 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3845341 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3847096 robobot/cmd/ti rc 0.05 0.0
+1772816567.384827 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816567.3849974 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3855398 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.38571 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.385813 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3858762 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.385941 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3860042 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3860672 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.38612 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386252 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3863285 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386394 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386461 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386533 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386718 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.386818 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.387365 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3874953 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3881404 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3882596 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3883493 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3885357 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3887281 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3888485 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3889124 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3889692 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.389024 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3891075 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3891704 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3892245 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.38928 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3893354 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3894296 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3895047 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3895855 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.38969 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3897798 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3898714 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3899648 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.390047 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3901205 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3906286 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3910658 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3912778 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.391406 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3917649 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3918984 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3921182 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3921993 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3922555 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.392338 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3923907 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3924882 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3925908 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3926888 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3929033 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3931804 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3933027 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3934157 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3935192 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.393629 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3937087 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3937778 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3938482 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3938992 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.393943 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.39416 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3943126 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3943937 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3945646 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.394635 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3948154 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3949065 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.394965 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.395019 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.395067 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3951106 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.395163 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3954635 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3956928 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.395764 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3958192 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3959627 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3960435 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3961136 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3961728 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3962314 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.396327 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3964021 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3965113 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3966088 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3967276 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3968353 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.39693 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.397 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.39721 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3973045 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3973763 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3974612 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3975136 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3976145 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3977058 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3977845 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3978376 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3979452 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3979962 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.398089 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3981566 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3982458 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3983254 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3983977 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3984492 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.398494 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3985598 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3986084 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3986914 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3987794 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3988695 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.398932 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3989873 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3990734 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.399176 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.399223 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.399294 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3994448 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3995163 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3995872 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3996933 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3998597 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.3999631 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4000492 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4001265 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4001946 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4002647 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4003255 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4004145 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.400488 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4005456 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.400602 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4006622 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4007423 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.400832 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4008908 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.400978 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4010603 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4011312 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.401203 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4012678 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.401332 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4013946 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4015038 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4015868 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.401642 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4016988 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4017522 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4018166 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4018676 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4019163 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4019651 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.402014 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4020782 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4021351 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4022288 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4022906 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4023454 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4024107 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4024932 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4025936 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.402713 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4027953 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4029086 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4031014 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4033098 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.40441 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4045768 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4047747 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4050124 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.405239 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4054112 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.405549 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.405762 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4059172 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4060166 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4061563 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.406244 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4064126 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4066398 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4067621 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.406887 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4069784 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407129 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4072387 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4072998 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4073534 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407404 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4074519 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4075396 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4075902 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4076397 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407694 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407784 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407862 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.407918 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4079547 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4079897 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.408025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4080596 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4080942 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.408127 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4081607 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4081955 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.40823 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4082673 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4083095 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4083483 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4083834 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.408417 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.40845 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4084818 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4085143 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4085505 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4085875 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4086206 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4086545 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4086866 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4087183 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4087498 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4087815 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4088137 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4088492 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4088857 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4089234 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4089572 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.408989 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4090207 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4090521 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4090838 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4091115 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4091372 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4091644 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409192 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409224 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4092555 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4092875 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4093187 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4093504 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409382 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409417 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4094489 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4094803 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409512 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409544 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4095757 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4096086 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4096801 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4097164 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.40975 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4097824 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4098144 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409846 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409878 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.409907 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4099405 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4099736 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4100084 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.410041 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4100735 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4101064 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4101396 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.410174 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4102108 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.410246 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4102771 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4103065 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4103336 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.410419 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4105432 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4108348 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.411143 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4112952 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4113717 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4115105 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.411601 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4116805 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4117327 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4117906 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4118397 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4119244 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.411991 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4120429 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4121137 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.412216 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.412271 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4123223 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4123719 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4124284 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4124815 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4125314 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4125865 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4126525 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4127536 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.412837 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4129047 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.412971 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4130204 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.413067 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4131157 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4132016 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.413269 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.413339 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4134197 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4134948 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4135513 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.413621 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.41393 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.414051 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4141204 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4141996 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4142745 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.414339 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4143991 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.414451 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4145296 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4146006 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.41465 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4146981 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.414775 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4148762 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4150603 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4152136 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4154418 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4155257 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4155965 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4156666 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.415718 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.415794 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4158437 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.415899 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4159555 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4160323 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4161665 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.416319 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4164288 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.416493 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4165592 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4166496 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4167056 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4167602 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4168122 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4168966 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.416949 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4169955 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.417043 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4171045 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4177067 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.41792 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4180055 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4180703 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4181705 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.418511 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.418608 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4186783 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4187422 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4188297 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4190052 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4192097 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.419308 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.419424 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.419552 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4198747 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4200454 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4201188 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.420213 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.420313 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.420367 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4204233 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4204798 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4205396 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4205928 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4206471 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4206975 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4208019 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4208817 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4209845 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4210577 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.421122 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4211857 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4212427 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4213226 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4214 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.421473 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4215393 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4215925 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4216402 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4216864 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4217324 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4217772 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.421822 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4218993 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.421969 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4221606 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4222481 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4223654 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4225662 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4226372 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4227223 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.422813 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4230762 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4231908 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.423263 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4233503 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.423511 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.423624 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4237027 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4237769 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.423906 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4239726 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4240873 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.42417 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424228 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424282 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4243636 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424412 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424483 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424532 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4245985 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4247699 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4248748 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.424961 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4250739 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.425152 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4252248 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4253619 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.425545 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4258168 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4259126 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.425994 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4260733 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4261591 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4262297 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4262848 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4263792 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4264424 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4264963 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4265463 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4270227 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.427311 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4274106 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4275243 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4276063 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4276652 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4277887 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4279852 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.428322 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4284258 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4285064 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.428651 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4287505 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4288106 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4288983 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4289496 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.429003 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4290583 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.429125 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4292228 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4292846 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4293358 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4293904 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4294746 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4295235 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4295938 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4296618 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4297516 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4298713 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4299302 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4299774 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4301026 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.430175 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4303365 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4303982 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.430476 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.43058 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.430641 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4306881 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4307659 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4308603 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4309433 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4309971 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4310482 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4310977 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4311423 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4312007 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4312706 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.431338 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.431436 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.431524 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4316058 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4316645 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4317582 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4318352 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.431889 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4319534 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.432003 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4320488 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4320917 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4321346 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.432177 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4322214 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.432295 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4323654 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4324386 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4325197 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4326034 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4326746 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4327478 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4328167 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.432888 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4329402 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4329984 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.433225 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4333313 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.433408 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.433491 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4335477 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4336658 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4337654 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4338293 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.433933 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4340193 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4340882 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.434184 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4342768 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4343586 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4344068 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4344504 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4346025 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4346557 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4349065 robobot/cmd/ti rc 0.05 0.0
+1772816567.435107 0  /RR pose (x, y, h): 0.000 -0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772816567.4351583 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4355302 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.435605 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4356914 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.435743 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4357903 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4358962 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4359815 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4360354 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.436084 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4361322 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4361782 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.436238 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4363563 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4364457 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4365494 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4366367 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.436717 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4367685 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4368176 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4368901 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4369571 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4370234 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4370847 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4371352 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4371817 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4372249 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4372668 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4373102 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.437353 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.437398 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4374516 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4374993 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4375641 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4376442 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4377193 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.437784 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4378457 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4381135 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4382255 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4383724 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4384527 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4386015 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.438674 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.438744 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4388056 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4389317 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4390175 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.439095 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4391582 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4392304 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4393487 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.439419 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4394758 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4395363 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4396327 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4396942 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4397478 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4398181 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4398813 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4399357 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.439988 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4400392 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4400914 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4402254 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4402893 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4403734 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4405282 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4405982 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.440752 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4408054 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4408572 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.440915 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4409761 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4410415 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4410906 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4411383 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4411917 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4412544 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4413214 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4413888 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4415011 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4415793 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4416702 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.441753 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.441833 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4419043 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4419563 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4420302 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4420974 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4421551 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.442204 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4422505 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4423509 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.442404 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4424567 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4425144 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.442573 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4427514 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.44281 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.442878 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4429357 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4429996 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4431832 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4432573 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.44334 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.443408 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4435494 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.443627 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.443728 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.443801 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4438584 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4439263 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4439843 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4440463 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4440987 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4441493 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4442003 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4442506 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4443269 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.444385 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4444368 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4444873 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4445376 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4445996 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4446728 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4447217 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.444764 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.444834 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4449768 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.445047 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4451175 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4452496 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4453042 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.445355 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.445424 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4454982 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4455602 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4456148 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.445666 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4457264 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4457877 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4458485 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.445898 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4459522 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4461007 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4461582 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.44621 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4462616 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4463117 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4463613 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.446411 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4464605 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.446528 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.446587 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4466407 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4466913 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4467413 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4468055 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4468813 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4469466 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4470103 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4470854 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4471514 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4472065 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.447259 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.447309 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.447359 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4474087 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4474585 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4475071 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4475558 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.447609 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.447676 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4477367 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4478018 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4478672 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4479258 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4479785 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4480278 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4480824 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4481428 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4482138 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.44828 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4483373 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.448388 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4484382 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4484873 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4485364 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4485853 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4486344 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4486833 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.448732 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4487965 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4488475 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4489157 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.448975 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.449027 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.449077 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.449132 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.4491935 robobot/cmd/ti rc 0.05 0.0
+1772816567.4751484 0  /RR pose (x, y, h): 0.001 0.000 0.002  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.002  /RR trip B distance and heading change: 0.0001 0.0023
+1772816567.4851422 0  /RR pose (x, y, h): 0.001 0.000 0.002  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.002  /RR trip B distance and heading change: 0.0002 0.0023
+% 1772816567.521618 robobot/cmd/ti rc 0.05 0.0
+% 1772816567.5224562 robobot/cmd/ti rc 0.05 -0.1
+1772816567.6707313 0  /RR pose (x, y, h): 0.003 0.000 0.001  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.002 0.001  /RR trip B distance and heading change: 0.0020 0.0012
+% 1772816567.8431199 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816567.9603324 0  /RR pose (x, y, h): 0.004 0.000 -0.001  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.003 -0.001  /RR trip B distance and heading change: 0.0034 -0.0012
+1772816567.9606936 0  /RR pose (x, y, h): 0.005 0.000 -0.001  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.004 -0.001  /RR trip B distance and heading change: 0.0037 -0.0012
+1772816567.9627764 0  /RR pose (x, y, h): 0.007 -0.000 -0.004  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.006 -0.004  /RR trip B distance and heading change: 0.0064 -0.0035
+1772816567.9731326 0  /RR pose (x, y, h): 0.009 -0.000 -0.006  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.009 -0.006  /RR trip B distance and heading change: 0.0089 -0.0058
+1772816567.9736226 0  /RR pose (x, y, h): 0.010 -0.000 -0.007  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.009 -0.007  /RR trip B distance and heading change: 0.0094 -0.0069
+1772816567.9757452 0  /RR pose (x, y, h): 0.013 -0.000 -0.010  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.012 -0.010  /RR trip B distance and heading change: 0.0120 -0.0104
+1772816567.9767895 0  /RR pose (x, y, h): 0.015 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.015 -0.012  /RR trip B distance and heading change: 0.0147 -0.0116
+1772816567.977092 0  /RR pose (x, y, h): 0.015 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.015 -0.012  /RR trip B distance and heading change: 0.0151 -0.0116
+1772816567.9788084 0  /RR pose (x, y, h): 0.018 -0.000 -0.010  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.018 -0.010  /RR trip B distance and heading change: 0.0177 -0.0104
+1772816567.988892 0  /RR pose (x, y, h): 0.019 -0.000 -0.016  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.019 -0.016  /RR trip B distance and heading change: 0.0194 -0.0162
+1772816567.9891675 0  /RR pose (x, y, h): 0.019 -0.000 -0.017  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.020 -0.017  /RR trip B distance and heading change: 0.0197 -0.0173
+1772816567.9901116 0  /RR pose (x, y, h): 0.022 -0.000 -0.014  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.022 -0.014  /RR trip B distance and heading change: 0.0225 -0.0139
+1772816568.000494 0  /RR pose (x, y, h): 0.023 -0.000 -0.018  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.026 -0.018  /RR trip B distance and heading change: 0.0262 -0.0185
+1772816568.0009353 0  /RR pose (x, y, h): 0.023 -0.000 -0.015  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.027 -0.015  /RR trip B distance and heading change: 0.0266 -0.0150
+1772816568.040592 0  /RR pose (x, y, h): 0.025 -0.000 -0.009  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.029 -0.009  /RR trip B distance and heading change: 0.0294 -0.0093
+1772816568.077293 0  /RR pose (x, y, h): 0.025 -0.000 -0.013  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.032 -0.013  /RR trip B distance and heading change: 0.0317 -0.0127
+1772816568.0864356 0  /RR pose (x, y, h): 0.026 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.032 -0.012  /RR trip B distance and heading change: 0.0319 -0.0116
+1772816568.3038526 0  /RR pose (x, y, h): 0.028 -0.000 -0.008  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.034 -0.008  /RR trip B distance and heading change: 0.0337 -0.0081
+% 1772816568.4212031 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816568.6222095 0  /RR pose (x, y, h): 0.028 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.036 -0.012  /RR trip B distance and heading change: 0.0363 -0.0116
+1772816568.672947 0  /RR pose (x, y, h): 0.029 -0.000 -0.013  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.036 -0.013  /RR trip B distance and heading change: 0.0365 -0.0127
+1772816568.7253232 0  /RR pose (x, y, h): 0.032 -0.000 -0.007  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.039 -0.007  /RR trip B distance and heading change: 0.0389 -0.0069
+1772816568.8481526 0  /RR pose (x, y, h): 0.032 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.040 -0.012  /RR trip B distance and heading change: 0.0405 -0.0116
+1772816568.9269278 0  /RR pose (x, y, h): 0.033 -0.000 -0.014  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.041 -0.014  /RR trip B distance and heading change: 0.0407 -0.0139
+1772816568.9537094 0  /RR pose (x, y, h): 0.035 -0.000 -0.009  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.044 -0.009  /RR trip B distance and heading change: 0.0437 -0.0093
+% 1772816568.979368 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816568.9855952 0  /RR pose (x, y, h): 0.036 -0.000 -0.014  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.046 -0.014  /RR trip B distance and heading change: 0.0456 -0.0139
+1772816568.9987376 0  /RR pose (x, y, h): 0.037 -0.000 -0.014  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.046 -0.014  /RR trip B distance and heading change: 0.0458 -0.0139
+1772816569.3353095 0  /RR pose (x, y, h): 0.038 -0.000 -0.007  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.053 -0.007  /RR trip B distance and heading change: 0.0528 -0.0069
+1772816569.5321999 0  /RR pose (x, y, h): 0.039 -0.000 -0.010  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.053 -0.010  /RR trip B distance and heading change: 0.0531 -0.0104
+% 1772816569.532274 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816569.6945713 0  /RR pose (x, y, h): 0.039 -0.000 -0.008  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.053 -0.008  /RR trip B distance and heading change: 0.0530 -0.0081
+1772816570.0287945 0  /RR pose (x, y, h): 0.040 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.054 -0.012  /RR trip B distance and heading change: 0.0543 -0.0116
+% 1772816570.1146753 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816570.2902749 0  /RR pose (x, y, h): 0.042 -0.000 -0.007  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.057 -0.007  /RR trip B distance and heading change: 0.0567 -0.0069
+1772816570.3679 0  /RR pose (x, y, h): 0.042 -0.000 -0.006  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.057 -0.006  /RR trip B distance and heading change: 0.0570 -0.0058
+% 1772816570.683275 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816570.7353957 0  /RR pose (x, y, h): 0.043 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.059 -0.012  /RR trip B distance and heading change: 0.0585 -0.0116
+1772816570.9670293 0  /RR pose (x, y, h): 0.045 -0.000 -0.012  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.060 -0.012  /RR trip B distance and heading change: 0.0599 -0.0116
+1772816571.105128 0  /RR pose (x, y, h): 0.046 -0.000 -0.010  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.060 -0.010  /RR trip B distance and heading change: 0.0604 -0.0104
+% 1772816571.236993 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816571.5488698 0  /RR pose (x, y, h): 0.048 -0.000 -0.016  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.063 -0.016  /RR trip B distance and heading change: 0.0628 -0.0162
+% 1772816571.8053432 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816571.856517 0  /RR pose (x, y, h): 0.050 -0.000 -0.016  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.065 -0.016  /RR trip B distance and heading change: 0.0650 -0.0162
+1772816571.9600008 0  /RR pose (x, y, h): 0.051 -0.000 -0.016  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.065 -0.016  /RR trip B distance and heading change: 0.0655 -0.0162
+% 1772816572.3522875 robobot/cmd/ti alive 2026-03-06 18:02:46.256594
+1772816572.4052436 0  /RR pose (x, y, h): 0.054 -0.001 -0.023  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.069 -0.023  /RR trip B distance and heading change: 0.0688 -0.0231
+% 1772816572.4837842 robobot/cmd/ti rc 0.0 0.0
