@@ -230,17 +230,18 @@ def loop():
     SKY114.driveXY()
   elif service.args.cameratest:
     SKY114.cameratest()
-  elif service.args.golf:
-    golf.find_and_catch()
+  #elif service.args.golf:
+    #golf.find_and_catch()
   elif service.args.controller:
     print("hello")
     manual_controller.controller()
+    state = 10000
 
   elif service.args.usestate > 0:
     state = service.args.usestate
 
-  elif service.args.base:
-    SKY114.base()
+  #elif service.args.base:
+    #SKY114.base()
 
 
 
@@ -311,6 +312,8 @@ def loop():
     elif state == 107:
       print(f"Servo down")
       service.send("robobot/cmd/T0","servo 1 150 400") # (servo down slow)
+    elif state == 10000:
+      t.sleep(0.01)
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
       break

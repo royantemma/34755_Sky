@@ -5,6 +5,8 @@ from datetime import *
 from setproctitle import setproctitle
 import signal
 
+import sys
+sys.path.append("/home/local/svn/robobot/stream_server")
 from stream_server import stream_manager
 import threading
 import simplejpeg
@@ -134,22 +136,33 @@ def LineTest():
 ####################################################################
 
 def cameratest():
+  cap = cv.VideoCapture("http://localhost:7123/stream/main")
+
+  ret, frame = cap.read()
+  print("$$$$$$$$$$$$$")
+  print(ret)
+
+
   cameratest_output = stream_manager.get_output("cameratest")
 
   def push_processed_images():
     for i in range(100):
       # Generate or process any image you like
-      img = getImage()
-      cv.putText(img, "Custom Image Stream", (50, 300),
-                  cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
+      #ok, img, frameTime = getImage()
+      #print(str(i) + ', ' + str(ok))
+      if ret and frame is not None:
+      #if ok and img is not None:
+        cv.putText(frame, "Custom Image Stream", (50, 300),
+                    cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
 
-      # Encode to JPEG
-      jpeg = simplejpeg.encode_jpeg(img, quality=80)
-      cameratest_output.write(jpeg)
+        # Encode to JPEG
+        jpeg = simplejpeg.encode_jpeg(frame, quality=80)
+        cameratest_output.write(jpeg)
 
-      time.sleep(0.2)  # ~5 FPS
+      t.sleep(0.2)  # ~5 FPS
 
   threading.Thread(target=push_processed_images, daemon=True).start()
+  service.stop = True
 
 
 
@@ -232,19 +245,51 @@ def controller():
   #  t.sleep(0.05)
 
 
-
 def driveXY():
-  x=0.1
-  y=0.2
+  pose.tripBreset()
+  service.send("robobot/cmd/ti","rc 0.05 0.0")
+  while not (service.stop):
+    signal.signal(signal.SIGINT, my_signal_handler)
+    if(datetime.now().microsecond % 100000==0):
+            print(f"# pose.tripB0[1] {pose.tripB0}, pose.tripB1 {pose.tripB1}, pose.tripBh {pose.tripBh} rad ")
+    #if pose.tripBh > (0.314):
+    #  service.stop = True
+
+    
+   
+
+
+"""
+def driveXY():
+  x=0.2
+  y=0.3
+  angle  = 0
   state = 15
-  turnR = 0.1
+  turnR = 0.4
   goalX = abs(x) - turnR
   goalY = abs(y) - turnR
+
+
+  if goalY > 0:
+    if goalX > 0:
+      angle  = -np.arctan(x/y)
+    elif goalX < 0:
+      angle  = -np.arctan(x/y) - 3.14/2
+    elif goalX == 0:
+
+  elif goalX < 0:
+    if goalY > 0:
+      angle  = -np.arctan(x/y)
+    elif goalY < 0:
+      angle  = -np.arctan(x/y) - 3.14/2
 
   if goalX > 0 and goalY > 0:
     state=11
   elif goalX < 0:
     state=22
+  
+  if 
+  
 
   
   pose.tripBreset()
@@ -260,7 +305,7 @@ def driveXY():
     if state == 12:
       if(datetime.now().microsecond % 100000==0):
           print(f"# pose.tripBh {pose.tripBh} rad ")
-      if pose.tripBh > 1: #3.14/2: # has turned 90 degrees
+      if pose.tripBh > np.arctan(x/y): #3.14/2: # has turned 90 degrees
           pose.tripBreset()
           service.send("robobot/cmd/ti","rc 0.05 0.0") # (forward m/s, turn-rate rad/sec)
           print(f"# to state 13")
@@ -295,5 +340,6 @@ def driveXY():
   service.send("robobot/cmd/T0","leds 16 0 0 0") #end
   print("% Driving a Pi turn ------------------------- end")
   service.stop = True
+  """
 
 

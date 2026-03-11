@@ -42,7 +42,7 @@ class SCam:
   def setup(self):
     if self.useCam:
       from uservice import service
-      self.cap = cv.VideoCapture(f'http://{service.host}:7123/stream.mjpg')
+      self.cap = cv.VideoCapture(f'http://{service.host}:7123/stream/main')
       if self.cap.isOpened():
         self.th = Thread(target = cam.run)
         self.th.start()
@@ -82,6 +82,8 @@ class SCam:
     cnt = 0;
     first = True
     ret = False
+
+    """
     while self.cap.isOpened() and not service.stop:
       if self.getFrame or first:
         try:
@@ -106,8 +108,39 @@ class SCam:
           self.terminate()
       # self.gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     print("% Camera thread stopped")
+    """
+    while True:
+        # Exit only if terminate() is called
+        if hasattr(self, "running") and not self.running:
+            break
 
+        # Make sure the capture device is open
+        if not self.cap.isOpened():
+            print("% SCam:: waiting for camera...")
+            time.sleep(0.1)
+            continue
 
+        try:
+            ret, frame = self.cap.read()
+        except Exception as e:
+            print(f"% SCam:: read error: {e}")
+            ret = False
+
+        if ret:
+            self.savedFrame = frame
+            self.frameTime = datetime.now()
+            self.getFrame = False
+            self.cnt += 1
+
+            if first:
+                first = False
+                h, w, ch = frame.shape
+                print(f"% Camera available: size ({h}x{w}, {ch} channels)")
+
+        else:
+            # Frame read failed; wait a bit and retry
+            time.sleep(0.01)
+      
   def terminate(self):
     try:
       self.th.join()
@@ -123,3 +156,6 @@ class SCam:
 
 # create instance of this class
 cam = SCam()
+
+def getImage():
+  return cam.getImage()

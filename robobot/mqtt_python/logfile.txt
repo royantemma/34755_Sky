@@ -1,0 +1,204 @@
+% logfile for Python side
+% 1 time (sec)
+% 2 Mission state
+% 3,4,5 (x,y,h) (m,m,rad)
+% 6 Camera frame count
+% 7-9 Line sensor: line position, e*kp, control y (rad/s), validCnt
+%     Line sensor: Kp=1.0, tau_z=0.8s, tau_p=0.25s
+% 10,11 trip A (distance and heading change)
+% 12,13 trip B (distance and heading change)
+% 1772823655.7431047 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+% 1772823655.7435365 robobot/cmd/ti log 1
+1772823655.7945673 0  /RR pose (x, y, h): 0.015 -0.001 -0.022  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 -0.022  /RR trip B distance and heading change: 0.0000 -0.0220
+1772823655.839697 0  /RR pose (x, y, h): 0.015 -0.001 -0.022  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 -0.022  /RR trip B distance and heading change: 0.0000 -0.0220
+1772823655.8446734 0  /RR pose (x, y, h): 0.015 -0.001 -0.022  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 -0.022  /RR trip B distance and heading change: 0.0000 -0.0220
+% 1772823655.8650126 robobot/cmd/T0 enc0
+% 1772823655.8652198 robobot/cmd/T0 confw 0.074 0.074 19 92 0.23
+% 1772823655.8653162 robobot/cmd/T0 confi
+1772823655.8939679 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772823655.9391718 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772823655.9444475 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772823655.993965 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 0 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772823656.013494 robobot/cmd/T0 lip 1
+% 1772823656.0135868 robobot/cmd/T0 sub livn 10
+% 1772823656.0339565 robobot/cmd/T0 liwi
+1772823656.0393968 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772823656.0447922 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+% 1772823656.0545912 robobot/cmd/T0 leds 16 30 30 0
+% 1772823656.054815 robobot/cmd/ti rc 0.05 0.0
+% 1772823656.2619317 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823656.3180034 0  /RR pose (x, y, h): 0.000 0.000 0.000  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.000 0.000  /RR trip B distance and heading change: 0.0000 0.0000
+1772823656.619795 0  /RR pose (x, y, h): -0.000 -0.000 0.002  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.001 0.002  /RR trip B distance and heading change: 0.0012 0.0023
+1772823656.6606176 0  /RR pose (x, y, h): -0.000 -0.000 0.002  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.001 0.002  /RR trip B distance and heading change: 0.0012 0.0023
+% 1772823656.80964 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823656.9840517 0  /RR pose (x, y, h): 0.001 0.000 0.008  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.002 0.008  /RR trip B distance and heading change: 0.0022 0.0081
+1772823657.3029232 0  /RR pose (x, y, h): 0.002 0.000 0.013  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.003 0.013  /RR trip B distance and heading change: 0.0035 0.0127
+1772823657.3132143 0  /RR pose (x, y, h): 0.002 0.000 0.014  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.004 0.014  /RR trip B distance and heading change: 0.0036 0.0139
+% 1772823657.3388975 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823657.6669316 0  /RR pose (x, y, h): 0.004 0.000 0.015  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.004 0.015  /RR trip B distance and heading change: 0.0045 0.0150
+% 1772823657.8806684 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823657.9011865 0  /RR pose (x, y, h): 0.006 0.000 0.016  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.007 0.016  /RR trip B distance and heading change: 0.0068 0.0162
+1772823657.9063923 0  /RR pose (x, y, h): 0.006 0.000 0.014  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.007 0.014  /RR trip B distance and heading change: 0.0068 0.0139
+1772823658.2393036 0  /RR pose (x, y, h): 0.008 0.000 0.022  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.011 0.022  /RR trip B distance and heading change: 0.0105 0.0220
+% 1772823658.4504788 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823658.530806 0  /RR pose (x, y, h): 0.010 0.000 0.021  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.013 0.021  /RR trip B distance and heading change: 0.0130 0.0208
+1772823658.572078 0  /RR pose (x, y, h): 0.011 0.000 0.021  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.014 0.021  /RR trip B distance and heading change: 0.0136 0.0208
+1772823658.9460793 0  /RR pose (x, y, h): 0.013 0.000 0.027  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.016 0.027  /RR trip B distance and heading change: 0.0161 0.0266
+% 1772823659.0184605 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823659.2723541 0  /RR pose (x, y, h): 0.015 0.000 0.031  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.019 0.031  /RR trip B distance and heading change: 0.0186 0.0312
+1772823659.3234403 0  /RR pose (x, y, h): 0.015 0.000 0.032  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.019 0.032  /RR trip B distance and heading change: 0.0186 0.0324
+1772823659.5717478 0  /RR pose (x, y, h): 0.018 0.000 0.035  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.021 0.035  /RR trip B distance and heading change: 0.0210 0.0347
+% 1772823659.5823383 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823659.7772355 0  /RR pose (x, y, h): 0.020 0.000 0.038  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.024 0.038  /RR trip B distance and heading change: 0.0236 0.0382
+1772823659.8715713 0  /RR pose (x, y, h): 0.020 0.000 0.037  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.024 0.037  /RR trip B distance and heading change: 0.0239 0.0370
+1772823660.142972 0  /RR pose (x, y, h): 0.023 0.001 0.038  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.027 0.038  /RR trip B distance and heading change: 0.0266 0.0382
+% 1772823660.163596 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823660.4567325 0  /RR pose (x, y, h): 0.025 0.001 0.038  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.029 0.038  /RR trip B distance and heading change: 0.0290 0.0382
+1772823660.508371 0  /RR pose (x, y, h): 0.026 0.001 0.037  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.029 0.037  /RR trip B distance and heading change: 0.0290 0.0370
+% 1772823660.7032993 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823660.89265 0  /RR pose (x, y, h): 0.028 0.001 0.042  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.032 0.042  /RR trip B distance and heading change: 0.0317 0.0416
+1772823661.2054868 0  /RR pose (x, y, h): 0.030 0.001 0.039  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.034 0.039  /RR trip B distance and heading change: 0.0341 0.0393
+% 1772823661.2469974 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823661.247125 0  /RR pose (x, y, h): 0.031 0.001 0.042  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.035 0.042  /RR trip B distance and heading change: 0.0345 0.0416
+1772823661.5715342 0  /RR pose (x, y, h): 0.032 0.001 0.039  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.037 0.039  /RR trip B distance and heading change: 0.0367 0.0393
+% 1772823661.7925289 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823661.8668551 0  /RR pose (x, y, h): 0.034 0.001 0.043  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.040 0.043  /RR trip B distance and heading change: 0.0396 0.0428
+1772823661.9052181 0  /RR pose (x, y, h): 0.035 0.001 0.046  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.040 0.046  /RR trip B distance and heading change: 0.0396 0.0463
+1772823662.203214 0  /RR pose (x, y, h): 0.036 0.001 0.039  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.042 0.039  /RR trip B distance and heading change: 0.0416 0.0393
+% 1772823662.356538 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823662.4189503 0  /RR pose (x, y, h): 0.038 0.001 0.044  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.046 0.044  /RR trip B distance and heading change: 0.0456 0.0439
+1772823662.464952 0  /RR pose (x, y, h): 0.038 0.001 0.044  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.046 0.044  /RR trip B distance and heading change: 0.0457 0.0439
+1772823662.694134 0  /RR pose (x, y, h): 0.040 0.001 0.041  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.047 0.041  /RR trip B distance and heading change: 0.0469 0.0405
+1772823662.895041 0  /RR pose (x, y, h): 0.042 0.001 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.050 0.045  /RR trip B distance and heading change: 0.0495 0.0451
+% 1772823662.910586 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823662.9208908 0  /RR pose (x, y, h): 0.042 0.001 0.044  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.050 0.044  /RR trip B distance and heading change: 0.0495 0.0439
+1772823663.2951913 0  /RR pose (x, y, h): 0.044 0.001 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.051 0.045  /RR trip B distance and heading change: 0.0513 0.0451
+% 1772823663.473089 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823663.5904713 0  /RR pose (x, y, h): 0.045 0.001 0.044  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.054 0.044  /RR trip B distance and heading change: 0.0542 0.0439
+1772823663.6669424 0  /RR pose (x, y, h): 0.046 0.002 0.043  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.054 0.043  /RR trip B distance and heading change: 0.0544 0.0428
+1772823664.0219095 0  /RR pose (x, y, h): 0.048 0.002 0.051  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.057 0.051  /RR trip B distance and heading change: 0.0572 0.0509
+% 1772823664.0372756 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823664.46261 0  /RR pose (x, y, h): 0.049 0.002 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.060 0.045  /RR trip B distance and heading change: 0.0595 0.0451
+1772823664.50007 0  /RR pose (x, y, h): 0.050 0.002 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.060 0.045  /RR trip B distance and heading change: 0.0595 0.0451
+% 1772823664.613419 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823664.8720133 0  /RR pose (x, y, h): 0.052 0.002 0.050  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.062 0.050  /RR trip B distance and heading change: 0.0623 0.0497
+% 1772823665.1563838 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823665.2592921 0  /RR pose (x, y, h): 0.053 0.002 0.046  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.064 0.046  /RR trip B distance and heading change: 0.0637 0.0463
+1772823665.2953825 0  /RR pose (x, y, h): 0.054 0.002 0.047  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.064 0.047  /RR trip B distance and heading change: 0.0640 0.0474
+1772823665.6413817 0  /RR pose (x, y, h): 0.057 0.002 0.049  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.067 0.049  /RR trip B distance and heading change: 0.0670 0.0486
+% 1772823665.7238092 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823665.9285352 0  /RR pose (x, y, h): 0.058 0.002 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.069 0.045  /RR trip B distance and heading change: 0.0690 0.0451
+1772823665.9796042 0  /RR pose (x, y, h): 0.059 0.002 0.047  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.069 0.047  /RR trip B distance and heading change: 0.0690 0.0474
+% 1772823666.3131196 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823666.3234382 0  /RR pose (x, y, h): 0.062 0.002 0.051  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.072 0.051  /RR trip B distance and heading change: 0.0724 0.0509
+1772823666.6822128 0  /RR pose (x, y, h): 0.063 0.002 0.050  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.074 0.050  /RR trip B distance and heading change: 0.0745 0.0497
+1772823666.7131462 0  /RR pose (x, y, h): 0.064 0.002 0.047  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.075 0.047  /RR trip B distance and heading change: 0.0748 0.0474
+% 1772823666.9034882 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823667.107888 0  /RR pose (x, y, h): 0.066 0.002 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.077 0.045  /RR trip B distance and heading change: 0.0768 0.0451
+1772823667.3978271 0  /RR pose (x, y, h): 0.068 0.003 0.045  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.080 0.045  /RR trip B distance and heading change: 0.0796 0.0451
+1772823667.4054422 0  /RR pose (x, y, h): 0.068 0.003 0.043  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.080 0.043  /RR trip B distance and heading change: 0.0796 0.0428
+% 1772823667.4674594 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823667.7358146 0  /RR pose (x, y, h): 0.071 0.003 0.049  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.082 0.049  /RR trip B distance and heading change: 0.0824 0.0486
+% 1772823668.0321922 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823668.0578196 0  /RR pose (x, y, h): 0.073 0.003 0.047  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.085 0.047  /RR trip B distance and heading change: 0.0852 0.0474
+1772823668.0887442 0  /RR pose (x, y, h): 0.073 0.003 0.047  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.086 0.047  /RR trip B distance and heading change: 0.0855 0.0474
+1772823668.381689 0  /RR pose (x, y, h): 0.074 0.003 0.054  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.089 0.054  /RR trip B distance and heading change: 0.0889 0.0544
+% 1772823668.5933943 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823668.6548066 0  /RR pose (x, y, h): 0.076 0.003 0.060  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.092 0.060  /RR trip B distance and heading change: 0.0918 0.0601
+1772823668.6957886 0  /RR pose (x, y, h): 0.076 0.003 0.061  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.092 0.061  /RR trip B distance and heading change: 0.0918 0.0613
+1772823669.0413852 0  /RR pose (x, y, h): 0.077 0.003 0.058  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.093 0.058  /RR trip B distance and heading change: 0.0932 0.0578
+% 1772823669.128511 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823669.3897855 0  /RR pose (x, y, h): 0.079 0.003 0.060  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.095 0.060  /RR trip B distance and heading change: 0.0950 0.0601
+1772823669.4160361 0  /RR pose (x, y, h): 0.079 0.003 0.061  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.095 0.061  /RR trip B distance and heading change: 0.0954 0.0613
+% 1772823669.705107 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823669.7565293 0  /RR pose (x, y, h): 0.080 0.003 0.058  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.097 0.058  /RR trip B distance and heading change: 0.0974 0.0578
+1772823670.0876927 0  /RR pose (x, y, h): 0.082 0.003 0.061  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.099 0.061  /RR trip B distance and heading change: 0.0988 0.0613
+1772823670.123567 0  /RR pose (x, y, h): 0.083 0.003 0.062  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.099 0.062  /RR trip B distance and heading change: 0.0988 0.0625
+% 1772823670.293275 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823670.4833677 0  /RR pose (x, y, h): 0.084 0.003 0.057  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.102 0.057  /RR trip B distance and heading change: 0.1016 0.0567
+1772823670.7103767 0  /RR pose (x, y, h): 0.087 0.004 0.064  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.104 0.064  /RR trip B distance and heading change: 0.1039 0.0636
+1772823670.7462084 0  /RR pose (x, y, h): 0.088 0.004 0.065  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.104 0.065  /RR trip B distance and heading change: 0.1045 0.0648
+% 1772823670.8440938 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823671.1196365 0  /RR pose (x, y, h): 0.090 0.004 0.060  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.107 0.060  /RR trip B distance and heading change: 0.1072 0.0601
+% 1772823671.4002256 robobot/cmd/ti alive 2026-03-06 20:00:52.176888
+1772823671.4128206 0  /RR pose (x, y, h): 0.092 0.004 0.060  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.110 0.060  /RR trip B distance and heading change: 0.1096 0.0601
+1772823671.4434617 0  /RR pose (x, y, h): 0.093 0.004 0.062  /RR camera image number: 1 
+ /RR line sensor detected position: 0.00 0.00 0.000 0.000 0  /RR trip A distance and heading chang: 0.110 0.062  /RR trip B distance and heading change: 0.1096 0.0625
+% 1772823671.6628535 robobot/cmd/ti rc 0.0 0.0

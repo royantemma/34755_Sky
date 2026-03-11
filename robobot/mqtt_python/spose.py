@@ -43,6 +43,8 @@ class SPose:
     tripAh = 0; # heading
     tripAtime = datetime.now()
     tripB = 0; # reset as needed
+    tripB0 = 0; # RR
+    tripB1 = 0; # RR
     tripBh = 0; # heading
     tripBtime = datetime.now()
     # robot info
@@ -153,6 +155,8 @@ class SPose:
 
     def tripBreset(self):
       self.tripB = 0
+      self.tripB0 = 0#RR
+      self.tripB1 = 0#RR
       self.tripBh = 0
       self.tripBtime = datetime.now()
 
@@ -181,8 +185,12 @@ class SPose:
               self.wheelVelocityInterval = (self.wheelVelocityInterval * 99 + dt) / 100
             self.wheelVelocityCnt += 1
             ds = (self.wheelVelocity[0] + self.wheelVelocity[1])*dt/2
+            ds0 = self.wheelVelocity[0]*dt #RR
+            ds1 = self.wheelVelocity[1]*dt #RR
             self.tripA += ds
             self.tripB += ds
+            self.tripB0 += ds0#RR
+            self.tripB1 += ds1#RR
             # self.printMVel()
         elif topic == "T0/mvel":
           gg = msg.split(" ")

@@ -26,7 +26,7 @@ from picamera2.outputs import FileOutput
 # set title of process, so that it is not just called Python
 setproctitle("stream_server")
 
-# hostname = socket.gethostname()
+hostname = socket.gethostname()
 # PAGE = """\
 # <html>
 # <head>
@@ -52,8 +52,8 @@ PAGE = """\
 <h1>Main Camera Stream</h1>
 <img src="/stream/main" width="820" height="616">
 
-<h1>Secondary Video Stream</h1>
-<img src="/stream/secondary_video" width="820" height="616">
+<h1>Custom Image Stream</h1>
+<img src="/stream/cameratest" width="820" height="616">
 </body>
 </html>
 """.format(hostname)
@@ -150,6 +150,9 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+
+### START MODIFICATION THEO - MULTISTREAMING ### moved this code inside the process_frames function
+"""
 # # 1296x972
 picam2 = Picamera2()
 #picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
@@ -160,7 +163,13 @@ picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},con
 #picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (50000, 200000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)},controls={'FrameDurationLimits': (200000, 500000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (320, 240)},controls={'FrameDurationLimits': (200000, 500000)}))
-output = StreamingOutput()
+
+#output = StreamingOutput()
+main_output = stream_manager.add_stream("main")
+"""
+### END MODIFICATION THEO - MULTISTREAMING ###
+main_output = stream_manager.add_stream("main")
+cameratest_output = stream_manager.add_stream("cameratest")
 
 #picam2.start_recording(JpegEncoder(), FileOutput(output))
 ### MODIFICATION THEO ### STATUS: working as intended, finished
@@ -168,8 +177,10 @@ output = StreamingOutput()
 # All the code in this section is the replacement of the commented line of code just above.
 
 def process_frames():
+    picam2 = Picamera2()
+    picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
     picam2.start()
-
+    
     while True:
         frame = picam2.capture_array()
 
@@ -183,15 +194,33 @@ def process_frames():
 
         jpeg = simplejpeg.encode_jpeg(processed, quality=80)
 
-        output.write(jpeg)
-    
-threading.Thread(target=process_frames, daemon=True).start()
+        main_output.write(jpeg)
+
+#threading.Thread(target=process_frames, daemon=True).start()
 
 ### END MODIFICATION THEO ###
 
-try:
+
+# try:
+#     address = ('', 7123)
+#     server = StreamingServer(address, StreamingHandler)
+#     server.serve_forever()
+# finally:
+#     picam2.stop_recording()
+
+### START MODIFICATION THEO - MULTISTREAMING ###
+def start_stream_server():
+    threading.Thread(target=process_frames, daemon=True).start()
+
     address = ('', 7123)
     server = StreamingServer(address, StreamingHandler)
     server.serve_forever()
-finally:
-    picam2.stop_recording()
+
+
+if __name__ == "__main__":
+    try:
+        start_stream_server()
+    finally:
+        pass
+    #     picam2.stop_recording()
+### END MODIFICATOIN THEO - MULTISTREAMING ###
