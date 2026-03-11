@@ -6,8 +6,8 @@ import time
 from uservice import service
 from spose import pose
 
-move_speed = 0.25  # m/s
-turn_speed = 0.5   # rad/s
+move_speed = 0.15  # m/s
+turn_speed = 0.35   # rad/s
 timeout = 0.1      # Seconds without input before assuming key release
 
 def get_key(settings, timeout):
@@ -47,21 +47,23 @@ def controller():
         f.write("Label,X,Y,Heading\n")
 
     try:
+        target_vel = 0.0
+        target_turn = 0.0
         while not service.stop:
             key = get_key(settings, timeout)
             
-            target_vel = 0.0
-            target_turn = 0.0
             
             # --- Drive Controls ---
             if key.lower() == 'w':
-                target_vel = move_speed
+                target_vel += move_speed
             elif key.lower() == 's':
-                target_vel = -move_speed
+                target_vel -= move_speed
             elif key.lower() == 'a':
-                target_turn = turn_speed
+                target_turn += turn_speed
             elif key.lower() == 'd':
-                target_turn = -turn_speed
+                target_turn -= turn_speed
+            elif key.lower() == 'x':
+                target_vel, target_turn = 0.0, 0.0
             elif key.lower() == 'q':
                 print("\nExiting controller...")
                 service.stop = True 
@@ -72,6 +74,7 @@ def controller():
                 # 1. Stop the robot immediately so it doesn't drift
                 service.send("robobot/cmd/ti", "rc 0.000 0.000")
                 current_vel, current_turn = 0.0, 0.0
+                target_vel, target_turn = 0.0, 0.0
                 
                 # 2. Restore normal terminal settings so you can type a full word
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)

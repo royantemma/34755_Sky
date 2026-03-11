@@ -184,17 +184,25 @@ def process_frames():
     while True:
         frame = picam2.capture_array()
 
-        # convert to grayscale
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        processed = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)
-
-        # draw example
-        cv.putText(processed, "Processed", (30,50),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-
-        jpeg = simplejpeg.encode_jpeg(processed, quality=80)
+        jpeg = simplejpeg.encode_jpeg(frame, quality=80)
 
         main_output.write(jpeg)
+
+    # Theo process frames in black and white
+    # while True:
+    #     frame = picam2.capture_array()
+
+    #     # convert to grayscale
+    #     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    #     processed = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)
+
+    #     # draw example
+    #     cv.putText(processed, "Processed", (30,50),
+    #                cv.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+
+    #     jpeg = simplejpeg.encode_jpeg(processed, quality=80)
+
+    #     main_output.write(jpeg)
 
 #threading.Thread(target=process_frames, daemon=True).start()
 

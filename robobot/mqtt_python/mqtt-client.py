@@ -373,7 +373,7 @@ if __name__ == "__main__":
       #service.setup('10.197.217.80') # Newton
       # service.setup('bode.local') # Bode
       if service.connected:
-        #loop()
+        loop()
         if service.args.mission_start2goal:
           from missions.mission_start2goal import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
