@@ -140,11 +140,29 @@ class SCam:
         else:
             # Frame read failed; wait a bit and retry
             time.sleep(0.01)
-      
+
+  # OLD TERMINATE METHOD (REPLACED BY NEW ONE BELOW) 
+  # def terminate(self):
+  #   try:
+  #     self.th.join()
+  #   except:
+  #     print("% join cam failed")
+  #     pass
+  #   if isinstance(self.cap, cv.VideoCapture):
+  #     self.cap.release()
+  #   else:
+  #     print("% Camera stream was not open")
+  #   cv.destroyAllWindows()
+  #   print("% Camera terminated")
+
+
   def terminate(self):
+    # signal the run loop to stop and wait for the thread to finish
     try:
-      self.th.join()
-    except:
+      self.running = False
+      if hasattr(self, 'th') and self.th is not None:
+        self.th.join(timeout=1.0)
+    except Exception:
       print("% join cam failed")
       pass
     if isinstance(self.cap, cv.VideoCapture):

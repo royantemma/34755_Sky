@@ -1,6 +1,7 @@
 import time as t
 import numpy as np
 import cv2 as cv
+import os
 
 # Import framework modules
 from uservice import service
@@ -9,7 +10,8 @@ from spose import pose
 
 def detect_red_ball(img):
     """
-    Converts image to HSV, masks red pixels, and finds the largest circular blob.
+    Converts image to HSV, masks red pixels, finds the ball, 
+    and returns a dictionary of all intermediate images for debugging.
     """
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
     
@@ -19,27 +21,41 @@ def detect_red_ball(img):
     lower_red2 = np.array([170, 120, 70])
     upper_red2 = np.array([180, 255, 255])
     
+    # Step 1: Individual Masks
     mask1 = cv.inRange(hsv, lower_red1, upper_red1)
     mask2 = cv.inRange(hsv, lower_red2, upper_red2)
-    mask = cv.bitwise_or(mask1, mask2)
     
-    # Clean up noise
-    mask = cv.erode(mask, None, iterations=2)
-    mask = cv.dilate(mask, None, iterations=2)
+    # Step 2: Combined Mask
+    combined_mask = cv.bitwise_or(mask1, mask2)
+    
+    # Step 3: Morphological Cleanup
+    eroded_mask = cv.erode(combined_mask, None, iterations=2)
+    final_mask = cv.dilate(eroded_mask, None, iterations=2)
+    
+    # Pack all steps into a dictionary to send back to the test function
+    debug_images = {
+        "01_original": img.copy(),
+        "02_mask1_low_red": mask1,
+        "03_mask2_high_red": mask2,
+        "04_combined_mask": combined_mask,
+        "05_final_cleaned_mask": final_mask
+    }
     
     # Find Contours
-    contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv.findContours(final_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     
     if len(contours) > 0:
-        # Find the largest blob
         largest_contour = max(contours, key=cv.contourArea)
-        
-        # Verify size and get center
         ((x, y), radius) = cv.minEnclosingCircle(largest_contour)
-        if radius > 10: # Discard tiny specks
-            return True, int(x), int(y), radius
+        
+        if radius > 10: 
+            # Draw a green circle and a red dot at the center on the debug image
+            cv.circle(debug_images["01_original"], (int(x), int(y)), int(radius), (0, 255, 0), 2)
+            cv.circle(debug_images["01_original"], (int(x), int(y)), 3, (0, 0, 255), -1)
             
-    return False, 0, 0, 0
+            return True, int(x), int(y), radius, debug_images
+            
+    return False, 0, 0, 0, debug_images
 
 def setup_homography(img_width, img_height):
     """
@@ -100,14 +116,14 @@ def px_to_xy_homography(px_x, px_y, H_matrix):
 def find_and_catch():
     """Main mission state machine"""
     state = 0
-    arm_reach = 0.15 # 15 cm reach (adjust as needed)
+    arm_reach = 0.26 # middle of the cup is 26cm from the center of the robot
     target_distance = 0.0
     target_angle = 0.0
     H_matrix = None 
     
     print("% Starting Golf Mission: Find and Catch the Red Ball!")
     service.send("robobot/cmd/T0", "leds 16 0 0 100") # Blue LED: Searching
-    service.send("robobot/cmd/T0", "servo 1 -800 300") # Ensure arm is UP
+    service.send("robobot/cmd/T0", "servo 1 -900 300") # Ensure arm is UP
     
     while not service.stop:
         if state == 0: 
@@ -121,7 +137,7 @@ def find_and_catch():
                     H_matrix = setup_homography(w, h)
                     print(f"% Homography matrix initialized for {w}x{h} camera.")
 
-                found, px_x, px_y, radius = detect_red_ball(img)
+                found, px_x, px_y, radius, mask = detect_red_ball(img)
                 
                 if found:
                     print(f"% Ball found at Px({px_x}, {px_y})!")
@@ -185,3 +201,49 @@ def find_and_catch():
             
         # Do not loop too fast, give the CPU a break
         t.sleep(0.05)
+
+
+def find_and_print():
+    """
+    Takes a single picture, saves all debug masks, and prints coordinates.
+    """
+    print("% Starting Golf Test: Find, Print, and Debug!")
+    os.makedirs("golf_test_results", exist_ok=True)
+    
+    while not service.stop:
+        ok, img, imgTime = cam.getImage()
+        
+        if ok:
+            h, w, _ = img.shape
+            H_matrix = setup_homography(w, h)
+            
+            # Process the image and get our dictionary of debug images
+            found, px_x, px_y, radius, debug_images = detect_red_ball(img)
+            
+            timestamp = imgTime.strftime('%Y%m%d_%H%M%S')
+            
+            # Save every image in the dictionary
+            print("% Saving debug images...")
+            for name, image_data in debug_images.items():
+                filename = f"golf_test_results/{timestamp}_{name}.jpg"
+                cv.imwrite(filename, image_data)
+                print(f"  -> Saved {name}")
+            
+            if found:
+                target_dist, target_angle = px_to_xy_homography(px_x, px_y, H_matrix)
+                
+                print("\n" + "="*40)
+                print("           BALL FOUND!")
+                print("="*40)
+                print(f"Pixel Coordinates : X={px_x}, Y={px_y}, Radius={radius:.1f}")
+                print(f"Robot Targets     : Dist={target_dist:.3f}m, Angle={target_angle:.3f}rad")
+                print("="*40 + "\n")
+            else:
+                print("\n" + "="*40)
+                print("       NO BALL FOUND IN IMAGE")
+                print("="*40 + "\n")
+            
+            service.stop = True
+            break
+        
+        t.sleep(0.1)

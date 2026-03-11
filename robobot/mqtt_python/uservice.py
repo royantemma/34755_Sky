@@ -107,6 +107,8 @@ class UService:
                 help='Move servo down')
     self.parser.add_argument('-cm', '--custom_mission', action='store_true',
                 help='Run the custom mission in in SKY114.py')
+    self.parser.add_argument('-go', '--golf', action='store_true',
+                help='Run the golf mission')
     self.parser.add_argument('-lt', '--linetest', action='store_true')
     self.parser.add_argument('-ct', '--cameratest', action='store_true')
     self.parser.add_argument('-rt', '--randomtest', action='store_true')
@@ -114,6 +116,10 @@ class UService:
     self.parser.add_argument('-dxy', '--drivexy', action='store_true')
     self.parser.add_argument('-c', '--controller', action='store_true',
                              help='Manual controller mode')
+    self.parser.add_argument('--calibrate_wheel_radius', action='store_true')
+    self.parser.add_argument('--calibrate_wheelbase', action='store_true')
+    self.parser.add_argument('--mission_start2goal', action='store_true', 
+                             help='Run the mission from start to goal')
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):
     #   self.args.usestate = int(0)
@@ -139,7 +145,7 @@ class UService:
     ir.setup()
     pose.setup()
     imu.setup()
-    cam.setup()
+    #cam.setup()
     edge.setup()
     print(f"% (uservice.py) Setup finished with connected={self.connected}")
     if self.args.level:
@@ -299,7 +305,7 @@ class UService:
 
   def send(self, topic, param):
     # print(self.startTime.strftime("At %Y-%m-%d %H:%M:%S.%f"))
-    print(f"% {self.startTime.strftime("At %Y-%m-%d %H:%M:%S.%f")}: sending: '{topic}' with '{param}' len(param)={len(param)}, not master {self.confirmedNotMaster}, master {self.confirmedMaster}")
+    # print(f"% {self.startTime.strftime("At %Y-%m-%d %H:%M:%S.%f")}: sending: '{topic}' with '{param}' len(param)={len(param)}, not master {self.confirmedNotMaster}, master {self.confirmedMaster}")
     if self.confirmedNotMaster:
       # self.terminate()
       self.stop = True
@@ -374,7 +380,7 @@ class UService:
     pose.terminate()
     ir.terminate()
     edge.terminate()
-    cam.terminate()
+    #cam.terminate()
     gpio.terminate()
     flog.terminate()
     self.startTime = datetime.now()

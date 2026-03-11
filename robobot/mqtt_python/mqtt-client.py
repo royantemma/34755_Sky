@@ -45,6 +45,7 @@ from uservice import service
 import SKY114
 import golf
 import manual_controller
+import calibrate_odom
 
 #import lineTest
 
@@ -230,20 +231,26 @@ def loop():
     SKY114.driveXY()
   elif service.args.cameratest:
     SKY114.cameratest()
-  #elif service.args.golf:
-    #golf.find_and_catch()
+  elif service.args.golf:
+    golf.find_and_print()
   elif service.args.controller:
     print("hello")
     manual_controller.controller()
     state = 10000
-
+  elif service.args.calibrate_wheel_radius:
+    calibrate_odom.calibrate_straight()
+    return
+  elif service.args.calibrate_wheelbase:
+    calibrate_odom.calibrate_rotation()
+    return
   elif service.args.usestate > 0:
     state = service.args.usestate
 
   #elif service.args.base:
     #SKY114.base()
 
-
+  
+  
 
   print(f"% Starting at state {state}")
   # elif not service.args.now:
@@ -366,6 +373,10 @@ if __name__ == "__main__":
       #service.setup('10.197.217.80') # Newton
       # service.setup('bode.local') # Bode
       if service.connected:
-        loop()
+        #loop()
+        if service.args.mission_start2goal:
+          from missions.mission_start2goal import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
       service.terminate()
     print("% Main Terminated")
