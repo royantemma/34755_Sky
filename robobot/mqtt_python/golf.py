@@ -57,11 +57,17 @@ def setup_homography(img_width, img_height):
     # 2. Real-world CAD coordinates (Destination) converted from mm to METERS
     # X: Left is negative, Right is positive
     # Y: Forward distance from robot
-    dst_pts = np.array([
-        [-0.573709, 0.9291],   # Middle left CAD
-        [0.573709, 0.9291],    # Middle right CAD
-        [-0.176576, 0.257516], # Bottom left CAD
-        [0.176576, 0.257516]   # Bottom right CAD
+    # dst_pts = np.array([ # For z=0mm
+    #     [-0.573709, 0.9291],   # Middle left CAD
+    #     [0.573709, 0.9291],    # Middle right CAD
+    #     [-0.176576, 0.257516], # Bottom left CAD
+    #     [0.176576, 0.257516]   # Bottom right CAD
+    # ], dtype=np.float32)
+    dst_pts = np.array([ # For z=21mm (middle of the ball)
+        [-0.510, 0.925],   # Middle left CAD
+        [0.510, 0.925],    # Middle right CAD
+        [-0.157, 0.228], # Bottom left CAD
+        [0.157, 0.228]   # Bottom right CAD
     ], dtype=np.float32)
 
     # 3. Calculate and return the 3x3 transformation matrix
