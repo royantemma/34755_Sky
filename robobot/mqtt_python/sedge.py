@@ -372,7 +372,7 @@ class SEdge:
       self.followLeft = followLeft
       self.refPosition = refPosition
       # velocity 0 (or negative) is turning off line control
-      self.lineCtrl = velocity > 0.001
+      self.lineCtrl = abs(velocity) > 0.001
       pass
 
     ##########################################################

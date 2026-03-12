@@ -108,17 +108,21 @@ def px_to_xy_homography(px_x, px_y, H_matrix):
     target_distance = np.sqrt(real_x**2 + real_y**2)
     
     # Calculate the angle to turn (in radians)
-    # Assuming Y is forward and X is horizontal
-    target_angle = np.arctan2(real_x, real_y)
+    # Positive angle = left (counterclockwise), matching the robot's turn convention.
+    # real_x is positive-right, so negate it for positive-left heading.
+    target_angle = np.arctan2(-real_x, real_y)
     
-    return target_distance, target_angle
+    return target_distance, target_angle, real_x, real_y
 
 def find_and_catch():
     """Main mission state machine"""
     state = 0
     arm_reach = 0.26 # middle of the cup is 26cm from the center of the robot
+    real_x = 0.0
+    real_y = 0.0
     target_distance = 0.0
     target_angle = 0.0
+    drive_dist = 0.0
     H_matrix = None 
     
     print("% Starting Golf Mission: Find and Catch the Red Ball!")
@@ -140,12 +144,17 @@ def find_and_catch():
                 found, px_x, px_y, radius, mask = detect_red_ball(img)
                 
                 if found:
-                    print(f"% Ball found at Px({px_x}, {px_y})!")
                     service.send("robobot/cmd/T0", "leds 16 0 100 0") # Green LED: Found
                     service.send("robobot/cmd/ti", "rc 0.0 0.0") # Stop spinning
                     
-                    # Calculate true trajectory using the matrix
-                    target_distance, target_angle = px_to_xy_homography(px_x, px_y, H_matrix)
+                    # Get real-world position relative to robot
+                    target_distance, target_angle, real_x, real_y = px_to_xy_homography(px_x, px_y, H_matrix)
+                    drive_dist = real_y - arm_reach
+                    
+                    print(f"% Ball found at Px({px_x}, {px_y}), radius={radius:.1f}")
+                    print(f"%   World position: x={real_x:.3f} m (+ right), y={real_y:.3f} m (forward)")
+                    print(f"%   Distance={target_distance:.3f} m, Angle={np.degrees(target_angle):.1f} deg")
+                    print(f"%   Drive distance after turn: {drive_dist:.3f} m (y - arm_reach)")
                     
                     pose.tripBreset() 
                     state = 1
@@ -163,16 +172,15 @@ def find_and_catch():
             # Check if we have turned enough using odometry (tripBh is heading)
             if abs(pose.tripBh) >= abs(target_angle):
                 service.send("robobot/cmd/ti", "rc 0.0 0.0") # Stop turning
+                print(f"% Turned {np.degrees(pose.tripBh):.1f} deg (target was {np.degrees(target_angle):.1f} deg)")
                 pose.tripBreset() # Reset distance counter
                 state = 2
-                print(f"% Turned {pose.tripBh:.2f} rad. Now driving to target.")
 
         elif state == 2:
             # STATE 2: Drive towards the ball
-            drive_dist = target_distance - arm_reach
-            
             if drive_dist <= 0:
-                # Already in reach!
+                print(f"% Ball already in arm reach (drive_dist={drive_dist:.3f} m)")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 state = 3
             else:
                 service.send("robobot/cmd/ti", "rc 0.2 0.0") # Drive forward at 0.2 m/s
@@ -180,8 +188,8 @@ def find_and_catch():
                 # Check if we have driven far enough (tripB is distance)
                 if pose.tripB >= drive_dist:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0") # Stop
+                    print(f"% Arrived at ball. Driven {pose.tripB:.3f} m (target was {drive_dist:.3f} m)")
                     state = 3
-                    print(f"% Arrived at ball. Driven {pose.tripB:.2f} m.")
                     
         elif state == 3:
             # STATE 3: Catch!
@@ -230,13 +238,14 @@ def find_and_print():
                 print(f"  -> Saved {name}")
             
             if found:
-                target_dist, target_angle = px_to_xy_homography(px_x, px_y, H_matrix)
+                target_dist, target_angle, real_x, real_y = px_to_xy_homography(px_x, px_y, H_matrix)
                 
                 print("\n" + "="*40)
                 print("           BALL FOUND!")
                 print("="*40)
                 print(f"Pixel Coordinates : X={px_x}, Y={px_y}, Radius={radius:.1f}")
-                print(f"Robot Targets     : Dist={target_dist:.3f}m, Angle={target_angle:.3f}rad")
+                print(f"World Position    : x={real_x:.3f}m (+ right), y={real_y:.3f}m (forward)")
+                print(f"Robot Targets     : Dist={target_dist:.3f}m, Angle={np.degrees(target_angle):.1f}deg")
                 print("="*40 + "\n")
             else:
                 print("\n" + "="*40)

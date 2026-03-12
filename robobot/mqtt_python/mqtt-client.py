@@ -233,6 +233,7 @@ def loop():
     SKY114.cameratest()
   elif service.args.golf:
     golf.find_and_print()
+    return
   elif service.args.controller:
     print("hello")
     manual_controller.controller()
@@ -316,9 +317,13 @@ def loop():
     elif state == 106:
       print(f"Servo up")
       service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up faster)
+      t.sleep(1.5) # wait for servo to reach position
+      break
     elif state == 107:
       print(f"Servo down")
       service.send("robobot/cmd/T0","servo 1 150 400") # (servo down slow)
+      t.sleep(1.5) # wait for servo to reach position
+      break
     elif state == 10000:
       t.sleep(0.01)
     else: # abort
@@ -350,7 +355,7 @@ def loop():
   gpio.set_value(20, 0)
   edge.lineControl(0, True) # stop following line
   service.send("robobot/cmd/ti","rc 0 0")
-  service.send("robobot/cmd/T0","servo 1 0 0")
+  #service.send("robobot/cmd/T0","servo 1 0 0")
   t.sleep(0.05)
   pass
 
@@ -373,10 +378,11 @@ if __name__ == "__main__":
       #service.setup('10.197.217.80') # Newton
       # service.setup('bode.local') # Bode
       if service.connected:
-        loop()
-        if service.args.mission_start2goal:
-          from missions.mission_start2goal import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+        if service.args.mission_gates:
+          from missions.mission_gates import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+        else:
+          loop()
       service.terminate()
     print("% Main Terminated")

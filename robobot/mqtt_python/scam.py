@@ -57,10 +57,11 @@ class SCam:
       if self.imageFailCnt == 0:
         print("% SCam:: not using cam")
       fail = True
-    if not fail and not self.cap.isOpened():
-      if self.imageFailCnt == 0:
-        print("% SCam:: could not open")
-      fail = True
+    if not fail:
+      if not isinstance(self.cap, cv.VideoCapture) or not self.cap.isOpened():
+        if self.imageFailCnt == 0:
+          print("% SCam:: could not open")
+        fail = True
     if not fail:
       from uservice import service
       self.getFrame = True
@@ -115,9 +116,9 @@ class SCam:
             break
 
         # Make sure the capture device is open
-        if not self.cap.isOpened():
+        if not isinstance(self.cap, cv.VideoCapture) or not self.cap.isOpened():
             print("% SCam:: waiting for camera...")
-            time.sleep(0.1)
+            t.sleep(0.1)
             continue
 
         try:
@@ -139,7 +140,7 @@ class SCam:
 
         else:
             # Frame read failed; wait a bit and retry
-            time.sleep(0.01)
+            t.sleep(0.01)
 
   # OLD TERMINATE METHOD (REPLACED BY NEW ONE BELOW) 
   # def terminate(self):

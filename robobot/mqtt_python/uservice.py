@@ -120,6 +120,9 @@ class UService:
     self.parser.add_argument('--calibrate_wheelbase', action='store_true')
     self.parser.add_argument('--mission_start2goal', action='store_true', 
                              help='Run the mission from start to goal')
+    self.parser.add_argument('--mission_gates', action='store_true', 
+                             help='Run the mission from start to goal with gates')
+
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):
     #   self.args.usestate = int(0)
@@ -145,7 +148,7 @@ class UService:
     ir.setup()
     pose.setup()
     imu.setup()
-    #cam.setup()
+    cam.setup()
     edge.setup()
     print(f"% (uservice.py) Setup finished with connected={self.connected}")
     if self.args.level:
@@ -380,7 +383,7 @@ class UService:
     pose.terminate()
     ir.terminate()
     edge.terminate()
-    #cam.terminate()
+    cam.terminate()
     gpio.terminate()
     flog.terminate()
     self.startTime = datetime.now()
