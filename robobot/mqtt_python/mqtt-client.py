@@ -232,7 +232,7 @@ def loop():
   elif service.args.cameratest:
     SKY114.cameratest()
   elif service.args.golf:
-    golf.find_and_print()
+    golf.find_and_catch()
     return
   elif service.args.controller:
     print("hello")

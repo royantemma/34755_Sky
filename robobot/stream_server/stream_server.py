@@ -13,6 +13,7 @@ import socket
 
 import threading
 import simplejpeg
+import numpy
 import cv2 as cv
 
 from http import server
@@ -184,7 +185,11 @@ def process_frames():
     while True:
         frame = picam2.capture_array()
 
-        jpeg = simplejpeg.encode_jpeg(frame, quality=80)
+        # Picamera2 XBGR8888 is RGBX in memory order — drop the padding channel.
+        if frame.shape[2] == 4:
+            frame = numpy.ascontiguousarray(frame[:, :, :3])
+
+        jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
 
         main_output.write(jpeg)
 

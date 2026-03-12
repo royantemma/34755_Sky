@@ -1,19 +1,59 @@
-[0:00:12.423731138] [1159] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:340 [0mlibcamera v0.6.0+rpt20251202
-[0:00:12.434089342] [1160] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:720 [0mlibpisp version 1.3.0
-[0:00:12.451995546] [1160] [1;32m INFO [1;37mIPAProxy [1;34mipa_proxy.cpp:180 [0mUsing tuning file /usr/share/libcamera/ipa/rpi/pisp/imx219.json
-[0:00:12.459974305] [1160] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:223 [0mAdding camera '/base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10' for pipeline handler rpi/pisp
-[0:00:12.460021601] [1160] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1181 [0mRegistered camera /base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10 to CFE device /dev/media1 and ISP device /dev/media0 using PiSP variant BCM2712_C0
-[0:00:12.463319953] [1159] [1;32m INFO [1;37mCamera [1;34mcamera.cpp:1215 [0mconfiguring streams: (0) 820x616-XBGR8888/SMPTE170M/Rec709/None/Full (1) 1640x1232-BGGR_PISP_COMP1/RAW
-[0:00:12.463413286] [1160] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1485 [0mSensor: /base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10 - Selected sensor format: 1640x1232-SBGGR10_1X10/RAW - Selected CFE format: 1640x1232-PC1B/RAW
-Exception in thread Thread-1 (process_frames):
-Traceback (most recent call last):
-  File "/usr/lib/python3.13/threading.py", line 1043, in _bootstrap_inner
-    self.run()
-    ~~~~~~~~^^
-  File "/usr/lib/python3.13/threading.py", line 994, in run
-    self._target(*self._args, **self._kwargs)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/local/svn/robobot/stream_server/stream_server.py", line 187, in process_frames
-    jpeg = simplejpeg.encode_jpeg(frame, quality=80)
-  File "simplejpeg/_jpeg.pyx", line 477, in simplejpeg._jpeg.encode_jpeg
-ValueError: 4 channels does not match given colorspace rgb
+[0:00:10.664302566] [1157] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:340 [0mlibcamera v0.6.0+rpt20251202
+[0:00:10.674692900] [1158] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:720 [0mlibpisp version 1.3.0
+[0:00:10.692472066] [1158] [1;32m INFO [1;37mIPAProxy [1;34mipa_proxy.cpp:180 [0mUsing tuning file /usr/share/libcamera/ipa/rpi/pisp/imx219.json
+[0:00:10.700407085] [1158] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:223 [0mAdding camera '/base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10' for pipeline handler rpi/pisp
+[0:00:10.700434029] [1158] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1181 [0mRegistered camera /base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10 to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+[0:00:10.703904900] [1157] [1;32m INFO [1;37mCamera [1;34mcamera.cpp:1215 [0mconfiguring streams: (0) 820x616-XBGR8888/SMPTE170M/Rec709/None/Full (1) 1640x1232-BGGR_PISP_COMP1/RAW
+[0:00:10.703999844] [1158] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1485 [0mSensor: /base/axi/pcie@1000120000/rp1/i2c@80000/imx219@10 - Selected sensor format: 1640x1232-SBGGR10_1X10/RAW - Selected CFE format: 1640x1232-PC1B/RAW
+127.0.0.1 - - [12/Mar/2026 16:58:35] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 58630): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 16:58:52] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 36558): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:07:41] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 33876): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:10:01] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 17:10:01] "GET /stream/main HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 17:10:01] "GET /stream/cameratest HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 17:10:01] code 404, message Not Found
+127.0.0.1 - - [12/Mar/2026 17:10:01] "GET /favicon.ico HTTP/1.1" 404 -
+WARNING:root:Removed streaming client ('127.0.0.1', 33664): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:18:30] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 55070): [Errno 104] Connection reset by peer
+127.0.0.1 - - [12/Mar/2026 17:19:01] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 54042): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:19:09] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 53134): [Errno 104] Connection reset by peer
+127.0.0.1 - - [12/Mar/2026 17:19:26] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 43950): [Errno 32] Broken pipe
+10.209.147.92 - - [12/Mar/2026 17:20:31] "GET /index.html HTTP/1.1" 200 -
+10.209.147.92 - - [12/Mar/2026 17:20:32] "GET /stream/main HTTP/1.1" 200 -
+10.209.147.92 - - [12/Mar/2026 17:20:32] "GET /stream/cameratest HTTP/1.1" 200 -
+10.209.147.92 - - [12/Mar/2026 17:20:32] code 404, message Not Found
+10.209.147.92 - - [12/Mar/2026 17:20:32] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [12/Mar/2026 17:34:57] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 41904): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:36:33] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 51198): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:38:50] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 37150): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:40:43] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 45422): [Errno 104] Connection reset by peer
+127.0.0.1 - - [12/Mar/2026 17:41:46] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 39048): [Errno 104] Connection reset by peer
+WARNING:root:Removed streaming client ('10.209.147.92', 64298): [Errno 110] Connection timed out
+127.0.0.1 - - [12/Mar/2026 17:51:04] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 53266): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:52:38] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 46922): [Errno 104] Connection reset by peer
+127.0.0.1 - - [12/Mar/2026 17:53:43] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 52504): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:54:01] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 56792): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:59:25] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 45030): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 17:59:42] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 60960): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 18:00:07] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 42678): [Errno 32] Broken pipe
+127.0.0.1 - - [12/Mar/2026 18:00:22] "GET /stream/main HTTP/1.1" 200 -
+WARNING:root:Removed streaming client ('127.0.0.1', 44092): [Errno 32] Broken pipe
