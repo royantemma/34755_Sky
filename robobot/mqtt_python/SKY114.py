@@ -5,12 +5,15 @@ from datetime import *
 from setproctitle import setproctitle
 import signal
 
-import sys
-sys.path.append("/home/local/svn/robobot/stream_server")
-from stream_server import stream_manager
+# import sys
+# sys.path.append("/home/local/svn/robobot/stream_server")
+# from stream_server import stream_manager
 import threading
 import simplejpeg
 from scam import getImage
+
+from http import server
+import socketserver
 
 
 # robot function
@@ -42,6 +45,108 @@ then takes care of the rest.
 service.send("robobot/cmd/T0","leds 16 0 100 0") # green
 
 """
+
+import cv2 as cv
+import threading
+import simplejpeg
+import time as t
+from http import server
+import socketserver
+
+# Global variables to share the frame between the processing loop and the web server
+latest_jpeg = None
+frame_condition = threading.Condition()
+
+class TestStreamHandler(server.BaseHTTPRequestHandler):
+    def do_GET(self):
+      # This will show up in your terminal to tell us EXACTLY what the browser wants
+      print(f"DEBUG: Browser is asking for: '{self.path}'")
+
+      # 1. If you just go to http://<ip>:7124/
+      if self.path == '/' or self.path == '/index.html':
+          content = b"<html><body><h1>Test Server Active</h1><img src='/stream'></body></html>"
+          self.send_response(200)
+          self.send_header('Content-Type', 'text/html')
+          self.send_header('Content-Length', len(content))
+          self.end_headers()
+          self.wfile.write(content)
+
+      # 2. If the browser (or the main page) asks for the video data
+      elif '/stream' in self.path:
+          self.send_response(200)
+          self.send_header('Age', 0)
+          self.send_header('Cache-Control', 'no-cache, private')
+          self.send_header('Pragma', 'no-cache')
+          self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+          self.end_headers()
+          try:
+              while True:
+                  with frame_condition:
+                      frame_condition.wait()
+                      frame = latest_jpeg
+                  
+                  if frame is None: continue
+                      
+                  self.wfile.write(b'--FRAME\r\n')
+                  self.send_header('Content-Type', 'image/jpeg')
+                  self.send_header('Content-Length', len(frame))
+                  self.end_headers()
+                  self.wfile.write(frame)
+                  self.wfile.write(b'\r\n')
+          except Exception as e:
+              print(f"Connection closed: {e}")
+
+      # 3. If it's anything else, send the 404
+      else:
+          self.send_error(404, "File Not Found")
+
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+def cameratest():
+    # 1. Connect to the robot's main camera stream
+    cap = cv.VideoCapture("http://localhost:7123/stream/main")
+
+    def process_and_stream():
+      global latest_jpeg
+      print("Checking main stream connection...")
+      if not cap.isOpened():
+        print("ERROR: Could not open the main stream at localhost:7123")
+        return
+
+      while True:
+        ret, frame = cap.read()
+        if ret and frame is not None:
+          print("Frame captured!") # Uncomment this to see a flood of messages if it works
+          # --- YOUR VISION CODE GOES HERE ---
+          cv.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
+
+          # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
+          jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='BGR')
+
+          # 3. Share the frame with the web server
+          with frame_condition:
+              latest_jpeg = jpeg
+              frame_condition.notify_all()
+        else:
+            print("Warning: Failed to grab frame from main stream")
+        t.sleep(0.2)
+
+
+    # Start the OpenCV processing in the background
+    threading.Thread(target=process_and_stream, daemon=True).start()
+
+    # Start the mini web server on port 7124
+    address = ('0.0.0.0', 7124)
+    print("Starting OpenCV test stream on port 7124...")
+    httpd = ThreadedHTTPServer(address, TestStreamHandler)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down test stream.")
+        httpd.server_close()
+
 
 
 def custom_mission():
@@ -135,34 +240,37 @@ def LineTest():
 
 ####################################################################
 
-def cameratest():
-  cap = cv.VideoCapture("http://localhost:7123/stream/main")
+# def cameratest():
+#   cap = cv.VideoCapture("http://localhost:7123/stream/main")
 
-  ret, frame = cap.read()
-  print("$$$$$$$$$$$$$")
-  print(ret)
+#   ret, frame = cap.read()
+#   print("$$$$$$$$$$$$$")
+#   print(ret)
+#   print("stream_manager id:", id(stream_manager))
 
 
-  cameratest_output = stream_manager.get_output("cameratest")
+#   cameratest_output = stream_manager.get_output("cameratest")
+#   print(cameratest_output)
 
-  def push_processed_images():
-    for i in range(100):
-      # Generate or process any image you like
-      #ok, img, frameTime = getImage()
-      #print(str(i) + ', ' + str(ok))
-      if ret and frame is not None:
-      #if ok and img is not None:
-        cv.putText(frame, "Custom Image Stream", (50, 300),
-                    cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
+#   def push_processed_images():
+#     while True:
+#       # Generate or process any image you like
+#       #ok, img, frameTime = getImage()
+#       #print(str(i) + ', ' + str(ok))
+#       ret, frame = cap.read()
+#       if ret and frame is not None:
+#       #if ok and img is not None:
+#         print("^^^^^^^^ thread started ^^^^^^^^^^^")
+#         cv.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
 
-        # Encode to JPEG
-        jpeg = simplejpeg.encode_jpeg(frame, quality=80)
-        cameratest_output.write(jpeg)
+#         # Encode to JPEG
+#         jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
+#         cameratest_output.write(jpeg)
 
-      t.sleep(0.2)  # ~5 FPS
+#       t.sleep(0.2)  # ~5 FPS
 
-  threading.Thread(target=push_processed_images, daemon=True).start()
-  service.stop = True
+#   threading.Thread(target=push_processed_images, daemon=True).start()
+#   # service.stop = True
 
 
 

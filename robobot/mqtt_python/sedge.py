@@ -49,7 +49,8 @@ class SEdge:
     # line detection levels
     lineValidThreshold = 700 # 1000 is calibrated white # RR change here to determine which sensor readings after normalization are invalid (too high)
     # RR lineValid = high >= lineValidThreshold; (if highest current reading above threshold)
-    crossingThreshold = 200 # average above this is assumed to be crossing line
+    crossingThreshold = 400 # average above this is assumed to be crossing line
+    crossingOverride = False  # when True, followLine() is suppressed
     # level for relevant white values
     # low = lineValidThreshold - 100;
     # line detection values
@@ -378,6 +379,8 @@ class SEdge:
     ##########################################################
 
     def followLine(self):
+      if self.crossingOverride:
+        return  # do nothing during crossing
       from uservice import service
       # some parameters depend on sample time, adjust
       # print(f"LineCtrl:: sample time {self.edge_nInterval}")

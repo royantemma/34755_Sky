@@ -25,6 +25,10 @@ class MissionRunner:
         self.task_index = 0
         self.task_state = 0
         self.task_start = None
+        self._recovery_start = None
+        self._crossing_count = 0
+        self._on_crossing    = False
+        self._crossing_start = None
 
     # time helpers _____________________________
 
@@ -70,6 +74,9 @@ class MissionRunner:
 
             elif task_type == "line_follow_brake":
                 self.run_line_follow_brake(current_task)
+
+            elif task_type == "line_follow_brake_crossing":
+                self.run_line_follow_brake_crossing(current_task)
 
             elif task_type == "drive_straight":
                 self.run_drive_straight(current_task)
@@ -160,6 +167,7 @@ class MissionRunner:
                 edge.lineControl(speed, follow_left)
                 pose.tripBreset()
                 print("% [line_follow] Line found — following")
+                self._recovery_start = None
                 self.task_state = 2
             elif pose.tripB > 4.0 or self.task_time() > timeout:
                 service.send("robobot/cmd/ti","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
@@ -169,27 +177,174 @@ class MissionRunner:
             normal_speed = task.get("speed",       0.15)
             brake_speed  = task.get("brake_speed", -0.05)
             max_speed    = task.get("max_speed",    0.25)
+            recovery     = task.get("recovery",    False)
+            recovery_time = task.get("recovery_time", 1.0)
 
             # check actual velocity and adjust
             if pose.velocity() > max_speed:
-                # going too fast — switch to braking speed
                 edge.lineControl(brake_speed, follow_left)
             else:
-                # normal speed
                 edge.lineControl(normal_speed, follow_left)
-                
+
             if self.task_time() > timeout:
                 edge.lineControl(0, True)
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 print("% [line_follow] Timeout")
                 self.task_state = 3
+
             elif edge.lineValidCnt < 2:
-                edge.lineControl(0, True)
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
-                self.task_state = 3
+                if recovery:
+                    # start recovery timer if not already started
+                    if self._recovery_start is None:
+                        self._recovery_start = datetime.now()
+                        print("% [line_follow] Line lost — waiting to recover")
+                    # check if recovery time has expired
+                    elif (datetime.now() - self._recovery_start).total_seconds() > recovery_time:
+                        edge.lineControl(0, True)
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        print("% [line_follow] Recovery failed — stopping")
+                        self._recovery_start = None
+                        self.task_state = 3
+                    # else: still within recovery window, keep going
+                else:
+                    # no recovery — stop immediately
+                    edge.lineControl(0, True)
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                    print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
+                    self.task_state = 3
+
+            else:
+                # line is valid — reset recovery timer
+                self._recovery_start = None
 
         elif self.task_state == 3: # stopping
+            if abs(pose.velocity()) < 0.001:
+                print("% [line_follow] Stopped — next task")
+                self.next_task()
+
+
+    def run_line_follow_brake_crossing(self, task):
+        """
+        Follow a line on the chosen side with:
+        - speed control / braking based on actual velocity
+        - recovery: wait before giving up if line is lost
+        - crossing detection: stop at nth intersection
+
+        Task keys:
+            side                'left' or 'right'
+            speed               forward speed m/s (default 0.2)
+            brake_speed         negative speed when too fast (default -0.05)
+            max_speed           velocity threshold to trigger braking (default 0.25)
+            timeout             max seconds for whole task (default 30)
+            recovery            True/False — wait before giving up on line loss (default False)
+            recovery_time       seconds to wait before giving up (default 1.0)
+            stop_at_crossing    True/False (default False)
+            crossing_count      which crossing to stop at (default 1)
+        """
+        follow_left      = (task["side"] == "left")
+        speed            = task.get("speed",            0.2)
+        brake_speed      = task.get("brake_speed",      -0.05)
+        max_speed        = task.get("max_speed",        0.25)
+        timeout          = task.get("timeout",          30)
+        recovery         = task.get("recovery",         False)
+        recovery_time    = task.get("recovery_time",    1.0)
+        stop_at_crossing = task.get("stop_at_crossing", False)
+        crossing_target  = task.get("crossing_count",   1)
+
+        # ── state 0: initialise ───────────────────────────────────────────────────
+        if self.task_state == 0:
+            print("% [line_follow] Starting — moving forward to find line")
+            service.send("robobot/cmd/T0", "leds 16 0 100 0")
+            service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+            self._recovery_start  = None
+            self._crossing_count  = 0
+            self._on_crossing     = False
+            self.task_state = 1
+
+        # ── state 1: approach — drive forward until line found ────────────────────
+        elif self.task_state == 1:
+            if edge.lineValidCnt > 4:
+                edge.lineControl(speed, follow_left)
+                pose.tripBreset()
+                self._recovery_start = None
+                print("% [line_follow] Line found — following")
+                self.task_state = 2
+            elif self.task_time() > timeout:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [line_follow] Timeout during approach")
+                self.task_state = 3
+
+        # ── state 2: follow line ──────────────────────────────────────────────────
+        elif self.task_state == 2:
+
+            #print(f"% average={edge.average:.1f}, crossingLineCnt={edge.crossingLineCnt}")
+
+            # ── speed control: brake if going too fast ────────────────────────────
+            if pose.velocity() > max_speed:
+                edge.lineControl(brake_speed, follow_left)
+            else:
+                edge.lineControl(speed, follow_left)
+
+            # ── crossing detection ────────────────────────────────────────────────
+            # ── crossing detection ────────────────────────────────────────────────
+            if self._on_crossing:
+                if edge.crossingLineCnt < 5:
+                    edge.crossingOverride = False
+                    print(f"% [line_follow] Crossing passed — resuming line follow")
+                    edge.lineControl(speed, follow_left)
+                    self._on_crossing = False
+                else:
+                    # actively keep sending straight — overrides any stray followLine() calls
+                    service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+
+            elif edge.crossingLineCnt > 15:
+                if not self._on_crossing:
+                    self._crossing_count += 1
+                    self._on_crossing = True
+                    self._crossing_start = datetime.now()
+                    print(f"% [line_follow] Crossing {self._crossing_count} — driving straight through")
+                    edge.crossingOverride = True
+                    edge.lineControl(0, True)
+                    service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+
+            if stop_at_crossing and self._crossing_count >= crossing_target and not self._on_crossing:
+                edge.crossingOverride = False
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [line_follow] Target crossing reached — stopping")
+                self.task_state = 3
+
+            # ── timeout ───────────────────────────────────────────────────────────
+            if self.task_state == 2 and pose.tripBtimePassed() > timeout:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [line_follow] Timeout while following")
+                self.task_state = 3
+
+            # ── line lost: recovery or immediate stop ─────────────────────────────
+            elif self.task_state == 2 and edge.lineValidCnt < 2:
+                if recovery:
+                    if self._recovery_start is None:
+                        self._recovery_start = datetime.now()
+                        print("% [line_follow] Line lost — waiting to recover")
+                    elif (datetime.now() - self._recovery_start).total_seconds() > recovery_time:
+                        edge.lineControl(0, True)
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        print("% [line_follow] Recovery failed — stopping")
+                        self._recovery_start = None
+                        self.task_state = 3
+                    # else: still within recovery window — keep going
+                else:
+                    edge.lineControl(0, True)
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                    print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
+                    self.task_state = 3
+
+            # ── line valid: reset recovery timer ──────────────────────────────────
+            elif self.task_state == 2 and edge.lineValidCnt >= 2:
+                self._recovery_start = None
+
+        # ── state 3: wait for full stop ───────────────────────────────────────────
+        elif self.task_state == 3:
             if abs(pose.velocity()) < 0.001:
                 print("% [line_follow] Stopped — next task")
                 self.next_task()
