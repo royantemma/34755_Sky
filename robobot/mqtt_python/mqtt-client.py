@@ -45,6 +45,8 @@ from uservice import service
 import SKY114
 import golf
 import calibrate_aruco
+import find_aruco
+import calibrate_extrinsics
 import manual_controller
 import calibrate_odom
 
@@ -240,6 +242,12 @@ def loop():
     return
   elif service.args.calibrate_cb:
     calibrate_aruco.run_calibration()
+    return
+  elif service.args.find_aruco:
+    find_aruco.find_and_print()
+    return
+  elif service.args.calibrate_extrinsics:
+    calibrate_extrinsics.run_calibration()
     return
   elif service.args.controller:
     print("hello")

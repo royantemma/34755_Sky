@@ -122,6 +122,10 @@ class UService:
                              help='Manual controller mode')
     self.parser.add_argument('--calibrate_cb', action='store_true',
                  help='Run checkerboard camera calibration')
+    self.parser.add_argument('-ce', '--calibrate_extrinsics', action='store_true',
+                 help='Run extrinsic height and pitch angle calibration using a sliding ArUco cube')
+    self.parser.add_argument('-fa', '--find_aruco', action='store_true',
+                             help='Find an ArUco marker and estimate pose')
     self.parser.add_argument('--calibrate_wheel_radius', action='store_true')
     self.parser.add_argument('--calibrate_wheelbase', action='store_true')
     self.parser.add_argument('--mission_start2goal', action='store_true', 

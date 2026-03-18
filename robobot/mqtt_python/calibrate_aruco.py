@@ -51,8 +51,7 @@ def run_calibration():
     print("% Image capture complete. Starting calibration...")
     
     # Checkerboard dimensions
-    # Note: OpenCV expects the number of inner corners. If your board has 11x8 squares, the inner corners are 10x7. 
-    # Use 11 and 8 if you have 12x9 squares.
+    # Note: OpenCV expects the number of inner corners. Board has 11x8 squares, the inner corners are 10x7.
     checkerboard_size = (10, 7)
     square_size = 20.0 # mm
     

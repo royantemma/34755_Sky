@@ -10,11 +10,13 @@ import io
 import logging
 import socketserver
 import socket
-
 import threading
 import simplejpeg
-import numpy
+import numpy as np
 import cv2 as cv
+import json
+import os
+import time
 
 from http import server
 from threading import Condition
@@ -28,22 +30,12 @@ from picamera2.outputs import FileOutput
 setproctitle("stream_server")
 
 hostname = socket.gethostname()
-PAGE = """\
-<html>
-<head>
-<title>Picamera2 Modular MJPEG</title>
-</head>
-<body>
-<h1>Main Camera Stream</h1>
-<img src="/stream/main" width="820" height="616">
 
-<h1>Custom Image Stream</h1>
-<img src="/stream/cameratest" width="820" height="616">
-
-</body>
-</html>
-""".format(hostname)
-
+# --- ArUco Processing Globals ---
+latest_frame = None
+latest_frame_cond = Condition()
+aruco_enabled = False
+aruco_data = []
 
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
@@ -87,12 +79,36 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Location', '/index.html')
             self.end_headers()
         elif self.path == '/index.html':
-            content = PAGE.encode('utf-8')
+            try:
+                curr_dir = os.path.dirname(os.path.abspath(__file__))
+                with open(os.path.join(curr_dir, 'index.html'), 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.send_header('Content-Length', len(content))
+                self.end_headers()
+                self.wfile.write(content)
+            except Exception as e:
+                self.send_error(500, f"Error loading index.html: {e}")
+        elif self.path.startswith('/api/aruco/set'):
+            global aruco_enabled
+            if 'enabled=1' in self.path:
+                aruco_enabled = True
+            elif 'enabled=0' in self.path:
+                aruco_enabled = False
             self.send_response(200)
-            self.send_header('Content-Type', 'text/html')
-            self.send_header('Content-Length', len(content))
+            self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(content)
+            self.wfile.write(json.dumps({'enabled': aruco_enabled}).encode('utf-8'))
+        elif self.path == '/api/aruco/data':
+            response = {
+                'enabled': aruco_enabled,
+                'markers': aruco_data
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
         elif self.path.startswith('/stream/'):
             # Get stream name
             stream_name = self.path.split('/')[-1]
@@ -130,25 +146,11 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-# # 1296x972
-
-#picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
-# higher resolution and lower framerate (5 FPS (200000 microseconds between frames))
-#picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
-#picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (200000, 500000)}))
-#picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (200000, 200000)}))
-#picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (50000, 200000)}))
-#picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)},controls={'FrameDurationLimits': (200000, 500000)}))
-#picam2.configure(picam2.create_video_configuration(main={"size": (320, 240)},controls={'FrameDurationLimits': (200000, 500000)}))
-
-
 main_output = stream_manager.add_stream("main")
 cameratest_output = stream_manager.add_stream("cameratest")
 
-
-#picam2.start_recording(JpegEncoder(), FileOutput(output))
-
 def process_frames():
+    global latest_frame
     picam2 = Picamera2()
     picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
     picam2.start()
@@ -158,14 +160,102 @@ def process_frames():
 
         # Picamera2 XBGR8888 is RGBX in memory order — drop the padding channel.
         if frame.shape[2] == 4:
-            frame = numpy.ascontiguousarray(frame[:, :, :3])
+            frame = np.ascontiguousarray(frame[:, :, :3])
+            
+        with latest_frame_cond:
+            latest_frame = frame
+            latest_frame_cond.notify_all()
 
         jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
-
         main_output.write(jpeg)
+
+def aruco_worker():
+    global latest_frame, aruco_enabled, aruco_data
+    
+    # Try to load intrinsic calibration data
+    calib_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python")
+    calib_file = os.path.join(calib_dir, "calibration_checkerboard.npz")
+    fallback_file = os.path.join(calib_dir, "calibration_data.npz")
+    
+    mtx = None
+    dist = None
+    
+    if os.path.exists(calib_file):
+        with np.load(calib_file) as X:
+            mtx, dist = [X[i] for i in ('mtx', 'dist')]
+    elif os.path.exists(fallback_file):
+        with np.load(fallback_file) as X:
+            mtx, dist = [X[i] for i in ('mtx', 'dist')]
+            
+    marker_size = 0.035
+    obj_points = np.array([
+        [-marker_size/2,  marker_size/2, 0],
+        [ marker_size/2,  marker_size/2, 0],
+        [ marker_size/2, -marker_size/2, 0],
+        [-marker_size/2, -marker_size/2, 0]
+    ], dtype=np.float32)
+
+    aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
+    if hasattr(cv.aruco, 'DetectorParameters_create'):
+        aruco_params = cv.aruco.DetectorParameters_create()
+    else:
+        aruco_params = cv.aruco.DetectorParameters()
+
+    while True:
+        if not aruco_enabled:
+            time.sleep(0.1)
+            continue
+            
+        with latest_frame_cond:
+            latest_frame_cond.wait(timeout=0.2)
+            if latest_frame is None:
+                continue
+            frame = latest_frame.copy()
+            
+        current_data = []
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        
+        try:
+            detector = cv.aruco.ArucoDetector(aruco_dict, aruco_params)
+            corners, ids, _ = detector.detectMarkers(gray)
+        except AttributeError:
+            corners, ids, _ = cv.aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
+            
+        if ids is not None and mtx is not None:
+            cv.aruco.drawDetectedMarkers(frame, corners, ids)
+            for i in range(len(ids)):
+                marker_id = int(ids[i][0])
+                marker_corners = corners[i][0]
+                ret, rvec, tvec = cv.solvePnP(obj_points, marker_corners, mtx, dist)
+                if ret:
+                    cv.drawFrameAxes(frame, mtx, dist, rvec, tvec, marker_size)
+                    x, y, z = tvec.flatten()
+                    x_mm, y_mm, z_mm = x * 1000, y * 1000, z * 1000
+                    
+                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Z = 189.2 mm)
+                    theta = np.radians(5.36)
+                    cam_z_offset = 189.2
+                    
+                    x_rob = x_mm
+                    y_rob = z_mm * np.cos(theta) - y_mm * np.sin(theta)
+                    z_rob = cam_z_offset - (y_mm * np.cos(theta) + z_mm * np.sin(theta))
+                    
+                    current_data.append({
+                        "id": marker_id,
+                        "x": round(x_rob, 1),
+                        "y": round(y_rob, 1),
+                        "z": round(z_rob, 1)
+                    })
+                    
+        aruco_data = current_data
+        
+        # Push annotated frame to cameratest_output
+        jpeg_bw = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
+        cameratest_output.write(jpeg_bw)
 
 def start_stream_server():
     threading.Thread(target=process_frames, daemon=True).start()
+    threading.Thread(target=aruco_worker, daemon=True).start()
 
     address = ('', 7123)
     server = StreamingServer(address, StreamingHandler)
@@ -177,4 +267,3 @@ if __name__ == "__main__":
         start_stream_server()
     finally:
         pass
-    #     picam2.stop_recording()
