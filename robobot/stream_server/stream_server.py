@@ -19,7 +19,7 @@ import cv2 as cv
 from http import server
 from threading import Condition
 from setproctitle import setproctitle
-#
+
 from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
@@ -28,22 +28,6 @@ from picamera2.outputs import FileOutput
 setproctitle("stream_server")
 
 hostname = socket.gethostname()
-# PAGE = """\
-# <html>
-# <head>
-# <title>picamera2 MJPEG</title>
-# </head>
-# <body>
-# <h1>Picamera2 MJPEG Streaming from {}</h1>
-# <img src="stream.mjpg" width="820" height="616" />
-# <!--img src="stream.mjpg" width="1296" height="972" -->
-# <!--img src="stream.mjpg" width="320" height="240" -->
-# <!--img src="stream.mjpg" width="640" height="480" -->
-# </body>
-# </html>
-# """.format(hostname)
-
-### MODIFICATION THEO - MULTISTREAMING ###
 PAGE = """\
 <html>
 <head>
@@ -55,10 +39,10 @@ PAGE = """\
 
 <h1>Custom Image Stream</h1>
 <img src="/stream/cameratest" width="820" height="616">
+
 </body>
 </html>
 """.format(hostname)
-### END MODIFICATION THEO - MULTISTREAMING ###
 
 
 class StreamingOutput(io.BufferedIOBase):
@@ -72,7 +56,6 @@ class StreamingOutput(io.BufferedIOBase):
             self.condition.notify_all()
 
 
-### MODIFICATION THEO - MULTISTREAMING ###
 class StreamManager:
     def __init__(self):
         self.streams = {}  # name: {output, enabled}
@@ -95,7 +78,6 @@ class StreamManager:
 
 # Global instance to be imported anywhere
 stream_manager = StreamManager()
-### END MODIFICATION THEO - MULTISTREAMING ###
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
@@ -111,8 +93,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Content-Length', len(content))
             self.end_headers()
             self.wfile.write(content)
-        #elif self.path == '/stream.mjpg':
-        ### MODIFICATION THEO - MULTISTREAMING ###
         elif self.path.startswith('/stream/'):
             # Get stream name
             stream_name = self.path.split('/')[-1]
@@ -120,7 +100,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             if not output:
                 self.send_error(404)
                 return
-        ### END MODIFICATION THEO - MULTISTREAMING ###
             self.send_response(200)
             self.send_header('Age', 0)
             self.send_header('Cache-Control', 'no-cache, private')
@@ -151,31 +130,23 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-
-### START MODIFICATION THEO - MULTISTREAMING ### moved this code inside the process_frames function
-"""
 # # 1296x972
-picam2 = Picamera2()
+
 #picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
 # higher resolution and lower framerate (5 FPS (200000 microseconds between frames))
-picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
+#picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (200000, 500000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (200000, 200000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (1296, 972)},controls={'FrameDurationLimits': (50000, 200000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)},controls={'FrameDurationLimits': (200000, 500000)}))
 #picam2.configure(picam2.create_video_configuration(main={"size": (320, 240)},controls={'FrameDurationLimits': (200000, 500000)}))
 
-#output = StreamingOutput()
-main_output = stream_manager.add_stream("main")
-"""
-### END MODIFICATION THEO - MULTISTREAMING ###
+
 main_output = stream_manager.add_stream("main")
 cameratest_output = stream_manager.add_stream("cameratest")
 
+
 #picam2.start_recording(JpegEncoder(), FileOutput(output))
-### MODIFICATION THEO ### STATUS: working as intended, finished
-# This section intends to modify the image before it is send to the life stream.
-# All the code in this section is the replacement of the commented line of code just above.
 
 def process_frames():
     picam2 = Picamera2()
@@ -193,35 +164,6 @@ def process_frames():
 
         main_output.write(jpeg)
 
-    # Theo process frames in black and white
-    # while True:
-    #     frame = picam2.capture_array()
-
-    #     # convert to grayscale
-    #     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    #     processed = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)
-
-    #     # draw example
-    #     cv.putText(processed, "Processed", (30,50),
-    #                cv.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-
-    #     jpeg = simplejpeg.encode_jpeg(processed, quality=80)
-
-    #     main_output.write(jpeg)
-
-#threading.Thread(target=process_frames, daemon=True).start()
-
-### END MODIFICATION THEO ###
-
-
-# try:
-#     address = ('', 7123)
-#     server = StreamingServer(address, StreamingHandler)
-#     server.serve_forever()
-# finally:
-#     picam2.stop_recording()
-
-### START MODIFICATION THEO - MULTISTREAMING ###
 def start_stream_server():
     threading.Thread(target=process_frames, daemon=True).start()
 
@@ -236,4 +178,3 @@ if __name__ == "__main__":
     finally:
         pass
     #     picam2.stop_recording()
-### END MODIFICATOIN THEO - MULTISTREAMING ###

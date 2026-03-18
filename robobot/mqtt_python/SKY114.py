@@ -5,9 +5,6 @@ from datetime import *
 from setproctitle import setproctitle
 import signal
 
-# import sys
-# sys.path.append("/home/local/svn/robobot/stream_server")
-# from stream_server import stream_manager
 import threading
 import simplejpeg
 from scam import getImage
@@ -105,9 +102,10 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, server.HTTPServer):
     daemon_threads = True
 
 def cameratest():
+    #print("Starting camera test stream...")
     # 1. Connect to the robot's main camera stream
     cap = cv.VideoCapture("http://localhost:7123/stream/main")
-
+    
     def process_and_stream():
       global latest_jpeg
       print("Checking main stream connection...")
@@ -118,7 +116,6 @@ def cameratest():
       while True:
         ret, frame = cap.read()
         if ret and frame is not None:
-          print("Frame captured!") # Uncomment this to see a flood of messages if it works
           # --- YOUR VISION CODE GOES HERE ---
           cv.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
 
@@ -133,7 +130,6 @@ def cameratest():
             print("Warning: Failed to grab frame from main stream")
         t.sleep(0.2)
 
-
     # Start the OpenCV processing in the background
     threading.Thread(target=process_and_stream, daemon=True).start()
 
@@ -146,7 +142,6 @@ def cameratest():
     except KeyboardInterrupt:
         print("\nShutting down test stream.")
         httpd.server_close()
-
 
 
 def custom_mission():

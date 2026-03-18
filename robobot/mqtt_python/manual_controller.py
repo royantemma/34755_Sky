@@ -6,6 +6,8 @@ import time
 from uservice import service
 from spose import pose
 
+import globals
+
 move_speed = 0.15  # m/s
 turn_speed = 0.35   # rad/s
 timeout = 0.1      # Seconds without input before assuming key release
@@ -20,7 +22,11 @@ def get_key(settings, timeout):
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
-def controller():
+def get_key_mqtt():
+    pass
+    
+
+def controller(use_mqtt=False):
     settings = termios.tcgetattr(sys.stdin)
     
     print("\n--- Robot Manual Controller ---")
@@ -36,6 +42,8 @@ def controller():
     print("-----------------------------------------")
     print("Press Q to Quit\n")
 
+    #service.client.subscribe("robobot/controller")
+
     current_vel = 0.0
     current_turn = 0.0
 
@@ -50,7 +58,9 @@ def controller():
         target_vel = 0.0
         target_turn = 0.0
         while not service.stop:
-            key = get_key(settings, timeout)
+            # key = get_key(settings, timeout)
+            key = globals.manual_controller_input
+
             
             
             # --- Drive Controls ---

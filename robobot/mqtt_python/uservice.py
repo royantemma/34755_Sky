@@ -45,6 +45,8 @@ from sgpio import gpio
 from ulog import flog
 import psutil
 
+import globals
+
 class UService:
   host = 'IP-setup'
   port = 1883
@@ -107,8 +109,10 @@ class UService:
                 help='Move servo down')
     self.parser.add_argument('-cm', '--custom_mission', action='store_true',
                 help='Run the custom mission in in SKY114.py')
-    self.parser.add_argument('-go', '--golf', action='store_true',
+    self.parser.add_argument('-go', '--golf_catch', action='store_true',
                 help='Run the golf mission')
+    self.parser.add_argument('-bl', '--ball_location', action='store_true',
+                help='Find the location of the ball')
     self.parser.add_argument('-lt', '--linetest', action='store_true')
     self.parser.add_argument('-ct', '--cameratest', action='store_true')
     self.parser.add_argument('-rt', '--randomtest', action='store_true')
@@ -116,6 +120,8 @@ class UService:
     self.parser.add_argument('-dxy', '--drivexy', action='store_true')
     self.parser.add_argument('-c', '--controller', action='store_true',
                              help='Manual controller mode')
+    self.parser.add_argument('--calibrate_cb', action='store_true',
+                 help='Run checkerboard camera calibration')
     self.parser.add_argument('--calibrate_wheel_radius', action='store_true')
     self.parser.add_argument('--calibrate_wheelbase', action='store_true')
     self.parser.add_argument('--mission_start2goal', action='store_true', 
@@ -160,6 +166,9 @@ class UService:
   def run(self):
     # print("% MQTT service - thread running")
     self.client.subscribe(self.topic + "#")
+    # self.client.subscribe("robobot/controller")
+    self.client.subscribe("robobot/#")
+    print(f"subscribed to robobot/controller")
     self.client.on_message = self.on_message
     # self.subscribe(self.client)
     while not self.stop:
@@ -195,6 +204,7 @@ class UService:
       print(f"% Connected to MQTT Broker {self.host} on {self.port}")
       self.connected = True
       self.client2=client
+      # client.subscribe("robobot/controller")
 
   def on_connectOut(self, client, userdata, flags, rc, properties = []):
     if rc == 0:
@@ -296,12 +306,28 @@ class UService:
           print("% I am not robot master, quitting!")
         # print(f"% got master {msg} my ID is {str(self.startTime)}")
         pass
-      elif "robobot/controller" == subtopic:
-        if msg == "forward":
-          print("controller forward")
-        pass
       else:
         used = False
+    # print(topic) # Commented out to prevent excessive terminal prints
+    if "robobot/controller" == topic:
+      used = True
+      print(f"% got controller command")
+      if msg == "forward":
+        # globals.manual_controller_input = "w"
+        manual_controller_input = "w"
+        print(f"manual controller: forward")
+      elif msg == "backward":
+        # globals.manual_controller_input = "s"
+        manual_controller_input = "s"
+        print(f"manual controller: backward")
+      elif msg == "left":
+        # globals.manual_controller_input = "a"
+        manual_controller_input = "a"
+        print(f"manual controller: left")
+      elif msg == "right":
+        # globals.manual_controller_input = "d"
+        manual_controller_input = "d"
+        print(f"manual controller: right")
     if not used:
       print("% Service:: message not used " + topic + " " + msg)
     return used

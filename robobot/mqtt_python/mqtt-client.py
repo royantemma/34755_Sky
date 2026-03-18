@@ -44,6 +44,7 @@ from uservice import service
 # Custom SKY114 Modules
 import SKY114
 import golf
+import calibrate_aruco
 import manual_controller
 import calibrate_odom
 
@@ -231,12 +232,18 @@ def loop():
     SKY114.driveXY()
   elif service.args.cameratest:
     SKY114.cameratest()
-  elif service.args.golf:
+  elif service.args.golf_catch:
     golf.find_and_catch()
+    return
+  elif service.args.ball_location:
+    golf.find_and_print()
+    return
+  elif service.args.calibrate_cb:
+    calibrate_aruco.run_calibration()
     return
   elif service.args.controller:
     print("hello")
-    manual_controller.controller()
+    manual_controller.controller(True)
     state = 10000
   elif service.args.calibrate_wheel_radius:
     calibrate_odom.calibrate_straight()
