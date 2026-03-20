@@ -44,16 +44,35 @@ def detect_red_ball(img):
     # Find Contours
     contours, _ = cv.findContours(final_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     
-    if len(contours) > 0:
-        largest_contour = max(contours, key=cv.contourArea)
-        ((x, y), radius) = cv.minEnclosingCircle(largest_contour)
-        
-        if radius > 5: 
-            # Draw a green circle and a red dot at the center on the debug image
-            cv.circle(debug_images["01_original"], (int(x), int(y)), int(radius), (0, 255, 0), 2)
-            cv.circle(debug_images["01_original"], (int(x), int(y)), 3, (0, 0, 255), -1)
+    best_contour = None
+    best_radius = 0
+    best_center = (0, 0)
+    max_area = 0
+    
+    for contour in contours:
+        area = cv.contourArea(contour)
+        if area > 10:  # Minimum area to filter noise
+            ((x, y), radius) = cv.minEnclosingCircle(contour)
+            circle_area = np.pi * (radius ** 2)
             
-            return True, int(x), int(y), radius, debug_images
+            if circle_area > 0:
+                area_ratio = area / circle_area
+                # Area of the contour divided by the area of its minimum enclosing
+                # circle is a simple circularity measure. A perfect circle is ~1.0.
+                img_height = img.shape[0]
+                if area_ratio > 0.8 and area > max_area and y > img_height / 2:
+                    max_area = area
+                    best_contour = contour
+                    best_radius = radius
+                    best_center = (x, y)
+    
+    if best_contour is not None and best_radius > 5:
+        x, y = best_center
+        # Draw a green circle and a red dot at the center on the debug image
+        cv.circle(debug_images["01_original"], (int(x), int(y)), int(best_radius), (0, 255, 0), 2)
+        cv.circle(debug_images["01_original"], (int(x), int(y)), 3, (0, 0, 255), -1)
+        
+        return True, int(x), int(y), best_radius, debug_images
             
     return False, 0, 0, 0, debug_images
 
@@ -128,8 +147,9 @@ def px_to_xy_homography(px_x, px_y, H_matrix):
 
 def find_and_catch():
     """Main mission state machine with two-phase approach"""
+    os.makedirs("golf_test_results", exist_ok=True)
     state = 0
-    arm_reach = 0.26 # middle of the cup is 26cm from the center of the robot
+    arm_reach = 0.23 # middle of the cup is 26cm from the center of the robot
     approach_margin = 0.20 # stop 20cm before arm reach on first pass
     real_x = 0.0
     real_y = 0.0
@@ -153,7 +173,11 @@ def find_and_catch():
                     H_matrix = setup_homography(w, h)
                     print(f"% Homography matrix initialized for {w}x{h} camera.")
 
-                found, px_x, px_y, radius, mask = detect_red_ball(img)
+                found, px_x, px_y, radius, debug_images = detect_red_ball(img)
+                
+                timestamp = imgTime.strftime('%Y%m%d_%H%M%S_%f')[:-3]
+                cv.imwrite(f"golf_test_results/state0_{timestamp}_01_original.jpg", debug_images["01_original"])
+                cv.imwrite(f"golf_test_results/state0_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
                 
                 if found:
                     service.send("robobot/cmd/T0", "leds 16 0 100 0") # Green LED: Found
@@ -204,7 +228,12 @@ def find_and_catch():
             # STATE 10: Re-detect the ball from closer range
             ok, img, imgTime = cam.getImage()
             if ok:
-                found, px_x, px_y, radius, mask = detect_red_ball(img)
+                found, px_x, px_y, radius, debug_images = detect_red_ball(img)
+                
+                timestamp = imgTime.strftime('%Y%m%d_%H%M%S_%f')[:-3]
+                cv.imwrite(f"golf_test_results/state10_{timestamp}_01_original.jpg", debug_images["01_original"])
+                cv.imwrite(f"golf_test_results/state10_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
+
                 if found:
                     target_distance, target_angle, real_x, real_y = px_to_xy_homography(px_x, px_y, H_matrix)
                     drive_dist = target_distance - arm_reach
@@ -256,7 +285,7 @@ def find_and_catch():
         elif state == 3:
             # STATE 3: Catch!
             print("% Catching the ball!")
-            service.send("robobot/cmd/T0", "servo 1 100 400") 
+            service.send("robobot/cmd/T0", "servo 1 150 400") 
             t.sleep(1.5) 
             state = 99
             
