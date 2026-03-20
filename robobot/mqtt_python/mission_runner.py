@@ -29,6 +29,7 @@ class MissionRunner:
         self._crossing_count = 0
         self._on_crossing    = False
         self._crossing_start = None
+        self.stop = False
 
     # time helpers _____________________________
 
@@ -55,7 +56,10 @@ class MissionRunner:
         print(f"% [MissionRunner] Starting task {index}: {task['type']}")
 
     def next_task(self):
-        self.start_task(self.task_index + 1)
+        if self.task_index + 1 < len(self.tasks):
+            self.start_task(self.task_index + 1)
+        else:
+            self.stop = True
 
     # main loop _________________________________
 
@@ -64,7 +68,7 @@ class MissionRunner:
         self.start_task(0)
         service.send("robobot/cmd/T0", "leds 16 0 0 30")   # blue = running
 
-        while not service.stop:
+        while not self.stop and not service.stop:
             current_task = self.tasks[self.task_index]
             task_type    = current_task["type"]
 
@@ -277,7 +281,8 @@ class MissionRunner:
         # ── state 2: follow line ──────────────────────────────────────────────────
         elif self.task_state == 2:
 
-            #print(f"% average={edge.average:.1f}, crossingLineCnt={edge.crossingLineCnt}")
+            if edge.crossingLineCnt>0:
+                print(f"% average={edge.average:.1f}, crossingLineCnt={edge.crossingLineCnt}")
 
             # ── speed control: brake if going too fast ────────────────────────────
             if pose.velocity() > max_speed:
@@ -285,7 +290,6 @@ class MissionRunner:
             else:
                 edge.lineControl(speed, follow_left)
 
-            # ── crossing detection ────────────────────────────────────────────────
             # ── crossing detection ────────────────────────────────────────────────
             if self._on_crossing:
                 if edge.crossingLineCnt < 5:
@@ -297,21 +301,22 @@ class MissionRunner:
                     # actively keep sending straight — overrides any stray followLine() calls
                     service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
 
-            elif edge.crossingLineCnt > 15:
+            elif edge.crossingLineCnt >= 10:
                 if not self._on_crossing:
                     self._crossing_count += 1
-                    self._on_crossing = True
-                    self._crossing_start = datetime.now()
-                    print(f"% [line_follow] Crossing {self._crossing_count} — driving straight through")
-                    edge.crossingOverride = True
-                    edge.lineControl(0, True)
-                    service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
-
-            if stop_at_crossing and self._crossing_count >= crossing_target and not self._on_crossing:
-                edge.crossingOverride = False
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                print("% [line_follow] Target crossing reached — stopping")
-                self.task_state = 3
+                    if self._crossing_count < crossing_target and stop_at_crossing:
+                        self._on_crossing = True
+                        self._crossing_start = datetime.now()
+                        print(f"% [line_follow] Crossing {self._crossing_count} — driving straight through")
+                        edge.crossingOverride = True
+                        edge.lineControl(0, True)
+                        service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+                    else:
+                        edge.crossingOverride = False
+                        edge.lineControl(0, True)
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        print(f"% [line_follow] Target crossing reached — stopping")
+                        self.task_state = 3
 
             # ── timeout ───────────────────────────────────────────────────────────
             if self.task_state == 2 and pose.tripBtimePassed() > timeout:

@@ -111,6 +111,8 @@ class UService:
                 help='Run the custom mission in in SKY114.py')
     self.parser.add_argument('-go', '--golf_catch', action='store_true',
                 help='Run the golf mission')
+    self.parser.add_argument('-cc', '--cube_catch', action='store_true',
+                help='Run the ArUco ID 53 cube catch mission')
     self.parser.add_argument('-bl', '--ball_location', action='store_true',
                 help='Find the location of the ball')
     self.parser.add_argument('-lt', '--linetest', action='store_true')
@@ -132,6 +134,7 @@ class UService:
                              help='Run the mission from start to goal')
     self.parser.add_argument('--mission_gates', action='store_true', 
                              help='Run the mission from start to goal with gates')
+    self.parser.add_argument('--mission_half', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):

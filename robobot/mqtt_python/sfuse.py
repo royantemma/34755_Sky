@@ -231,5 +231,5 @@ class SFuse:
         pass
 
 # create the data object
-viwo = SFuse()
+iwo = SFuse()
 

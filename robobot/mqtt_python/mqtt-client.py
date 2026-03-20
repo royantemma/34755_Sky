@@ -44,6 +44,7 @@ from uservice import service
 # Custom SKY114 Modules
 import SKY114
 import golf
+import cube_catch
 import calibrate_aruco
 import find_aruco
 import calibrate_extrinsics
@@ -234,6 +235,9 @@ def loop():
     SKY114.driveXY()
   elif service.args.cameratest:
     SKY114.cameratest()
+  elif service.args.cube_catch:
+    cube_catch.find_and_catch()
+    return
   elif service.args.golf_catch:
     golf.find_and_catch()
     return
@@ -393,7 +397,12 @@ if __name__ == "__main__":
       #service.setup('10.197.217.80') # Newton
       # service.setup('bode.local') # Bode
       if service.connected:
-        if service.args.mission_gates:
+        if service.args.mission_half:
+          from missions.mission_half import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+          golf.find_and_catch()
+        elif service.args.mission_gates:
           from missions.mission_gates import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
