@@ -32,6 +32,7 @@ import cv2 as cv
 from datetime import *
 from setproctitle import setproctitle
 # robot function
+import line_vision
 from spose import pose
 from sir import ir
 from srobot import robot
@@ -265,6 +266,8 @@ def loop():
     return
   elif service.args.usestate > 0:
     state = service.args.usestate
+  elif service.args.line_vision:
+    line_vision.line_follow_vision()
 
   #elif service.args.base:
     #SKY114.base()
@@ -399,6 +402,11 @@ if __name__ == "__main__":
       if service.connected:
         if service.args.mission_half:
           from missions.mission_half import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+          golf.find_and_catch()
+        elif service.args.mission_half_HALF:
+          from missions.mission_half_HALF import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
           golf.find_and_catch()

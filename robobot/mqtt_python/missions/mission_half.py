@@ -27,10 +27,21 @@ TASKS = [
         "timeout":  200,
     },
 
+    # # Turn to heading 
+    # {
+    #     "type":      "turn_to_heading",
+    #     "heading_deg": -8, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+    #     "speed":     0.4,
+    #     "tolerance_deg": 2,
+    #     "timeout":   200,
+    # },
+
+    ### Correction
+
     # Turn to heading 
     {
         "type":      "turn_to_heading",
-        "heading_deg": -8, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+        "heading_deg": -18, # 0 is the heading at the beginning ot the mission, so this is a relative turn
         "speed":     0.4,
         "tolerance_deg": 2,
         "timeout":   200,
@@ -39,7 +50,26 @@ TASKS = [
     # Drive straight
     {
         "type":     "drive_straight",
-        "speed":    0.15,
+        "speed":    0.1,
+        "distance": 0.2,
+        "timeout":  200,
+    },
+
+    # Turn to heading 
+    {
+        "type":      "turn_to_heading",
+        "heading_deg": 10, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+        "speed":     0.4,
+        "tolerance_deg": 2,
+        "timeout":   200,
+    },
+
+    ### Correction
+
+    # Drive straight
+    {
+        "type":     "drive_straight",
+        "speed":    0.10, # 0.15,
         "distance": 0.2,
         "timeout":  200,
     },

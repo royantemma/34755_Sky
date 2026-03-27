@@ -149,6 +149,7 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 main_output = stream_manager.add_stream("main")
 cameratest_output = stream_manager.add_stream("cameratest")
+line_vision_stream_output = stream_manager.add_stream("line_vision")
 
 def process_frames():
     global latest_frame
@@ -250,7 +251,7 @@ def aruco_worker():
                     })
                     
                     # Target specific ID 53
-                    if marker_id == 53:
+                    if marker_id == 53 or marker_id == 20:
                         # Center of the cube is 30mm behind the marker surface in X axis
                         R, _ = cv.Rodrigues(rvec)
                         

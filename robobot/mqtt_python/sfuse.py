@@ -3,6 +3,8 @@ from datetime import *
 from threading import Thread
 import numpy as np
 
+ENABLE_LOGGING = True
+
 class SFuse:
     #
     motorVelocity = [0,0] # in radians/sec
@@ -36,6 +38,219 @@ class SFuse:
     poseTime = datetime.now()
     poseCnt = 0
     poseInterval = 1000 # sec
+
+    # Initialize Kalman
+    # Delta_t = 12 * 10e-3
+    X = np.array([0, 0, 0, 1.0, 0, 0, 0]) # x y z q_wxyz
+    P = 0.0001*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
+    acc_var = ((2.409e-01)/6)**2
+    gyro_var = 1*(( np.pi /180) * (0.07) ) 
+    vb_var = 0.001
+    Sigma_u = np.diag([vb_var, gyro_var,gyro_var,gyro_var]) # Process Noise Covariance
+    R = np.eye(6)
+    R[0:3, 0:3] *= 0.00000001 # Noise Pos
+    R[3:6, 3:6] *= acc_var  # Noise in Acc
+
+    fused_roll = 0
+    fused_pitch = 0
+    fused_yaw = 0
+    fused_x = 0
+    fused_y = 0
+    fused_z = 0
+
+    # Logging
+    log_file_name = "robot_data.csv"
+    log_initialized = False
+
+    def predict(self, vb, omega, dt):
+      
+      qw, qx, qy, qz = self.X[3:]
+      
+      self.X[0] += (1 - 2*(qy**2 + qz**2)) * vb * dt
+      self.X[1] += 2*(qx*qy + qw*qz) * vb * dt
+      self.X[2] += 2*(qx*qz - qw*qy) * vb * dt
+
+      # Quaternion-Update: q_new = q + 0.5 * Omega * q * dt
+      ox, oy, oz = omega
+      dq = 0.5 * np.array([
+          -ox*qx - oy*qy - oz*qz,
+          ox*qw + oz*qy - oy*qz,
+          oy*qw - oz*qx + ox*qz,
+          oz*qw + oy*qx - ox*qy
+      ]) * dt
+      self.X[3:] += dq
+      self.X[3:] /= np.linalg.norm(self.X[3:]) # Normalize to get valid quaternion
+
+      F = self.get_F(vb, omega, dt)
+      W = self.get_W(dt)
+      Q = W @ self.Sigma_u @ W.T
+
+      self.P = F @ self.P @ F.T + Q
+
+    def correct(self, acc_meas, pos_meas=None):
+     
+      for i in range(3):
+        if pos_meas is not None and pos_meas[i] is not None:
+          self.R[i, i] = 0.00000001 # Very low noise for position measurements
+        else:
+          self.R[i, i] = 10 # High noise for missing position measurements
+          pos_meas[i] = self.X[i] # Use predicted position as measurement if not provided
+
+      z_t = np.concatenate([pos_meas, acc_meas])
+      
+      H = self.get_H()
+      
+      v_t = z_t - self.get_h()
+      
+      S_t = H @ self.P @ H.T + self.R
+      K_t = self.P @ H.T @ np.linalg.inv(S_t)
+
+      self.X = self.X + K_t @ v_t
+      self.P = (np.eye(7) - K_t @ H) @ self.P
+      
+      self.X[3:] /= np.linalg.norm(self.X[3:])
+    
+    def get_F(self, vb, omega, dt):
+    
+      qw, qx, qy, qz = self.X[3:7]
+      ox, oy, oz = omega  
+
+      s1 = -0.5 * dt * oz
+      s2 = -0.5 * dt * oy
+      s3 = -0.5 * dt * ox
+      
+      # Matrix F
+      F = np.array([
+          [1, 0, 0, 0, 0, -4*dt*qy*vb, -4*dt*qz*vb],
+          [0, 1, 0, 2*dt*qz*vb, 2*dt*qy*vb, 2*dt*qx*vb, 2*dt*qw*vb],
+          [0, 0, 1, -2*dt*qy*vb, 2*dt*qz*vb, -2*dt*qw*vb, 2*dt*qx*vb],
+          [0, 0, 0, 1, s3, s2, s1],
+          [0, 0, 0, 0.5*dt*ox, 1, 0.5*dt*oz, s2],
+          [0, 0, 0, 0.5*dt*oy, s1, 1, 0.5*dt*ox],
+          [0, 0, 0, 0.5*dt*oz, 0.5*dt*oy, s3, 1]
+      ])
+      return F
+
+    def get_W(self, dt):
+      
+      qw, qx, qy, qz = self.X[3:7]
+      
+      s1 = -0.5 * dt * qz
+      s2 = -0.5 * dt * qy
+      s3 = -0.5 * dt * qx
+      
+      # Matrix W       
+      W = np.array([
+          [-dt * (2*qy**2 + 2*qz**2 - 1), 0, 0, 0],
+          [ dt * (2*qw*qz + 2*qx*qy),      0, 0, 0],
+          [-dt * (2*qw*qy - 2*qx*qz),      0, 0, 0],
+          [0, s3, s2, s1],
+          [0, 0.5*dt*qw, s1, 0.5*dt*qy],
+          [0, 0.5*dt*qz, 0.5*dt*qw, s3],
+          [0, s2, 0.5*dt*qx, 0.5*dt*qw]
+      ])
+      return W
+
+    def get_h(self, g=[0, 0, 1]):
+      x, y, z, qw, qx, qy, qz = self.X
+      gx, gy, gz = g
+      
+      ax_exp = 2*gy*(qw*qz + qx*qy) - 2*gz*(qw*qy - qx*qz) - 2*gx*(qy**2 + qz**2 - 0.5)
+      ay_exp = 2*gz*(qw*qx + qy*qz) - 2*gx*(qw*qz - qx*qy) - 2*gy*(qx**2 + qz**2 - 0.5)
+      az_exp = 2*gx*(qw*qy + qx*qz) - 2*gy*(qw*qx - qy*qz) - 2*gz*(qx**2 + qy**2 - 0.5)
+      
+      return np.array([x, y, z, ax_exp, ay_exp, az_exp])
+
+    def get_H(self, g=[0, 0, 1]):
+      qw, qx, qy, qz = self.X[3:7]
+      gx, gy, gz = g
+      
+      H = np.zeros((6, 7))
+      
+      H[0:3, 0:3] = np.eye(3)
+      
+      H[3, 3] =  2*gy*qz - 2*gz*qy
+      H[3, 4] =  2*gy*qy + 2*gz*qz
+      H[3, 5] =  2*gy*qx - 4*gx*qy - 2*gz*qw
+      H[3, 6] =  2*gy*qw - 4*gx*qz + 2*gz*qx
+      
+      H[4, 3] =  2*gz*qx - 2*gx*qz
+      H[4, 4] =  2*gx*qy - 4*gy*qx + 2*gz*qw
+      H[4, 5] =  2*gx*qx + 2*gz*qz
+      H[4, 6] =  2*gz*qy - 4*gy*qz - 2*gx*qw
+      
+      H[5, 3] =  2*gx*qy - 2*gy*qx
+      H[5, 4] =  2*gx*qz - 2*gy*qw - 4*gz*qx
+      H[5, 5] =  2*gx*qw + 2*gy*qz - 4*gz*qy
+      H[5, 6] =  2*gx*qx + 2*gy*qy
+      
+      return H
+
+    def fuse(self, acc, gyro, dt, pos_meas=None):
+
+      if not self.log_initialized:
+        with open(self.log_file_name, 'w') as f:
+            f.write("dt,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,fused_x,fused_y,fused_z,roll,pitch,yaw,pose_x,pose_y,pose_yaw\n")
+        self.log_initialized = True
+
+      vb = self.velocity()
+      gyro = np.array(gyro, dtype='float64') - np.array([-0.1834, -0.1299, -0.1700])
+      # Convert to radians/sec and apply bias correction
+      omega = np.deg2rad(gyro) 
+
+      #print(f"vb: {vb} m/s, omega: {omega} rad/s, dt: {dt} sec")
+      acc_meas = np.array(acc, dtype='float64')
+      #print(acc_meas)
+      
+      # Normalize accelerometer reading & corrct bias
+      acc_meas = np.array([
+        acc_meas[0] - (-0.0149), # X-Bias 
+        acc_meas[1] - (-0.0047), # Y-Bias 
+        acc_meas[2] / 1.2816     # Z-Scale
+      ])
+
+      norm = np.linalg.norm(acc_meas)
+      if norm > 1e-6:
+          acc_meas /= norm
+
+          #print(acc_meas)
+      
+      pos_meas = [None, None, None] if pos_meas is None else pos_meas
+
+      self.predict(vb, omega, dt)
+      if norm > 1e-3: 
+        self.correct(acc_meas, pos_meas=pos_meas)
+      else:
+          print("Warning: Skipping correction due to zero acceleration")
+      #self.correct(acc_meas, pos_meas=None)
+
+      self.fused_x = self.X[0] # x
+      self.fused_y = self.X[1] # y
+      self.fused_z = self.X[2] # z
+      
+      qw, qx, qy, qz = self.X[3:]
+      self.fused_yaw = np.rad2deg(np.arctan2(2*(qw*qz + qx*qy), 1 - 2*(qy**2 + qz**2)))
+      self.fused_pitch = np.rad2deg(np.arcsin(2*(qw*qy - qz*qx)))
+      self.fused_roll = np.rad2deg(np.arctan2(2*(qw*qx + qy*qz), 1 - 2*(qx**2 + qy**2)))
+      
+      try:
+
+        if ENABLE_LOGGING:
+          data = [dt, *acc, *gyro, self.fused_x, self.fused_y, self.fused_z, 
+                  self.fused_roll, self.fused_pitch, self.fused_yaw, self.pose[0], self.pose[1], self.pose[2]]
+          
+          log_line = ",".join(map(str, data))
+          
+          with open(self.log_file_name, 'a') as f:
+              f.write(log_line + "\n")
+      except Exception as e:
+        print(f"Logging Error: {e}")
+
+      from uservice import service
+      service.send("robobot/iwo/pos",f"{self.fused_x} {self.fused_y} {self.fused_z}")
+      service.send("robobot/iwo/ang",f"{self.fused_roll} {self.fused_pitch} {self.fused_yaw}")
+      service.send("robobot/map",f"{self.fused_x} {self.fused_y} {self.fused_yaw}")
+
 
     def velocity(self):
       # meters per second

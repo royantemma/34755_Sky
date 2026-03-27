@@ -91,6 +91,14 @@ class SEdge:
     lostLineCnt = 0
     u = 0 # turn rate control signal
 
+    # Custom PID
+    CUSTOM_CONTROL_ENABLED = False
+    e_prev = 0 # Previous error
+    e_sum = 0
+    Kp = 1
+    Kd = 0.2
+    Ki = 0
+
 
     ##########################################################
 
@@ -409,10 +417,21 @@ class SEdge:
       # To correct we need a negative turn rate (CV),
       # so sign of e is OK
       #
-      # calculate action (P-Lead controller)
-      self.u = self.lineKp * e; # error times Kp
-      # Lead filter
-      self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      if not self.CUSTOM_CONTROL_ENABLED:
+        # calculate action (P-Lead controller)
+        self.u = self.lineKp * e; # error times Kp
+        # Lead filter
+        self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      else:
+        T_s = self.edge_nInterval / 1000.0 
+        P = self.Kp * e
+        self.sum_e += e * T_s
+        I = self.Ki * self.sum_e
+        D = self.Kd * (e-self.e_prev)/T_s
+        self.e_prev = e
+
+        self.lineY = P + I + D
+      
       #
       if self.lineY > 4:
         self.lineY = 4
