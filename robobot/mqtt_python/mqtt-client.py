@@ -268,6 +268,7 @@ def loop():
     state = service.args.usestate
   elif service.args.line_vision:
     line_vision.line_follow_vision()
+    return
 
   #elif service.args.base:
     #SKY114.base()

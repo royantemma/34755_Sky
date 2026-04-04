@@ -50,12 +50,13 @@ def detect_cube_center_id53(img, mtx, dist):
     cube_centers_rob = []
     
     # Camera Extrinsics
-    theta = np.radians(5.36)
+    theta = np.radians(5.36) # Pitch (around x-axis)
+    phi = np.radians(2.12)   # Tilt around y-axis (towards the right). Change sign if direction is wrong.
     cam_z_offset = 189.2
     
     # Offset of the cube center from the marker surface (measured in meters)
     # The user noted "30mm (x axis) behind the center"
-    offset_marker_frame = np.array([[0.030], [0.0], [0.0]]) # Or negative if it's the other direction
+    offset_marker_frame = np.array([[0.0], [0.0], [-0.030]]) # Or negative if it's the other direction
 
     for i in range(len(ids)):
         if ids[i][0] == 53:
@@ -68,6 +69,12 @@ def detect_cube_center_id53(img, mtx, dist):
                 
                 cx, cy, cz = cube_tvec
                 cx_mm, cy_mm, cz_mm = cx * 1000, cy * 1000, cz * 1000
+                
+                # Apply Y-axis tilt (Yaw)
+                cx_mm_rot = cx_mm * np.cos(phi) + cz_mm * np.sin(phi)
+                cz_mm_rot = -cx_mm * np.sin(phi) + cz_mm * np.cos(phi)
+                cx_mm = cx_mm_rot
+                cz_mm = cz_mm_rot
                 
                 # Transform to Robot Frame (Origin on ground)
                 x_rob = cx_mm
@@ -94,8 +101,9 @@ def detect_cube_center_id53(img, mtx, dist):
 def find_and_catch():
     """Main mission state machine with two-phase approach for ArUco Cube ID 53"""
     state = 0
-    arm_reach = 0.26 # middle of the cup is 26cm from the center of the robot
-    approach_margin = 0.20 # stop 20cm before arm reach on first pass
+    #arm_reach = 0.27 # middle of the cup is 28cm from the center of the robot
+    arm_reach = 0.32
+    approach_margin = 0.30 # stop 20cm before arm reach on first pass
     
     real_x = 0.0
     real_y = 0.0
@@ -157,7 +165,7 @@ def find_and_catch():
                 t.sleep(0.3)
                 state = 10
             else:
-                service.send("robobot/cmd/ti", "rc 0.2 0.0")
+                service.send("robobot/cmd/ti", "rc 0.1 0.0")
                 if pose.tripB >= drive_dist:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
                     t.sleep(0.3)
@@ -205,7 +213,7 @@ def find_and_catch():
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 state = 3
             else:
-                service.send("robobot/cmd/ti", "rc 0.15 0.0") 
+                service.send("robobot/cmd/ti", "rc 0.05 0.0") 
                 if pose.tripB >= drive_dist:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
                     state = 3

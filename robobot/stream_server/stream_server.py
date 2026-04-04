@@ -235,9 +235,16 @@ def aruco_worker():
                     x, y, z = tvec.flatten()
                     x_mm, y_mm, z_mm = x * 1000, y * 1000, z * 1000
                     
-                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Z = 189.2 mm)
-                    theta = np.radians(5.36)
+                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Y-tilt = 2.12 deg, Z = 189.2 mm)
+                    theta = np.radians(5.36) # Pitch (around x-axis)
+                    phi = np.radians(2.12)   # Tilt around y-axis (towards the right)
                     cam_z_offset = 189.2
+                    
+                    # Apply Y-axis tilt (Yaw)
+                    x_mm_rot = x_mm * np.cos(phi) + z_mm * np.sin(phi)
+                    z_mm_rot = -x_mm * np.sin(phi) + z_mm * np.cos(phi)
+                    x_mm = x_mm_rot
+                    z_mm = z_mm_rot
                     
                     x_rob = x_mm
                     y_rob = z_mm * np.cos(theta) - y_mm * np.sin(theta)
@@ -256,11 +263,17 @@ def aruco_worker():
                         R, _ = cv.Rodrigues(rvec)
                         
                         # Apply 30mm offset into the X-plane
-                        offset_cam = R @ np.array([[0.030], [0.0], [0.0]])
+                        offset_cam = R @ np.array([[0.0], [0.0], [-0.030]])
                         
                         cube_tvec = tvec.flatten() + offset_cam.flatten()
                         cx, cy, cz = cube_tvec
                         cx_mm, cy_mm, cz_mm = cx * 1000, cy * 1000, cz * 1000
+                        
+                        # # Apply Y-axis tilt (Yaw)
+                        # cx_mm_rot = cx_mm * np.cos(phi) + cz_mm * np.sin(phi)
+                        # cz_mm_rot = -cx_mm * np.sin(phi) + cz_mm * np.cos(phi)
+                        # cx_mm = cx_mm_rot
+                        # cz_mm = cz_mm_rot
                         
                         cx_rob = cx_mm
                         cy_rob = cz_mm * np.cos(theta) - cy_mm * np.sin(theta)

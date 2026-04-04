@@ -88,37 +88,43 @@ def line_follow_vision():
     cap = cv.VideoCapture("http://localhost:7123/stream/main")
     
     def process_and_stream():
-      global latest_jpeg
-      print("Checking main stream connection...")
-      if not cap.isOpened():
-        print("ERROR: Could not open the main stream at localhost:7123")
-        return
+        global latest_jpeg
+        print("Checking main stream connection...")
+        if not cap.isOpened():
+            print("ERROR: Could not open the main stream at localhost:7123")
+            return
 
-      while True:
-        ret, frame = cap.read()
-        if ret and frame is not None:
-            # --- YOUR VISION CODE GOES HERE ---
-            image, heading = process_frame(frame)
-            vision_steer_robot(heading)
+        prev_time = t.perf_counter()
 
-            # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
-            thresh_bgr = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
-            jpeg = simplejpeg.encode_jpeg(thresh_bgr, quality=80, colorspace='BGR')
+        while True:
+            ret, frame = cap.read()
+            current_time = t.perf_counter()
+            if ret and frame is not None:
+                # --- YOUR VISION CODE GOES HERE ---
+                image, heading = process_frame(frame, percentage_width=80)
+                vision_steer_robot(heading, forward_speed=0.02, turn_sensitivity=0.01)
 
-            # 3. Share the frame with the web server
-            with frame_condition:
-                latest_jpeg = jpeg
-                frame_condition.notify_all()
-        else:
-            print("Warning: Failed to grab frame from main stream")
-        t.sleep(0.05)
+                # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
+                thresh_bgr = image
+                jpeg = simplejpeg.encode_jpeg(thresh_bgr, quality=80, colorspace='BGR')
+
+                # 3. Share the frame with the web server
+                with frame_condition:
+                    latest_jpeg = jpeg
+                    frame_condition.notify_all()
+            else:
+                print("Warning: Failed to grab frame from main stream")
+            print(f"Elapsed time: {current_time - prev_time:.6f}")
+            prev_time = current_time
+            # t.sleep(0.05)
+
 
     # Start the OpenCV processing in the background
     threading.Thread(target=process_and_stream, daemon=True).start()
 
-    # Start the mini web server on port 7125
+    # Start the mini web server on port 7124
     address = ('0.0.0.0', 7124)
-    print("Starting OpenCV test stream on port 7125...")
+    print("Starting OpenCV test stream on port 7124...")
     httpd = ThreadedHTTPServer(address, TestStreamHandler)
     try:
         httpd.serve_forever()
@@ -129,19 +135,28 @@ def line_follow_vision():
 
 def process_frame(img, percentage_height=40, percentage_width=100):
     # Choose relevant portion of the image and convert to grayscale
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    h, w = gray.shape[:2]
+    h, w = img.shape[:2]
     h_relevant = (h * percentage_height) // 100
     w_relevant = (w * percentage_width) // 100
     x_start = (w - w_relevant) // 2
-    roi = gray[-h_relevant:, x_start:x_start + w_relevant]
-    _, frame = cv.threshold(roi, 190, 255, cv.THRESH_BINARY)
 
-    # Implement here dilation and erosion if needed
+    roi = img[-h_relevant:, x_start:x_start + w_relevant]
+    gray = cv.cvtColor(roi, cv.COLOR_BGR2GRAY)
+    _ , frame_gray = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)
+    # frame_gray = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 10)
+
+    # Only keep large areas
+    num_labels, labels, stats, _ = cv.connectedComponentsWithStats(frame_gray)
+    clean = np.zeros_like(frame_gray)
+    for i in range(1, num_labels):  # skip background
+        area = stats[i, cv.CC_STAT_AREA]
+        if area > 200:
+            clean[labels == i] = 255
+    frame = cv.cvtColor(clean, cv.COLOR_GRAY2BGR)
 
     # Detect the line
     indices = np.arange(frame.shape[1])
-    weights = frame / 255  # 0 or 1
+    weights = clean / 255  # 0 or 1
     sums = np.sum(weights, axis=1)
     valid_rows = sums > 0  # Ignore rows with no white pixels
 
@@ -156,11 +171,11 @@ def process_frame(img, percentage_height=40, percentage_width=100):
         # Draw smooth continuous red line along the center
         points = [(int(row_centers[i]), valid_indices[i]) for i in range(len(valid_indices))]
         for i in range(1, len(points)):
-            cv.line(color_roi, points[i-1], points[i], (0, 0, 255), 2)  # thickness=2
+            cv.line(frame, points[i-1], points[i], (0, 0, 255), 2)  # thickness=2
 
     return frame, heading
 
 
-def vision_steer_robot(heading, forward_speed=0.2, turn_sensitivity=0.005):
+def vision_steer_robot(heading, forward_speed=0.2, turn_sensitivity=0.0025):
     turn_rate = -heading * turn_sensitivity
     service.send("robobot/cmd/ti/","rc {} {}".format(forward_speed, turn_rate)) # (forward m/s, turn-rate rad/sec)
