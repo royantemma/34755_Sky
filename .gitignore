@@ -2,3 +2,4 @@ log/
 *.log
 **/**/build/
 
+robobot/stream_server/stream_server.err
