@@ -104,6 +104,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, server.HTTPServer):
 def cameratest():
     #print("Starting camera test stream...")
     # 1. Connect to the robot's main camera stream
+    print("hello cameratest ----------------------------------")
     cap = cv.VideoCapture("http://localhost:7123/stream/main")
     
     def process_and_stream():
@@ -117,10 +118,13 @@ def cameratest():
         ret, frame = cap.read()
         if ret and frame is not None:
           # --- YOUR VISION CODE GOES HERE ---
-          cv.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
+          #c v.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
+          gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)  
+          _, thresh = cv.threshold(gray, 190, 255, cv.THRESH_BINARY)
+          thresh_bgr = cv.cvtColor(thresh, cv.COLOR_GRAY2BGR)
 
           # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
-          jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='BGR')
+          jpeg = simplejpeg.encode_jpeg(thresh_bgr, quality=80, colorspace='BGR')
 
           # 3. Share the frame with the web server
           with frame_condition:
@@ -128,13 +132,13 @@ def cameratest():
               frame_condition.notify_all()
         else:
             print("Warning: Failed to grab frame from main stream")
-        t.sleep(0.2)
+        t.sleep(0.05)
 
     # Start the OpenCV processing in the background
     threading.Thread(target=process_and_stream, daemon=True).start()
 
     # Start the mini web server on port 7124
-    address = ('0.0.0.0', 7124)
+    address = ('0.0.0.0', 7125)
     print("Starting OpenCV test stream on port 7124...")
     httpd = ThreadedHTTPServer(address, TestStreamHandler)
     try:
@@ -233,39 +237,6 @@ def LineTest():
   service.send("robobot/cmd/T0","leds 16 0 0 0") # end
   print("% Driving to line ------------------------- end")
 
-####################################################################
-
-# def cameratest():
-#   cap = cv.VideoCapture("http://localhost:7123/stream/main")
-
-#   ret, frame = cap.read()
-#   print("$$$$$$$$$$$$$")
-#   print(ret)
-#   print("stream_manager id:", id(stream_manager))
-
-
-#   cameratest_output = stream_manager.get_output("cameratest")
-#   print(cameratest_output)
-
-#   def push_processed_images():
-#     while True:
-#       # Generate or process any image you like
-#       #ok, img, frameTime = getImage()
-#       #print(str(i) + ', ' + str(ok))
-#       ret, frame = cap.read()
-#       if ret and frame is not None:
-#       #if ok and img is not None:
-#         print("^^^^^^^^ thread started ^^^^^^^^^^^")
-#         cv.putText(frame, "Custom Image Stream", (50, 300), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
-
-#         # Encode to JPEG
-#         jpeg = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
-#         cameratest_output.write(jpeg)
-
-#       t.sleep(0.2)  # ~5 FPS
-
-#   threading.Thread(target=push_processed_images, daemon=True).start()
-#   # service.stop = True
 
 
 

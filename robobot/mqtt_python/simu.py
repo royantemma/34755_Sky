@@ -25,11 +25,13 @@
 import time as t
 from datetime import *
 
+
+
 class SImu:
 
     gyro = [0, 0, 0]
     gyroUpdCnt = 0
-    gyroTime =datetime.now()
+    gyroTime = datetime.now()
     gyroInterval = 1
 
     acc  = [0, 0, 0]
@@ -101,6 +103,14 @@ class SImu:
               self.gyroInterval = (self.gyroInterval * 99 + (t1 -t0).total_seconds()) / 100
             self.gyroUpdCnt += 1
             # self.print()
+
+            from sfuse import iwo
+            if iwo.wheelVelocityCnt > 0:
+              dt = (t1 - t0).total_seconds()
+              if 0 < dt < 0.5: # Handle if t0 lies in the past
+                  iwo.fuse(self.acc, self.gyro, dt)
+
+
         elif topic == "T0/acc":
           gg = msg.split(" ")
           if (len(gg) >= 4):

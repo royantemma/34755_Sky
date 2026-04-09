@@ -60,6 +60,10 @@
                     <tr><td colspan="4">No markers detected</td></tr>
                 </tbody>
             </table>
+            
+            <div id="cube-center-info" style="margin-top: 15px; padding: 10px; background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 5px; font-weight: bold; display: none;">
+                Cube (ID 53) Center (Avg): <span id="cube-center-coords">N/A</span>
+            </div>
         </div>
     </div>
 
@@ -124,6 +128,15 @@
                         `).join('');
                     } else {
                         tbody.innerHTML = '<tr><td colspan="4">No markers detected</td></tr>';
+                    }
+                    
+                    const cubeInfo = document.getElementById('cube-center-info');
+                    const cubeCoords = document.getElementById('cube-center-coords');
+                    if (data.cube_center) {
+                        cubeInfo.style.display = 'block';
+                        cubeCoords.innerText = `X=${data.cube_center.x} mm, Y=${data.cube_center.y} mm, Z=${data.cube_center.z} mm`;
+                    } else {
+                        cubeInfo.style.display = 'none';
                     }
                 })
                 .catch(err => console.error("Error fetching ArUco data:", err));

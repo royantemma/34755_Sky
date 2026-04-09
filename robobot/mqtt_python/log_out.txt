@@ -1198,3 +1198,33 @@ Started 2026-03-05 17:50:45.589854
 % logfile closed
 Ended at 2026-03-05 17:50:56.733533
 % Main Terminated
+% BCM GPIO found OK
+% Starting
+Started 2026-03-27 14:25:40.037902
+subscribed to robobot/controller
+% GPIO setup start
+% GPIO setup finished
+% ConnectedOut to MQTT Broker localhost on 1883
+% Connected to MQTT Broker localhost on 1883
+% I am not robot master, quitting!
+% Robot (srobot.py) data stream OK; 9 loops.
+% IR sensor (sir.py):: got data stream; 0 loops.
+% Service - thread stopped
+# Ruta -----------------sedge.setup start
+% Edge (sedge.py):: turns on line sensor
+% (uservice.py) Setup finished with connected=True
+% Starting at state 0
+% Camera available: size (616x820, 3 channels)
+% shutting down
+% Service - thread stopped
+% Pose terminated
+% Robot terminated
+% Pose terminated
+% IR terminated
+% Edge (sedge.py):: turn off line sensor
+% Edge (sedge.py):: terminated
+% Camera terminated
+% GPIO terminated
+% logfile closed
+Ended at 2026-03-27 14:25:41.305078
+% Main Terminated

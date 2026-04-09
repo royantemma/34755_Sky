@@ -45,6 +45,8 @@ from sgpio import gpio
 from ulog import flog
 import psutil
 
+from sfuse import iwo
+
 import globals
 
 class UService:
@@ -111,6 +113,8 @@ class UService:
                 help='Run the custom mission in in SKY114.py')
     self.parser.add_argument('-go', '--golf_catch', action='store_true',
                 help='Run the golf mission')
+    self.parser.add_argument('-cc', '--cube_catch', action='store_true',
+                help='Run the ArUco ID 53 cube catch mission')
     self.parser.add_argument('-bl', '--ball_location', action='store_true',
                 help='Find the location of the ball')
     self.parser.add_argument('-lt', '--linetest', action='store_true')
@@ -132,6 +136,10 @@ class UService:
                              help='Run the mission from start to goal')
     self.parser.add_argument('--mission_gates', action='store_true', 
                              help='Run the mission from start to goal with gates')
+    self.parser.add_argument('--mission_half', action='store_true')
+    self.parser.add_argument('--mission_half_HALF', action='store_true')
+    self.parser.add_argument('--line_vision', action='store_true',
+                             help='Run the line following with vision (might be used for other vision tests later)')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):
@@ -160,6 +168,9 @@ class UService:
     imu.setup()
     cam.setup()
     edge.setup()
+
+    iwo.setup()
+
     print(f"% (uservice.py) Setup finished with connected={self.connected}")
     if self.args.level:
       print(f"% Command line argument '--level'={self.args.level} but not implemented")
@@ -286,6 +297,7 @@ class UService:
       if imu.decode(subtopic, msg):
         pass
       elif pose.decode(subtopic, msg):
+        iwo.decode(subtopic,msg) # Henrik added this
         pass
       elif ir.decode(subtopic, msg):
         pass

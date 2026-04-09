@@ -49,7 +49,7 @@ class SEdge:
     # line detection levels
     lineValidThreshold = 700 # 1000 is calibrated white # RR change here to determine which sensor readings after normalization are invalid (too high)
     # RR lineValid = high >= lineValidThreshold; (if highest current reading above threshold)
-    crossingThreshold = 400 # average above this is assumed to be crossing line
+    crossingThreshold = 500 # average above this is assumed to be crossing line
     crossingOverride = False  # when True, followLine() is suppressed
     # level for relevant white values
     # low = lineValidThreshold - 100;
@@ -71,10 +71,11 @@ class SEdge:
     #
     # follow line controller
     lineCtrl = False # private
-    # try with a P-Lead controller
-    lineKp = 1.0 # 5  (rad/s per sensor value)
+    # try with a P-Lead controller 
+    # 1.0 / 0.8 / 0.15
+    lineKp = 1 # 5  (rad/s per sensor value)
     lineTauZ = 0.8 # 0.8 (second)
-    lineTauP = 0.25 # 0.15 (second)
+    lineTauP = 0.25 #0.3 # 0.15 (second)
     # Lead pre-calculated factors
     tauP2pT = 1.0
     tauP2mT = 0.0
@@ -89,6 +90,14 @@ class SEdge:
     topicCmdT0 = ""
     lostLineCnt = 0
     u = 0 # turn rate control signal
+
+    # Custom PID
+    CUSTOM_CONTROL_ENABLED = False
+    e_prev = 0 # Previous error
+    e_sum = 0
+    Kp = 1
+    Kd = 0.2
+    Ki = 0
 
 
     ##########################################################
@@ -408,10 +417,21 @@ class SEdge:
       # To correct we need a negative turn rate (CV),
       # so sign of e is OK
       #
-      # calculate action (P-Lead controller)
-      self.u = self.lineKp * e; # error times Kp
-      # Lead filter
-      self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      if not self.CUSTOM_CONTROL_ENABLED:
+        # calculate action (P-Lead controller)
+        self.u = self.lineKp * e; # error times Kp
+        # Lead filter
+        self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      else:
+        T_s = self.edge_nInterval / 1000.0 
+        P = self.Kp * e
+        self.sum_e += e * T_s
+        I = self.Ki * self.sum_e
+        D = self.Kd * (e-self.e_prev)/T_s
+        self.e_prev = e
+
+        self.lineY = P + I + D
+      
       #
       if self.lineY > 4:
         self.lineY = 4
@@ -427,8 +447,8 @@ class SEdge:
       # debug end
       service.send("robobot/cmd/ti", par) # send new turn command, maintaining velocity
       # debug print
-      if self.edge_nUpdCnt % 20 == 0: #True: ##RR Change the condition to adjust how often info is published to not flood the output
-        print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f}, cnt {self.lineValidCnt}, -> {par}")
+      #if self.edge_nUpdCnt % 20 == 0: #True: ##RR Change the condition to adjust how often info is published to not flood the output
+        #print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f}, cnt {self.lineValidCnt}, -> {par}")
 
     ##########################################################
 

@@ -5,11 +5,13 @@ import tty
 import time
 from uservice import service
 from spose import pose
+from sfuse import iwo
+import numpy as np
 
 import globals
 
 move_speed = 0.15  # m/s
-turn_speed = 0.35   # rad/s
+turn_speed = 0.15   # rad/s
 timeout = 0.1      # Seconds without input before assuming key release
 
 def get_key(settings, timeout):
@@ -58,11 +60,11 @@ def controller(use_mqtt=False):
         target_vel = 0.0
         target_turn = 0.0
         while not service.stop:
-            # key = get_key(settings, timeout)
-            key = globals.manual_controller_input
+            key = get_key(settings, timeout)
+            #key = globals.manual_controller_input
 
             
-            
+            #print(f"IWO - x: {iwo.fused_x} - y: {iwo.fused_y} - z: {iwo.fused_z} - yaw deg: {iwo.fused_yaw}")
             # --- Drive Controls ---
             if key.lower() == 'w':
                 target_vel += move_speed

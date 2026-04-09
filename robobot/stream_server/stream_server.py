@@ -103,7 +103,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif self.path == '/api/aruco/data':
             response = {
                 'enabled': aruco_enabled,
-                'markers': aruco_data
+                'markers': aruco_data.get('markers', []) if isinstance(aruco_data, dict) else aruco_data,
+                'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None
             }
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -148,6 +149,7 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 main_output = stream_manager.add_stream("main")
 cameratest_output = stream_manager.add_stream("cameratest")
+line_vision_stream_output = stream_manager.add_stream("line_vision")
 
 def process_frames():
     global latest_frame
@@ -213,6 +215,7 @@ def aruco_worker():
             frame = latest_frame.copy()
             
         current_data = []
+        cube_centers_data = []
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         
         try:
@@ -232,9 +235,16 @@ def aruco_worker():
                     x, y, z = tvec.flatten()
                     x_mm, y_mm, z_mm = x * 1000, y * 1000, z * 1000
                     
-                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Z = 189.2 mm)
-                    theta = np.radians(5.36)
+                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Y-tilt = 2.12 deg, Z = 189.2 mm)
+                    theta = np.radians(5.36) # Pitch (around x-axis)
+                    phi = np.radians(2.12)   # Tilt around y-axis (towards the right)
                     cam_z_offset = 189.2
+                    
+                    # Apply Y-axis tilt (Yaw)
+                    x_mm_rot = x_mm * np.cos(phi) + z_mm * np.sin(phi)
+                    z_mm_rot = -x_mm * np.sin(phi) + z_mm * np.cos(phi)
+                    x_mm = x_mm_rot
+                    z_mm = z_mm_rot
                     
                     x_rob = x_mm
                     y_rob = z_mm * np.cos(theta) - y_mm * np.sin(theta)
@@ -242,12 +252,45 @@ def aruco_worker():
                     
                     current_data.append({
                         "id": marker_id,
-                        "x": round(x_rob, 1),
-                        "y": round(y_rob, 1),
-                        "z": round(z_rob, 1)
+                        "x": round(float(x_rob), 1),
+                        "y": round(float(y_rob), 1),
+                        "z": round(float(z_rob), 1)
                     })
                     
-        aruco_data = current_data
+                    # Target specific ID 53
+                    if marker_id == 53 or marker_id == 20:
+                        # Center of the cube is 30mm behind the marker surface in X axis
+                        R, _ = cv.Rodrigues(rvec)
+                        
+                        # Apply 30mm offset into the X-plane
+                        offset_cam = R @ np.array([[0.0], [0.0], [-0.030]])
+                        
+                        cube_tvec = tvec.flatten() + offset_cam.flatten()
+                        cx, cy, cz = cube_tvec
+                        cx_mm, cy_mm, cz_mm = cx * 1000, cy * 1000, cz * 1000
+                        
+                        # # Apply Y-axis tilt (Yaw)
+                        # cx_mm_rot = cx_mm * np.cos(phi) + cz_mm * np.sin(phi)
+                        # cz_mm_rot = -cx_mm * np.sin(phi) + cz_mm * np.cos(phi)
+                        # cx_mm = cx_mm_rot
+                        # cz_mm = cz_mm_rot
+                        
+                        cx_rob = cx_mm
+                        cy_rob = cz_mm * np.cos(theta) - cy_mm * np.sin(theta)
+                        cz_rob = cam_z_offset - (cy_mm * np.cos(theta) + cz_mm * np.sin(theta))
+                        
+                        cube_centers_data.append([cx_rob, cy_rob, cz_rob])
+                        
+        if len(cube_centers_data) > 0:
+            avg_c = np.mean(cube_centers_data, axis=0)
+            avg_cube_data = {"x": round(float(avg_c[0]), 1), "y": round(float(avg_c[1]), 1), "z": round(float(avg_c[2]), 1)}
+        else:
+            avg_cube_data = None
+
+        aruco_data = {
+            "markers": current_data,
+            "cube_center": avg_cube_data
+        }
         
         # Push annotated frame to cameratest_output
         jpeg_bw = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
