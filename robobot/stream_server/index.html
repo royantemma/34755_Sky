@@ -33,12 +33,17 @@
 
     <div class="stream-container">
         <h2>ArUco Detection</h2>
-        <div style="margin-bottom: 15px; display: flex; align-items: center;">
-            <label class="switch">
-                <input type="checkbox" id="aruco-toggle">
-                <span class="slider"></span>
-            </label>
-            <span id="aruco-status-text" class="status-text">Detection Disabled</span>
+        <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center;">
+                <label class="switch">
+                    <input type="checkbox" id="aruco-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span id="aruco-status-text" class="status-text">Detection Disabled</span>
+            </div>
+            <button id="disable-servo-btn" style="padding: 10px 20px; background-color: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">Disable Servo</button>
+            <button id="catch-btn" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">Catch Cube</button>
+            <button id="stop-btn" style="padding: 10px 20px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">Stop Mission</button>
         </div>
 
         <div id="aruco-content" class="d-none">
@@ -86,6 +91,33 @@
             fetch(`/api/aruco/set?enabled=${enabled}`)
                 .then(res => res.json())
                 .catch(err => console.error("Error setting ArUco state:", err));
+        });
+
+        const catchBtn = document.getElementById('catch-btn');
+        catchBtn.addEventListener('click', () => {
+            fetch('/api/aruco/catch')
+                .then(res => res.json())
+                .catch(err => alert("Error starting mission."));
+            
+            // Automatically turn on stream tracking
+            if(!toggleBtn.checked) {
+                toggleBtn.checked = true;
+                fetch('/api/aruco/set?enabled=1');
+            }
+        });
+
+        const stopBtn = document.getElementById('stop-btn');
+        stopBtn.addEventListener('click', () => {
+            fetch('/api/aruco/stop')
+                .then(res => res.json())
+                .catch(err => alert("Error stopping mission."));
+        });
+
+        const disableServoBtn = document.getElementById('disable-servo-btn');
+        disableServoBtn.addEventListener('click', () => {
+            fetch('/api/servo/disable')
+                .then(res => res.json())
+                .catch(err => alert("Error disabling servo."));
         });
 
         function fetchArucoData() {

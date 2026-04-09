@@ -5,115 +5,54 @@ import os
 
 from uservice import service
 from scam import cam
+import aruco
 
 def find_and_print():
     """
-    Takes a single picture, finds a 4x4 ArUco marker,
-    estimates its pose relative to the camera using the calibration data,
+    Takes a single picture, finds ArUco markers using the shared ArucoProcessor,
     saves an annotated image, and prints the coordinates.
     """
-    print("% Starting ArUco Pose Estimation Test!")
-    
-    # Try to load calibration data
-    calib_file = "calibration_checkerboard.npz"
-    if not os.path.exists(calib_file):
-        calib_file = "calibration_data.npz" # Fallback
-        if not os.path.exists(calib_file):
-            print("% ERROR: Calibration file not found. Please run calibration first.")
-            service.stop = True
-            return
-            
-    print(f"% Loading calibration from {calib_file}")
-    with np.load(calib_file) as X:
-        mtx, dist = [X[i] for i in ('mtx', 'dist')]
-        
+    print("% Starting Shared ArUco Pose Estimation Test!")
     os.makedirs("aruco_test_results", exist_ok=True)
     
-    marker_size = 0.035 # 35mm in meters
-    
-    # Define the 3D coordinates of the marker corners
-    obj_points = np.array([
-        [-marker_size/2,  marker_size/2, 0],
-        [ marker_size/2,  marker_size/2, 0],
-        [ marker_size/2, -marker_size/2, 0],
-        [-marker_size/2, -marker_size/2, 0]
-    ], dtype=np.float32)
-
-    # ArUco dictionary (4x4)
-    aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
-    
-    # Handle OpenCV version differences for Detector parameters
-    if hasattr(cv.aruco, 'DetectorParameters_create'):
-        aruco_params = cv.aruco.DetectorParameters_create()
-    else:
-        aruco_params = cv.aruco.DetectorParameters()
+    processor = aruco.get_processor()
+    if processor.mtx is None:
+        print("% ERROR: Calibration file not found. Please run calibration first.")
+        service.stop = True
+        return
     
     while not service.stop:
         ok, img, imgTime = cam.getImage()
         
         if ok:
-            gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-            
-            # Handle OpenCV version differences for detecting markers
-            try:
-                # Modern OpenCV 4.7+
-                detector = cv.aruco.ArucoDetector(aruco_dict, aruco_params)
-                corners, ids, rejected = detector.detectMarkers(gray)
-            except AttributeError:
-                # Older OpenCV
-                corners, ids, rejected = cv.aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
-            
             timestamp = imgTime.strftime('%Y%m%d_%H%M%S')
             
-            if ids is not None and len(ids) > 0:
+            # Using shared logic!
+            annotated_img, data = processor.process_image(img.copy())
+            
+            markers = data.get("markers", [])
+            
+            if len(markers) > 0:
                 print("\n" + "="*40)
-                print(f"       ARUCO MARKER(S) FOUND!")
+                print(f"       {len(markers)} ARUCO MARKER(S) FOUND!")
                 print("="*40)
                 
-                # Draw detected markers
-                cv.aruco.drawDetectedMarkers(img, corners, ids)
-                
-                for i in range(len(ids)):
-                    marker_id = ids[i][0]
-                    marker_corners = corners[i][0]
+                for m in markers:
+                    print(f"Marker ID : {m['id']}")
+                    print(f"Robot Pose: X = {m['x']:.1f} mm (right)")
+                    print(f"            Y = {m['y']:.1f} mm (forward)")
+                    print(f"            Z = {m['z']:.1f} mm (up)")
+                    print(f"Cube Cntr : X = {m['cube_center_x']:.1f} mm")
+                    print(f"            Y = {m['cube_center_y']:.1f} mm")
+                    print(f"            Z = {m['cube_center_z']:.1f} mm")
+                    print("-" * 40)
                     
-                    # Estimate pose
-                    ret, rvec, tvec = cv.solvePnP(obj_points, marker_corners, mtx, dist)
-                    
-                    if ret:
-                        # Draw axis
-                        cv.drawFrameAxes(img, mtx, dist, rvec, tvec, marker_size)
-                        
-                        x, y, z = tvec.flatten()
-                        
-                        # Convert variables to mm for printing
-                        x_mm, y_mm, z_mm = x * 1000, y * 1000, z * 1000
-                        
-                        # Calculate robot frame coordinates
-                        # Camera is rolled down by 5.37 degrees on X axis
-                        # From CAD : 11.4 deg, 184mm
-                        # Experimentally measured: 5.37 deg, 189.8mm
-                        theta = np.radians(5.37)
-                        cam_z_offset = 189.8 # 189.8 mm from origin
-                        
-                        # Apply rotation and translation to match the origin
-                        # OpenCV camera frame is Z=forward, X=right, Y=down
-                        # Robot frame usually: Y=forward, X=right, Z=up
-                        x_rob = x_mm
-                        y_rob = z_mm * np.cos(theta) - y_mm * np.sin(theta)
-                        z_rob = cam_z_offset - (y_mm * np.cos(theta) + z_mm * np.sin(theta))
-                        
-                        print(f"Marker ID : {marker_id}")
-                        print(f"Cam Pose  : X = {x_mm:.1f} mm (right)")
-                        print(f"            Y = {y_mm:.1f} mm (down)")
-                        print(f"            Z = {z_mm:.1f} mm (forward)")
-                        print(f"Robot Pose: X = {x_rob:.1f} mm (right)")
-                        print(f"            Y = {y_rob:.1f} mm (forward)")
-                        print(f"            Z = {z_rob:.1f} mm (up)")
-                        print("-" * 40)
+                target = data.get("cube_center")
+                if target:
+                    print(f"Averaged Cube Center: X={target['x']:.1f}, Y={target['y']:.1f}, Z={target['z']:.1f}")
                 
                 filename = f"aruco_test_results/{timestamp}_aruco_pose.jpg"
-                cv.imwrite(filename, img)
+                cv.imwrite(filename, annotated_img)
                 print(f"  -> Saved {filename}\n")
             else:
                 print("\n" + "="*40)
