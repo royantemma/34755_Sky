@@ -106,10 +106,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'enabled': aruco_enabled}).encode('utf-8'))
         elif self.path == '/api/aruco/data':
+            # Also send estimates
+            est = aruco_data.get('estimates', []) if isinstance(aruco_data, dict) else []
+            
             response = {
                 'enabled': aruco_enabled,
                 'markers': aruco_data.get('markers', []) if isinstance(aruco_data, dict) else aruco_data,
-                'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None
+                'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None,
+                'estimates': est
             }
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -172,8 +176,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
         else:
-            self.send_error(404)
-            self.end_headers()
+            try:
+                import mimetypes
+                req_path = self.path.split('?')[0].lstrip('/')
+                if '..' in req_path:
+                    self.send_error(403)
+                    return
+                curr_dir = os.path.dirname(os.path.abspath(__file__))
+                filepath = os.path.join(curr_dir, req_path)
+                if os.path.isfile(filepath):
+                    mimetype, _ = mimetypes.guess_type(filepath)
+                    with open(filepath, 'rb') as f:
+                        file_content = f.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', mimetype or 'application/octet-stream')
+                    self.send_header('Content-Length', len(file_content))
+                    self.end_headers()
+                    self.wfile.write(file_content)
+                else:
+                    self.send_error(404)
+            except Exception as e:
+                self.send_error(500, f"Error: {e}")
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -231,6 +254,9 @@ def aruco_worker():
 
 
 def start_stream_server():
+    import subprocess
+    mqtt_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python")
+    subprocess.Popen(["python3", "navigation.py"], cwd=mqtt_dir)
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
 

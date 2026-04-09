@@ -1,4 +1,6 @@
+import sys
 
+content = """
 import numpy as np
 import cv2 as cv
 import os
@@ -8,14 +10,14 @@ import time
 
 MARKER_DB = {
     # Static markers
-    10: {'type': 'static', 'size': 0.1, 'x': 124.0, 'y': -177.0, 'z': 117.0, 'yaw': np.radians(135)},
-    11: {'type': 'static', 'size': 0.1, 'x': 124.0, 'y': 117.0, 'z': 117.0, 'yaw': np.radians(45)},
-    12: {'type': 'static', 'size': 0.1, 'x': 117.0, 'y': 124.0, 'z': 117.0, 'yaw': np.radians(-135)},
-    13: {'type': 'static', 'size': 0.1, 'x': -117.0, 'y': 124.0, 'z': 117.0, 'yaw': np.radians(135)},
-    14: {'type': 'static', 'size': 0.1, 'x': -124.0, 'y': 117.0, 'z': 117.0, 'yaw': np.radians(-45)},
-    15: {'type': 'static', 'size': 0.1, 'x': -124.0, 'y': -117.0, 'z': 117.0, 'yaw': np.radians(-135)},
-    16: {'type': 'static', 'size': 0.1, 'x': -117.0, 'y': -124.0, 'z': 117.0, 'yaw': np.radians(45)},
-    17: {'type': 'static', 'size': 0.1, 'x': 117.0, 'y': -124.0, 'z': 117.0, 'yaw': np.radians(-45)},
+    10: {'type': 'static', 'size': 0.1, 'x': 1240.0, 'y': -1770.0, 'z': 117.0, 'yaw': np.radians(45)},
+    11: {'type': 'static', 'size': 0.1, 'x': 1240.0, 'y': 1170.0, 'z': 117.0, 'yaw': np.radians(-45)},
+    12: {'type': 'static', 'size': 0.1, 'x': 1170.0, 'y': 1240.0, 'z': 117.0, 'yaw': np.radians(135)},
+    13: {'type': 'static', 'size': 0.1, 'x': -1170.0, 'y': 1240.0, 'z': 117.0, 'yaw': np.radians(45)},
+    14: {'type': 'static', 'size': 0.1, 'x': -1240.0, 'y': 1170.0, 'z': 117.0, 'yaw': np.radians(225)},
+    15: {'type': 'static', 'size': 0.1, 'x': -1240.0, 'y': -1170.0, 'z': 117.0, 'yaw': np.radians(135)},
+    16: {'type': 'static', 'size': 0.1, 'x': -1170.0, 'y': -1240.0, 'z': 117.0, 'yaw': np.radians(-45)},
+    17: {'type': 'static', 'size': 0.1, 'x': 1170.0, 'y': -1240.0, 'z': 117.0, 'yaw': np.radians(225)},
     # Cubes
     20: {'type': 'cube', 'size': 0.035, 'cube_size': 60.0},
     53: {'type': 'cube', 'size': 0.035, 'cube_size': 60.0},
@@ -82,9 +84,7 @@ class ArucoProcessor:
         if self.mtx is None or self.dist is None:
             return frame, {"markers": [], "cube_center": None, "estimates": []}
             
-        # Convert RGB to BGR for OpenCV drawing correctly
-        frame_bgr = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
-        gray = cv.cvtColor(frame_bgr, cv.COLOR_BGR2GRAY)
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         try:
             detector = cv.aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
             corners, ids, _ = detector.detectMarkers(gray)
@@ -96,7 +96,7 @@ class ArucoProcessor:
         estimates = [] # position estimates
 
         if ids is not None:
-            cv.aruco.drawDetectedMarkers(frame_bgr, corners, ids)
+            cv.aruco.drawDetectedMarkers(frame, corners, ids)
             for i in range(len(ids)):
                 marker_id = int(ids[i][0])
                 if marker_id not in MARKER_DB:
@@ -110,7 +110,7 @@ class ArucoProcessor:
                 marker_corners = corners[i][0]
                 ret, rvec, tvec = cv.solvePnP(obj_pts, marker_corners, self.mtx, self.dist)
                 if ret:
-                    cv.drawFrameAxes(frame_bgr, self.mtx, self.dist, rvec, tvec, size)
+                    cv.drawFrameAxes(frame, self.mtx, self.dist, rvec, tvec, size)
                     
                     tvec_mm = tvec * 1000.0
                     R_marker, _ = cv.Rodrigues(rvec)
@@ -138,65 +138,25 @@ class ArucoProcessor:
                         cube_centers_data.append([cx_rob, cy_rob, cz_rob])
                         
                     elif m_type == 'static':
-                        # 1. Marker in Robot frame
-                        R_rob2marker = self.R_cam2rob @ R_marker
-                        T_rob2marker = marker_rob # which is self.R_cam2rob @ tvec_mm + self.T_cam2rob
-                        
-                        # Marker relative Euler orientation (in Robot frame) using numpy
-                        sy = np.sqrt(R_rob2marker[0,0] * R_rob2marker[0,0] +  R_rob2marker[1,0] * R_rob2marker[1,0])
-                        singular = sy < 1e-6
-                        if not singular:
-                            m_roll = np.arctan2(R_rob2marker[2,1], R_rob2marker[2,2])
-                            m_pitch = np.arctan2(-R_rob2marker[2,0], sy)
-                            m_yaw = np.arctan2(R_rob2marker[1,0], R_rob2marker[0,0])
-                        else:
-                            m_roll = np.arctan2(-R_rob2marker[1,2], R_rob2marker[1,1])
-                            m_pitch = np.arctan2(-R_rob2marker[2,0], sy)
-                            m_yaw = 0
-                            
-                        marker_obj["yaw"] = round(float(m_yaw), 2)
-                        marker_obj["pitch"] = round(float(m_pitch), 2)
-                        marker_obj["roll"] = round(float(m_roll), 2)
-                        
-                        # Compute robot position in world
+                        # Compute robot position
                         world_x, world_y, world_z, world_yaw = marker_info['x'], marker_info['y'], marker_info['z'], marker_info['yaw']
-                        T_world2marker = np.array([[world_x], [world_y], [world_z]])
                         
-                        # Build rotation matrix of marker in world frame
-                        # Base marker at origin: Z out, X right, Y down.
-                        # "movement applied is a certain angle in yaw, then roll of +90 for all of them"
+                        R_rob2cam = self.R_cam2rob.T
+                        T_rob2cam = -R_rob2cam @ self.T_cam2rob
                         
-                        # Roll of +90 around X axis
-                        R_roll = np.array([
-                            [1, 0,  0],
-                            [0, 0, -1],
-                            [0, 1,  0]
-                        ])
+                        R_world2cam = R_marker
+                        T_world2cam = tvec_mm
                         
-                        # Yaw around Z axis
-                        R_yaw = np.array([
-                            [np.cos(world_yaw), -np.sin(world_yaw), 0],
-                            [np.sin(world_yaw),  np.cos(world_yaw), 0],
-                            [ 0,                 0,                 1]
-                        ])
+                        # We want R_world2rob, T_world2rob to figure out where robot is in world.
+                        R_world2rob = self.R_cam2rob @ R_world2cam
+                        T_world2rob = (self.R_cam2rob @ T_world2cam) + self.T_cam2rob
                         
-                        # Intrinsic rotation: Apply Yaw, then Roll (+90)
-                        R_world2marker = R_yaw @ R_roll
+                        R_rob2world = R_world2rob.T
+                        T_rob2world = -R_rob2world @ T_world2rob
                         
-                        # Core Derivation:
-                        # X_w = R_w2m * X_m + T_w2m
-                        # X_r = R_r2m * X_m + T_r2m   =>  X_m = R_r2m^T * (X_r - T_r2m)
-                        # So X_w = R_w2m * R_r2m^T * X_r  -  R_w2m * R_r2m^T * T_r2m + T_w2m
-                        # X_w = R_w2r * X_r + T_w2r
-                        
-                        R_world2rob = R_world2marker @ R_rob2marker.T
-                        T_world2rob = T_world2marker - (R_world2rob @ T_rob2marker)
-                        
-                        robot_x_est = T_world2rob[0, 0]
-                        robot_y_est = T_world2rob[1, 0]
-                        
-                        # Robot Yaw (around Z of world)
-                        robot_yaw_est = np.arctan2(R_world2rob[1,0], R_world2rob[0,0])
+                        robot_x_est = world_x + T_rob2world[0,0]
+                        robot_y_est = world_y + T_rob2world[1,0]
+                        robot_yaw_est = world_yaw + np.arctan2(R_rob2world[1,0], R_rob2world[0,0])
                         
                         estimates.append({
                             "marker_id": marker_id,
@@ -216,8 +176,7 @@ class ArucoProcessor:
             "estimates": estimates
         }
         
-        frame_res = cv.cvtColor(frame_bgr, cv.COLOR_BGR2RGB)
-        return frame_res, aruco_data
+        return frame, aruco_data
 
 class ArucoClient:
     def __init__(self, host="127.0.0.1", port=7123):
@@ -258,3 +217,9 @@ def get_client():
         client = ArucoClient()
     return client
 
+"""
+
+with open("mqtt_python/aruco.py", "w") as f:
+    f.write(content)
+    
+print("Updated aruco.py successfully")
