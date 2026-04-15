@@ -16,7 +16,12 @@ import numpy as np
 import cv2 as cv
 import json
 import os
+import sys
 import time
+
+# Add mqtt_python to path so we can import aruco module
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python"))
+import aruco
 
 from http import server
 from threading import Condition
@@ -101,15 +106,47 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'enabled': aruco_enabled}).encode('utf-8'))
         elif self.path == '/api/aruco/data':
+            # Also send estimates
+            est = aruco_data.get('estimates', []) if isinstance(aruco_data, dict) else []
+            
             response = {
                 'enabled': aruco_enabled,
                 'markers': aruco_data.get('markers', []) if isinstance(aruco_data, dict) else aruco_data,
-                'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None
+                'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None,
+                'estimates': est
             }
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
+        elif self.path == '/api/aruco/catch':
+            import subprocess
+            # Launch the mission script correctly as a separate process from the mqtt_python directory
+            mqtt_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python")
+            def run_mission():
+                subprocess.run(["python3", "mqtt-client.py", "-cc"], cwd=mqtt_dir)
+            threading.Thread(target=run_mission, daemon=True).start()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "catching"}).encode('utf-8'))
+        elif self.path == '/api/aruco/stop':
+            # Stop any running mqtt-client
+            os.system("pkill -f mqtt-client")
+            # Clear any frozen velocity control
+            os.system("mosquitto_pub -t 'robobot/cmd/ti' -m 'rc 0 0'")
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "stopped"}).encode('utf-8'))
+        elif self.path == '/api/servo/disable':
+            # Clear any frozen velocity control
+            os.system("mosquitto_pub -t 'robobot/cmd/T0' -m 'servo 1 10000 0'")
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "servo disabled"}).encode('utf-8'))
         elif self.path.startswith('/stream/'):
             # Get stream name
             stream_name = self.path.split('/')[-1]
@@ -139,8 +176,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
         else:
-            self.send_error(404)
-            self.end_headers()
+            try:
+                import mimetypes
+                req_path = self.path.split('?')[0].lstrip('/')
+                if '..' in req_path:
+                    self.send_error(403)
+                    return
+                curr_dir = os.path.dirname(os.path.abspath(__file__))
+                filepath = os.path.join(curr_dir, req_path)
+                if os.path.isfile(filepath):
+                    mimetype, _ = mimetypes.guess_type(filepath)
+                    with open(filepath, 'rb') as f:
+                        file_content = f.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', mimetype or 'application/octet-stream')
+                    self.send_header('Content-Length', len(file_content))
+                    self.end_headers()
+                    self.wfile.write(file_content)
+                else:
+                    self.send_error(404)
+            except Exception as e:
+                self.send_error(500, f"Error: {e}")
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -174,34 +230,8 @@ def process_frames():
 def aruco_worker():
     global latest_frame, aruco_enabled, aruco_data
     
-    # Try to load intrinsic calibration data
-    calib_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python")
-    calib_file = os.path.join(calib_dir, "calibration_checkerboard.npz")
-    fallback_file = os.path.join(calib_dir, "calibration_data.npz")
-    
-    mtx = None
-    dist = None
-    
-    if os.path.exists(calib_file):
-        with np.load(calib_file) as X:
-            mtx, dist = [X[i] for i in ('mtx', 'dist')]
-    elif os.path.exists(fallback_file):
-        with np.load(fallback_file) as X:
-            mtx, dist = [X[i] for i in ('mtx', 'dist')]
-            
-    marker_size = 0.035
-    obj_points = np.array([
-        [-marker_size/2,  marker_size/2, 0],
-        [ marker_size/2,  marker_size/2, 0],
-        [ marker_size/2, -marker_size/2, 0],
-        [-marker_size/2, -marker_size/2, 0]
-    ], dtype=np.float32)
-
-    aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
-    if hasattr(cv.aruco, 'DetectorParameters_create'):
-        aruco_params = cv.aruco.DetectorParameters_create()
-    else:
-        aruco_params = cv.aruco.DetectorParameters()
+    # Use centralized processor
+    processor = aruco.get_processor()
 
     while True:
         if not aruco_enabled:
@@ -214,89 +244,19 @@ def aruco_worker():
                 continue
             frame = latest_frame.copy()
             
-        current_data = []
-        cube_centers_data = []
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        
-        try:
-            detector = cv.aruco.ArucoDetector(aruco_dict, aruco_params)
-            corners, ids, _ = detector.detectMarkers(gray)
-        except AttributeError:
-            corners, ids, _ = cv.aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
-            
-        if ids is not None and mtx is not None:
-            cv.aruco.drawDetectedMarkers(frame, corners, ids)
-            for i in range(len(ids)):
-                marker_id = int(ids[i][0])
-                marker_corners = corners[i][0]
-                ret, rvec, tvec = cv.solvePnP(obj_points, marker_corners, mtx, dist)
-                if ret:
-                    cv.drawFrameAxes(frame, mtx, dist, rvec, tvec, marker_size)
-                    x, y, z = tvec.flatten()
-                    x_mm, y_mm, z_mm = x * 1000, y * 1000, z * 1000
-                    
-                    # Apply Extrinsic calibration (Pitch = 5.36 deg, Y-tilt = 2.12 deg, Z = 189.2 mm)
-                    theta = np.radians(5.36) # Pitch (around x-axis)
-                    phi = np.radians(2.12)   # Tilt around y-axis (towards the right)
-                    cam_z_offset = 189.2
-                    
-                    # Apply Y-axis tilt (Yaw)
-                    x_mm_rot = x_mm * np.cos(phi) + z_mm * np.sin(phi)
-                    z_mm_rot = -x_mm * np.sin(phi) + z_mm * np.cos(phi)
-                    x_mm = x_mm_rot
-                    z_mm = z_mm_rot
-                    
-                    x_rob = x_mm
-                    y_rob = z_mm * np.cos(theta) - y_mm * np.sin(theta)
-                    z_rob = cam_z_offset - (y_mm * np.cos(theta) + z_mm * np.sin(theta))
-                    
-                    current_data.append({
-                        "id": marker_id,
-                        "x": round(float(x_rob), 1),
-                        "y": round(float(y_rob), 1),
-                        "z": round(float(z_rob), 1)
-                    })
-                    
-                    # Target specific ID 53
-                    if marker_id == 53 or marker_id == 20:
-                        # Center of the cube is 30mm behind the marker surface in X axis
-                        R, _ = cv.Rodrigues(rvec)
-                        
-                        # Apply 30mm offset into the X-plane
-                        offset_cam = R @ np.array([[0.0], [0.0], [-0.030]])
-                        
-                        cube_tvec = tvec.flatten() + offset_cam.flatten()
-                        cx, cy, cz = cube_tvec
-                        cx_mm, cy_mm, cz_mm = cx * 1000, cy * 1000, cz * 1000
-                        
-                        # # Apply Y-axis tilt (Yaw)
-                        # cx_mm_rot = cx_mm * np.cos(phi) + cz_mm * np.sin(phi)
-                        # cz_mm_rot = -cx_mm * np.sin(phi) + cz_mm * np.cos(phi)
-                        # cx_mm = cx_mm_rot
-                        # cz_mm = cz_mm_rot
-                        
-                        cx_rob = cx_mm
-                        cy_rob = cz_mm * np.cos(theta) - cy_mm * np.sin(theta)
-                        cz_rob = cam_z_offset - (cy_mm * np.cos(theta) + cz_mm * np.sin(theta))
-                        
-                        cube_centers_data.append([cx_rob, cy_rob, cz_rob])
-                        
-        if len(cube_centers_data) > 0:
-            avg_c = np.mean(cube_centers_data, axis=0)
-            avg_cube_data = {"x": round(float(avg_c[0]), 1), "y": round(float(avg_c[1]), 1), "z": round(float(avg_c[2]), 1)}
-        else:
-            avg_cube_data = None
-
-        aruco_data = {
-            "markers": current_data,
-            "cube_center": avg_cube_data
-        }
+        # Delegated everything to shared library!
+        annotated_frame, data = processor.process_image(frame)
+        aruco_data = data
         
         # Push annotated frame to cameratest_output
-        jpeg_bw = simplejpeg.encode_jpeg(frame, quality=80, colorspace='RGB')
+        jpeg_bw = simplejpeg.encode_jpeg(annotated_frame, quality=80, colorspace="RGB")
         cameratest_output.write(jpeg_bw)
 
+
 def start_stream_server():
+    import subprocess
+    mqtt_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python")
+    subprocess.Popen(["python3", "navigation.py"], cwd=mqtt_dir)
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
 
