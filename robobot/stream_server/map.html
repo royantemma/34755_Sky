@@ -130,7 +130,7 @@
 
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f0f0); // light gray background
+        scene.background = new THREE.Color(0x303030); // light gray background
 
         // Camera
         // Perspective camera with parameters: FOV, aspect ratio, near, far
@@ -150,10 +150,10 @@
         controls.target.set(0, 0, 0); // Target origin
 
         // --- Lights ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Soft white light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft white light
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 10); // Brighter directional light
         dirLight.position.set(5000, 5000, 2000);
         dirLight.castShadow = true;
         scene.add(dirLight);
