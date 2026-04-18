@@ -15,6 +15,10 @@ from sedge import edge
 from uservice import service
 from sir import ir
 
+import threading
+from line_vision import line_follow_vision
+from roundabout_vision import drive_roundabout
+
 class MissionRunner:
 
     def __init__(self, tasks, total_time, goal_time_buffer):
@@ -94,6 +98,12 @@ class MissionRunner:
             elif task_type == "turn_to_heading":
                 self.run_turn_to_heading(current_task)
 
+            elif task_type == "line_follow_vision":
+                self.run_line_follow_vision(current_task)
+
+            elif task_type == "roundabout_vision":
+                self.run_roundabout_vision(current_task)
+
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
                 self.next_task()
@@ -116,6 +126,7 @@ class MissionRunner:
         follow_left = (task["side"] == "left")
         speed = task.get("speed", 0.2)
         timeout = task.get("timeout", 30)
+        edge.CUSTOM_CONTROL_ENABLED = True
 
         if self.task_state == 0:
             print("% [line_follow] Starting — moving forward to find line")
@@ -150,6 +161,44 @@ class MissionRunner:
             if abs(pose.velocity()) < 0.001:
                 print("% [line_follow] Stopped — next task")
                 self.next_task()
+
+
+    def run_line_follow_vision(self, task):
+        """
+        Follow a line using vision (camera-based controller running in background).
+        Stops on timeout or when externally stopped.
+        """
+
+        timeout = task.get("timeout", 30)
+
+        if self.task_state == 0:
+            print("% [line_follow_vision] Starting vision-based line following")
+
+            service.send("robobot/cmd/T0", "leds 16 0 100 0")  # green
+
+            # Start vision controller in background
+            self._vision_thread = threading.Thread(
+                target=line_follow_vision,
+                daemon=True
+            )
+            self._vision_thread.start()
+
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            # Just wait while vision is controlling the robot
+
+            if self.task_time() > timeout:
+                print("% [line_follow_vision] Timeout — stopping")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            # wait for robot to fully stop
+            if abs(pose.velocity()) < 0.001:
+                print("% [line_follow_vision] Stopped — next task")
+                self.next_task()
+
 
     def run_line_follow_brake(self, task):
         """
@@ -354,6 +403,41 @@ class MissionRunner:
                 print("% [line_follow] Stopped — next task")
                 self.next_task()
 
+    def run_roundabout_vision(self, task):
+        """
+        Drive roundabout using vision controller (runs in background).
+        Stops on timeout.
+        """
+
+        timeout = task.get("timeout", 30)
+
+        if self.task_state == 0:
+            print("% [roundabout_vision] Starting vision-based roundabout")
+
+            service.send("robobot/cmd/T0", "leds 16 100 100 0")  # yellow (different from line follow)
+
+            # Start vision controller in background
+            self._vision_thread = threading.Thread(
+                target=drive_roundabout,
+                daemon=True
+            )
+            self._vision_thread.start()
+
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            # Let vision control everything
+
+            if self.task_time() > timeout:
+                print("% [roundabout_vision] Timeout — stopping")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            # Wait until robot actually stops
+            if abs(pose.velocity()) < 0.001:
+                print("% [roundabout_vision] Stopped — next task")
+                self.next_task()
 
     def run_turn(self, task):
         """

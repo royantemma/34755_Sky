@@ -20,7 +20,8 @@ class SFuse:
     tripA = 0; # should not be reset
     tripAh = 0; # heading
     tripAtime = datetime.now()
-    tripB = 0; # reset as needed
+    tripB_startX = 0.0
+    tripB_startY = 0.0
     tripBh = 0; # heading
     tripBtime = datetime.now()
     # robot info
@@ -47,9 +48,10 @@ class SFuse:
     gyro_var = 1*(( np.pi /180) * (0.07) ) 
     vb_var = 0.001
     Sigma_u = np.diag([vb_var, gyro_var,gyro_var,gyro_var]) # Process Noise Covariance
-    R = np.eye(6)
+    R = np.eye(10) # Measurement Noise Covariance
     R[0:3, 0:3] *= 0.00000001 # Noise Pos
     R[3:6, 3:6] *= acc_var  # Noise in Acc
+    R[6:10, 6:10] *= 0.00000001 # Noise Att
 
     fused_roll = 0
     fused_pitch = 0
@@ -87,16 +89,24 @@ class SFuse:
 
       self.P = F @ self.P @ F.T + Q
 
-    def correct(self, acc_meas, pos_meas=None):
+    def correct(self, acc_meas, pos_meas=None, att_meas=None):
      
       for i in range(3):
         if pos_meas is not None and pos_meas[i] is not None:
-          self.R[i, i] = 0.00000001 # Very low noise for position measurements
+          self.R[i, i] = 0.0001 # Very low noise for position measurements
         else:
           self.R[i, i] = 10 # High noise for missing position measurements
           pos_meas[i] = self.X[i] # Use predicted position as measurement if not provided
+      
+      # Attitude measurements as quaternion
+      for i in range(4):
+        if att_meas is not None and att_meas[i] is not None:
+          self.R[6+i, 6+i] = 0.0001 # Very low noise for attitude measurements
+        else:
+          self.R[6+i, 6+i] = 10 # High noise for missing attitude measurements
+          att_meas[i] = self.X[3+i] # Use predicted attitude as measurement if not provided
 
-      z_t = np.concatenate([pos_meas, acc_meas])
+      z_t = np.concatenate([pos_meas, acc_meas, att_meas])
       
       H = self.get_H()
       
@@ -159,13 +169,15 @@ class SFuse:
       ay_exp = 2*gz*(qw*qx + qy*qz) - 2*gx*(qw*qz - qx*qy) - 2*gy*(qx**2 + qz**2 - 0.5)
       az_exp = 2*gx*(qw*qy + qx*qz) - 2*gy*(qw*qx - qy*qz) - 2*gz*(qx**2 + qy**2 - 0.5)
       
-      return np.array([x, y, z, ax_exp, ay_exp, az_exp])
+      return np.array([x, y, z, ax_exp, ay_exp, az_exp, qw, qx, qy, qz])
 
     def get_H(self, g=[0, 0, 1]):
       qw, qx, qy, qz = self.X[3:7]
       gx, gy, gz = g
       
-      H = np.zeros((6, 7))
+      #H = np.zeros((6, 7))
+      #H = np.zeros((7, 7))
+      H = np.zeros((10, 7))
       
       H[0:3, 0:3] = np.eye(3)
       
@@ -184,15 +196,70 @@ class SFuse:
       H[5, 5] =  2*gx*qw + 2*gy*qz - 4*gz*qy
       H[5, 6] =  2*gx*qx + 2*gy*qy
       
+      """
+      # Yaw
+      c_1 = 2 * qy**2 + 2*qz**2 - 1
+      c_2 = 2 * qw*qz + 2*qx*qy
+      s = -2 * (c_1**2 + c_2**2)
+      H[6, 3] = 2 * qz * c_1 / s 
+      H[6, 4] = 2 * qy * c_1 / s 
+      H[6, 5] = (2*qx*c_1 - 4*qy*c_2) / s 
+      H[6, 6] =  (2*qw*c_1 - 4*qz*c_2) / s 
+      """
+      # All Orientation
+      H[6:, 3:] = np.eye(4)
+
+      
       return H
 
-    def fuse(self, acc, gyro, dt, pos_meas=None):
+    def euler_to_quaternion(self, roll=0.0, pitch=0.0, yaw=0.0):
+      cr = np.cos(roll * 0.5)
+      sr = np.sin(roll * 0.5)
+      cp = np.cos(pitch * 0.5)
+      sp = np.sin(pitch * 0.5)
+      cy = np.cos(yaw * 0.5)
+      sy = np.sin(yaw * 0.5)
+      qw = cr * cp * cy + sr * sp * sy
+      qx = sr * cp * cy - cr * sp * sy
+      qy = cr * sp * cy + sr * cp * sy
+      qz = cr * cp * sy - sr * sp * cy
+      return [qw, qx, qy, qz]
+
+    def _normalize_attitude_measurement(self, att_meas):
+      if att_meas is None:
+        return None
+      if isinstance(att_meas, dict):
+        if 'yaw' in att_meas and 'pitch' not in att_meas and 'roll' not in att_meas:
+          return self.euler_to_quaternion(0.0, 0.0, att_meas['yaw'])
+        if all(key in att_meas for key in ('roll', 'pitch', 'yaw')):
+          return self.euler_to_quaternion(att_meas['roll'], att_meas['pitch'], att_meas['yaw'])
+        if all(key in att_meas for key in ('qw', 'qx', 'qy', 'qz')):
+          return [att_meas['qw'], att_meas['qx'], att_meas['qy'], att_meas['qz']]
+      if isinstance(att_meas, (list, tuple, np.ndarray)):
+        if len(att_meas) == 1:
+          return self.euler_to_quaternion(0.0, 0.0, att_meas[0])
+        if len(att_meas) == 3:
+          return self.euler_to_quaternion(att_meas[0], att_meas[1], att_meas[2])
+        if len(att_meas) == 4:
+          return list(att_meas)
+      return att_meas
+
+    def fuse(self, acc, gyro, dt, pos_meas=None, att_meas=None):
+      if isinstance(pos_meas, dict):
+        pos_meas = np.array([pos_meas.get('x'), pos_meas.get('y'), pos_meas.get('z')]) / 1000
+      att_meas = self._normalize_attitude_measurement(att_meas)
+      if pos_meas is not None and len(pos_meas) != 3:
+        raise ValueError('pos_meas must be a 3-element list, tuple, or dict with x/y/z')
+      if att_meas is not None and len(att_meas) != 4:
+        raise ValueError('att_meas must be a 4-element quaternion or yaw-only list/dict')
 
       if not self.log_initialized:
         with open(self.log_file_name, 'w') as f:
             f.write("dt,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,fused_x,fused_y,fused_z,roll,pitch,yaw,pose_x,pose_y,pose_yaw\n")
         self.log_initialized = True
 
+      #print(pos_meas)
+      #print(att_meas)
       vb = self.velocity()
       gyro = np.array(gyro, dtype='float64') - np.array([-0.1834, -0.1299, -0.1700])
       # Convert to radians/sec and apply bias correction
@@ -216,10 +283,11 @@ class SFuse:
           #print(acc_meas)
       
       pos_meas = [None, None, None] if pos_meas is None else pos_meas
+      att_meas = [None, None, None, None] if att_meas is None else att_meas
 
       self.predict(vb, omega, dt)
       if norm > 1e-3: 
-        self.correct(acc_meas, pos_meas=pos_meas)
+        self.correct(acc_meas, pos_meas=pos_meas, att_meas=att_meas)
       else:
           print("Warning: Skipping correction due to zero acceleration")
       #self.correct(acc_meas, pos_meas=None)
@@ -229,9 +297,18 @@ class SFuse:
       self.fused_z = self.X[2] # z
       
       qw, qx, qy, qz = self.X[3:]
+      last_yaw = self.fused_yaw
       self.fused_yaw = np.rad2deg(np.arctan2(2*(qw*qz + qx*qy), 1 - 2*(qy**2 + qz**2)))
       self.fused_pitch = np.rad2deg(np.arcsin(2*(qw*qy - qz*qx)))
       self.fused_roll = np.rad2deg(np.arctan2(2*(qw*qx + qy*qz), 1 - 2*(qx**2 + qy**2)))
+      
+      dh = np.deg2rad(self.fused_yaw - last_yaw)
+      if dh > np.pi:
+        dh -= 2.0 * np.pi
+      elif dh < -np.pi:
+        dh += 2.0 * np.pi
+      self.tripBh += dh
+      self.tripAh += dh
       
       try:
 
@@ -250,6 +327,25 @@ class SFuse:
       service.send("robobot/iwo/pos",f"{self.fused_x} {self.fused_y} {self.fused_z}")
       service.send("robobot/iwo/ang",f"{self.fused_roll} {self.fused_pitch} {self.fused_yaw}")
       service.send("robobot/map",f"{self.fused_x} {self.fused_y} {self.fused_yaw}")
+
+    def reset_kalman(self):
+      self.X = np.array([0, 0, 0, 1.0, 0, 0, 0]) # x y z q_wxyz
+      self.P = 10*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
+      self.acc_var = ((2.409e-01)/6)**2
+      self.gyro_var = 1*(( np.pi /180) * (0.07) ) 
+      self.vb_var = 0.001
+      self.Sigma_u = np.diag([self.vb_var, self.gyro_var,self.gyro_var,self.gyro_var]) # Process Noise Covariance
+      self.R = np.eye(10) # Measurement Noise Covariance
+      self.R[0:3, 0:3] *= 0.00000001 # Noise Pos
+      self.R[3:6, 3:6] *= self.acc_var  # Noise in Acc
+      self.R[6:10, 6:10] *= 0.00000001 # Noise Att
+
+      self.fused_roll = 0
+      self.fused_pitch = 0
+      self.fused_yaw = 0
+      self.fused_x = 0
+      self.fused_y = 0
+      self.fused_z = 0
 
 
     def velocity(self):
@@ -280,7 +376,7 @@ class SFuse:
           ## send robot configuration
           # confw rl rr g t wb Set configuration 
           #     radius (left,right (m)), gear, encTick, wheelbase (m)
-          service.send("robobot/cmd/T0","confw 0.074 0.074 19 92 0.23")
+          service.send("robobot/cmd/T0","confw 0.1036 0.1036 19 92 0.23")
           # encoder reversed (motortest only)
           # service.send("robobot/cmd/T0/encrev","1")
           # request new configuration from Teensy
@@ -342,8 +438,14 @@ class SFuse:
       self.tripAh = 0
       self.tripAtime = datetime.now()
 
+    @property
+    def tripB(self):
+      # True Euclidean displacement based on Kalman fusion snapshot
+      return np.sqrt((self.fused_x - self.tripB_startX)**2 + (self.fused_y - self.tripB_startY)**2)
+
     def tripBreset(self):
-      self.tripB = 0
+      self.tripB_startX = self.fused_x
+      self.tripB_startY = self.fused_y
       self.tripBh = 0
       self.tripBtime = datetime.now()
 
@@ -373,7 +475,7 @@ class SFuse:
             self.wheelVelocityCnt += 1
             ds = (self.wheelVelocity[0] + self.wheelVelocity[1])*dt/2
             self.tripA += ds
-            self.tripB += ds
+            # tripB accumulation removed: now dynamically computed from Kalman snapshot
             # self.printMVel()
         elif topic == "T0/mvel":
           gg = msg.split(" ")
@@ -404,8 +506,6 @@ class SFuse:
               dh -= 2.0 * np.pi
             elif (dh < -np.pi):
               dh += 2.0 * np.pi
-            self.tripBh += dh
-            self.tripAh += dh
             self.pose[2] = h
             # tilt
             self.pose[3] = float(gg[5])

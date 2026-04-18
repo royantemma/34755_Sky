@@ -95,9 +95,17 @@ class SEdge:
     CUSTOM_CONTROL_ENABLED = False
     e_prev = 0 # Previous error
     e_sum = 0
-    Kp = 1
-    Kd = 0.2
-    Ki = 0
+    #Kp = -0.0001
+    #Kd = -0.00005
+    #Ki = -0.01
+    """ Current best for 0.8
+    Kp = -0.0005
+    Kd = -0.0001
+    Ki = -0.0001
+    """
+    Kp = -0.0005
+    Kd = -0.0001
+    Ki = -0.0000
 
 
     ##########################################################
@@ -284,14 +292,21 @@ class SEdge:
             # flog.writeDataString(f" {msg}");
             #
             # calculate line values based on new values
-            self.LineDetect()
-            #
-            # use to control, if active
-            if self.lineCtrl:
-              self.followLine()
-            # log relevant line sensor data
-            if self.edge_nUpdCnt % 10 == 0:
-              flog.write()
+            if not self.CUSTOM_CONTROL_ENABLED:
+              self.LineDetect()
+              #
+              # use to control, if active
+              if self.lineCtrl:
+                self.followLine()
+              # log relevant line sensor data
+              if self.edge_nUpdCnt % 10 == 0:
+                flog.write()
+            else:
+              self.NewLineDetect()
+
+              if self.lineCtrl:
+                self.NewfollowLine()
+              
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -313,6 +328,40 @@ class SEdge:
         return used
 
     ##########################################################
+    def NewLineDetect(self,followLeft=True):
+      
+      # Check for valid line
+      sum = 0
+      high = int(1)
+      for i in range(8):
+        sum += self.edge_n[i] # for average
+        if self.edge_n[i] > high:
+          high = self.edge_n[i] # most bright value (floor level)
+      self.high = high # most white level
+      self.lineValid = self.high >= self.lineValidThreshold
+      self.average = sum / 8.0
+      
+      # Detect if we have a crossing
+      self.crossingLine = self.average >= self.crossingThreshold
+      
+      if self.crossingLine:
+        print("I AM ON A CROSSING")
+        if followLeft:
+          #weights = [-7, -5, -4, -3, 0, 0, 0, 0]  
+          weights = [-4, -3, -2, -1, 1, 1.5, 0, 0]  
+        else:
+          #weights = [0, 0, 0, 0, -3, 4, 5, 7]  
+          weights = [0, 0, -1.5, -1, 1, 2, 3, 4]  
+      else:
+        weights = [-4, -3, -2, -1, 1, 2, 3, 4]
+
+      self.BOB = 0
+      if self.lineValid:
+        for i in range(8):
+          self.BOB += weights[i] * self.edge_n[i]
+        print(self.BOB)
+      
+      
 
     def LineDetect(self):
       sum = 0
@@ -329,7 +378,7 @@ class SEdge:
       #self.printn() #RR
       # print(f"% Edge (sedge.py):: {low}, {high} - what")
       # average white level
-      self.average = sum / 8.0;
+      self.average = sum / 8.0
       # detect if we have a crossing line
       self.crossingLine = self.average >= self.crossingThreshold
       # is line valid (high above threshold)
@@ -342,17 +391,17 @@ class SEdge:
           posLeft = -3 # between sensor 1 and 2 or more right
           for i in range(1,8):
             if self.edge_n[i] < self.lineValidThreshold:
-              posLeft += 1;
+              posLeft += 1
             else:
-              break;
+              break
         posRight = 3.5 # max right
         if self.edge_n[7] < self.lineValidThreshold:
           posRight = 3 # may be between sensor 8 and 7 or more left
           for i in range(1,8):
             if self.edge_n[7-i] < self.lineValidThreshold:
-              posRight -= 1;
+              posRight -= 1
             else:
-              break;
+              break
         self.posLeft = posLeft
         self.posRight = posRight
       else:
@@ -387,6 +436,26 @@ class SEdge:
 
     ##########################################################
 
+    def NewfollowLine(self):
+      
+      from uservice import service
+
+      e = self.BOB
+
+      T_s = self.edge_nInterval / 1000.0 
+      P = self.Kp * e
+      self.e_sum += e * T_s
+      I = self.Ki * self.e_sum
+      D = self.Kd * (e-self.e_prev)/T_s
+      self.e_prev = e
+
+      self.lineY = P + I + D #+ I + D
+
+      par = f"rc {self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+      #print(par)
+      service.send("robobot/cmd/ti", par) # send new turn command, maintaining velocity
+
+
     def followLine(self):
       if self.crossingOverride:
         return  # do nothing during crossing
@@ -417,20 +486,11 @@ class SEdge:
       # To correct we need a negative turn rate (CV),
       # so sign of e is OK
       #
-      if not self.CUSTOM_CONTROL_ENABLED:
-        # calculate action (P-Lead controller)
-        self.u = self.lineKp * e; # error times Kp
-        # Lead filter
-        self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
-      else:
-        T_s = self.edge_nInterval / 1000.0 
-        P = self.Kp * e
-        self.sum_e += e * T_s
-        I = self.Ki * self.sum_e
-        D = self.Kd * (e-self.e_prev)/T_s
-        self.e_prev = e
-
-        self.lineY = P + I + D
+    
+      # calculate action (P-Lead controller)
+      self.u = self.lineKp * e; # error times Kp
+      # Lead filter
+      self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
       
       #
       if self.lineY > 4:
@@ -442,6 +502,7 @@ class SEdge:
       self.lineY1 = self.lineY
       # make response
       par = f"rc {self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+      print(par)
       # debug - no action, go straight
       #par = f"{self.velocity:.3f} 0 {t.time()}"
       # debug end

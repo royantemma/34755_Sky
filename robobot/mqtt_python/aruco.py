@@ -194,14 +194,31 @@ class ArucoProcessor:
                         
                         robot_x_est = T_world2rob[0, 0]
                         robot_y_est = T_world2rob[1, 0]
+                        robot_z_est = T_world2rob[2, 0]
+
+                        sy = np.sqrt(R_world2rob[0,0] * R_world2rob[0,0] +  R_world2rob[1,0] * R_world2rob[1,0])
+                        singular = sy < 1e-6
+                        if not singular:
+                            robot_roll_est = np.arctan2(R_world2rob[2,1], R_world2rob[2,2])
+                            robot_pitch_est = np.arctan2(-R_world2rob[2,0], sy)
+                            robot_yaw_est = np.arctan2(R_world2rob[1,0], R_world2rob[0,0])
+                        else:
+                            robot_roll_est = np.arctan2(-R_world2rob[1,2], R_world2rob[1,1])
+                            robot_pitch_est = np.arctan2(-R_world2rob[2,0], sy)
+                            robot_yaw_est = 0
                         
-                        # Robot Yaw (around Z of world)
-                        robot_yaw_est = np.arctan2(R_world2rob[1,0], R_world2rob[0,0])
+                        # Optionnaly : set z, pitch and roll to zero for a more stable 2D pose estimation, as the robot is mostly on a plane and we care less about those angles
+                        robot_z_est = 0
+                        robot_pitch_est = 0
+                        robot_roll_est = 0
                         
                         estimates.append({
                             "marker_id": marker_id,
                             "robot_x": round(float(robot_x_est), 1),
                             "robot_y": round(float(robot_y_est), 1),
+                            "robot_z": round(float(robot_z_est), 1),
+                            "robot_roll": float(robot_roll_est),
+                            "robot_pitch": float(robot_pitch_est),
                             "robot_yaw": float(robot_yaw_est)
                         })
 

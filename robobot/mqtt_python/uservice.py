@@ -118,10 +118,12 @@ class UService:
     self.parser.add_argument('-bl', '--ball_location', action='store_true',
                 help='Find the location of the ball')
     self.parser.add_argument('-lt', '--linetest', action='store_true')
+    self.parser.add_argument('-imanal', '--imanal', action='store_true')
     self.parser.add_argument('-ct', '--cameratest', action='store_true')
     self.parser.add_argument('-rt', '--randomtest', action='store_true')
     self.parser.add_argument('-b', '--base', action='store_true')
     self.parser.add_argument('-dxy', '--drivexy', action='store_true')
+    self.parser.add_argument('-bob', '--testbob', action='store_true')
     self.parser.add_argument('-c', '--controller', action='store_true',
                              help='Manual controller mode')
     self.parser.add_argument('--calibrate_cb', action='store_true',
@@ -140,6 +142,11 @@ class UService:
     self.parser.add_argument('--mission_half_HALF', action='store_true')
     self.parser.add_argument('--line_vision', action='store_true',
                              help='Run the line following with vision (might be used for other vision tests later)')
+    self.parser.add_argument('--roundabout_vision', action='store_true',
+                             help='Drive around the roundabout using camera vision')
+    self.parser.add_argument('--drive_to_line', action='store_true',
+                             help='Drive to the line using the camera')
+    self.parser.add_argument('--mission_final', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):

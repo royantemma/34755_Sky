@@ -3,6 +3,8 @@ import urllib.request
 import json
 import numpy as np
 
+
+
 class Navigator:
     def __init__(self, host="127.0.0.1", port=7123):
         self.base_url = f"http://{host}:{port}"

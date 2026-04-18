@@ -5,14 +5,14 @@ import os
 
 # Import framework modules
 from uservice import service
-from spose import pose
+from sfuse import iwo as pose
 import aruco
 
 def find_and_catch():
     """Main mission state machine with two-phase approach for ArUco Cube"""
     state = 0
-    arm_reach = 0.32
-    approach_margin = 0.30 # stop 20cm before arm reach on first pass
+    arm_reach = 0.29
+    approach_margin = 0.40 # stop 40cm before arm reach on first pass
     
     target_distance = 0.0
     target_angle = 0.0
@@ -23,7 +23,7 @@ def find_and_catch():
 
     print("% Starting Cube Catch Mission (Shared Aruco)!")
     service.send("robobot/cmd/T0", "leds 16 0 0 100") # Blue LED: Searching
-    service.send("robobot/cmd/T0", "servo 1 -900 300") # Ensure arm is UP
+    service.send("robobot/cmd/T0","servo 1 -930 400") # Ensure arm is UP
     
     t.sleep(1.0)
     
@@ -53,12 +53,12 @@ def find_and_catch():
                 state = 1
             else:
                 # Spin to search
-                service.send("robobot/cmd/ti", "rc 0.0 0.4") 
+                service.send("robobot/cmd/ti", "rc 0.0 0.1")
                 t.sleep(0.1)
                 
         elif state == 1:
             # STATE 1: Turn towards the cube
-            if target_angle > 0:
+            if target_angle > 0.05: # About 3 degrees tolerance
                 service.send("robobot/cmd/ti", "rc 0.0 0.5")
             else:
                 service.send("robobot/cmd/ti", "rc 0.0 -0.5")
@@ -77,10 +77,10 @@ def find_and_catch():
                 t.sleep(0.3)
                 state = 10
             else:
-                service.send("robobot/cmd/ti", "rc 0.1 0.0")
+                service.send("robobot/cmd/ti", "rc 0.4 0.0")
                 if pose.tripB >= drive_dist:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                    t.sleep(0.3)
+                    t.sleep(0.5)
                     state = 10
             t.sleep(0.05)
 
@@ -96,6 +96,7 @@ def find_and_catch():
                 drive_dist = target_distance - arm_reach
                 
                 print(f"% Phase 2: Cube at x={rx:.3f} m, y={ry:.3f} m")
+                print(f"%   Distance={target_distance:.3f} m, Angle={np.degrees(target_angle):.1f} deg")
                 print(f"%   Phase 2 drive: {drive_dist:.3f} m (dist - arm)")
                 
                 pose.tripBreset()
@@ -109,47 +110,55 @@ def find_and_catch():
 
         elif state == 11:
             # STATE 11: Fine-adjust heading
-            if abs(target_angle) < 0.05:
+            if abs(target_angle) < 0.02: # About 1 degree tolerance
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 pose.tripBreset()
                 state = 12
             else:
                 if target_angle > 0:
-                    service.send("robobot/cmd/ti", "rc 0.0 0.3")
+                    service.send("robobot/cmd/ti", "rc 0.0 0.2")
                 else:
-                    service.send("robobot/cmd/ti", "rc 0.0 -0.3")
+                    service.send("robobot/cmd/ti", "rc 0.0 -0.2")
                     
-                if abs(pose.tripBh) >= abs(target_angle):
+                if abs(pose.tripBh) >= abs(target_angle) - 0.01: # Stop early to avoid overshoot
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                    print(f"% Turned {np.degrees(pose.tripBh):.1f} deg (target {np.degrees(target_angle):.1f} deg)")
                     pose.tripBreset()
                     state = 12
             t.sleep(0.05)
             
         elif state == 12:
-            # Drop the arm
-            service.send("robobot/cmd/T0", "servo 1 10 300")
-            print("% Arm dropped")
-            state = 13
-            t.sleep(1.0)
-            
-        elif state == 13:
             # Drive the last segment
             if drive_dist <= 0:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                state = 14
+                state = 13
             else:
                 service.send("robobot/cmd/ti", "rc 0.1 0.0")
                 if pose.tripB >= drive_dist:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                    state = 14
+                    state = 13
             t.sleep(0.05)
             
-        elif state == 14:
-            # CATCH
-            service.send("robobot/cmd/T0", "servo 1 -900 300")
-            service.send("robobot/cmd/T0", "leds 16 0 0 100") 
-            print("% Cube presumably caught and lifted!")
+        elif state == 13: # gross catch
+            print("% Lowering arm to catch cube...")
+            service.send("robobot/cmd/T0","servo 1 150 400") # (servo down)
             t.sleep(0.5)
+            service.send("robobot/cmd/T0","servo 1 10000 0") # (servo off)
+            state = 14
+
+        elif state == 14: # fine catch
+            # jiggle left and right to ensure cube is in arm
+            service.send("robobot/cmd/ti", "rc 0.0 0.4")
+            t.sleep(1)
+            service.send("robobot/cmd/ti", "rc 0.0 -0.4")
+            t.sleep(2)
+            service.send("robobot/cmd/ti", "rc 0.0 0.0")
+
+            print("% Cube caught! (hopefully...)")
+            t.sleep(0.5)
+
+            # Disabling servo
+            service.send("robobot/cmd/T0","servo 1 10000 0") # (servo off)
             
             client.set_enabled(False)
             service.stop = True

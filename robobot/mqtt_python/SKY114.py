@@ -54,6 +54,34 @@ import socketserver
 latest_jpeg = None
 frame_condition = threading.Condition()
 
+def test_BOB():
+  print("Testing BOB")
+  # Resetting Odometry
+  state = 0
+  pose.tripBreset()
+
+  print("% Starting BOB mission! -------------------------")
+  service.send("robobot/cmd/T0","leds 16 0 100 0") # green
+
+  # Main "State Machine of the Mission"
+  while not (service.stop):
+      if state == 0: # wait for start signal
+          service.send("robobot/cmd/ti","rc 0.2 0.0") # (forward m/s, turn-rate rad/sec)
+          state = 1
+      elif state == 1:
+          edge.CUSTOM_CONTROL_ENABLED = True
+          edge.lineControl(0.3)
+      else:
+          print(f"# drive 1m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+          service.send("robobot/cmd/ti","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+          break
+      print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds; left {edge.posLeft}, right {edge.posRight}")
+      t.sleep(0.05)
+  pass
+  service.send("robobot/cmd/T0","leds 16 0 0 0") # end
+  print("% Testing BOB ------------------------- end")
+
+
 class TestStreamHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
       # This will show up in your terminal to tell us EXACTLY what the browser wants

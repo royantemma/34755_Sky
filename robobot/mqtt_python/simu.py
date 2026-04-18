@@ -24,11 +24,39 @@
 
 import time as t
 from datetime import *
+import numpy as np
+import aruco
 
 
 
 class SImu:
+    # AI
+    aruco_client = None
 
+    def _get_aruco_client(self):
+      if self.aruco_client is None:
+        self.aruco_client = aruco.get_client()
+      return self.aruco_client
+
+    def _get_aruco_pose(self):
+      try:
+        client = self._get_aruco_client()
+        data = client.get_data()
+        if not data or not data.get('estimates'):
+          return None
+        estimates = data['estimates']
+        xs = [e['robot_x'] for e in estimates]
+        ys = [e['robot_y'] for e in estimates]
+        yaws = [e['robot_yaw'] for e in estimates]
+        if len(estimates) == 0:
+          return None
+        avg_x = sum(xs) / len(xs)
+        avg_y = sum(ys) / len(ys)
+        avg_yaw = np.arctan2(np.sum(np.sin(yaws)), np.sum(np.cos(yaws)))
+        return {'x': avg_x, 'y': avg_y, 'z': 0.0, 'yaw': avg_yaw}
+      except Exception:
+        return None
+    ##
     gyro = [0, 0, 0]
     gyroUpdCnt = 0
     gyroTime = datetime.now()
@@ -108,7 +136,14 @@ class SImu:
             if iwo.wheelVelocityCnt > 0:
               dt = (t1 - t0).total_seconds()
               if 0 < dt < 0.5: # Handle if t0 lies in the past
-                  iwo.fuse(self.acc, self.gyro, dt)
+                  aruco_pose = self._get_aruco_pose()
+                  pos_meas = None
+                  att_meas = None
+                  #if aruco_pose is not None:
+                  #  pos_meas = [aruco_pose['x']/1000, aruco_pose['y']/1000, aruco_pose['z']/1000]
+                  #  #pos_meas = [aruco_pose['x'], aruco_pose['y'], aruco_pose['z']]
+                  #  att_meas = [np.deg2rad(aruco_pose['yaw'])]
+                  iwo.fuse(self.acc, self.gyro, dt, pos_meas=pos_meas, att_meas=att_meas)
 
 
         elif topic == "T0/acc":
