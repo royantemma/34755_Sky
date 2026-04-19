@@ -3,7 +3,7 @@ from datetime import *
 from threading import Thread
 import numpy as np
 
-ENABLE_LOGGING = True
+ENABLE_LOGGING = False
 
 class SFuse:
     #

@@ -359,7 +359,23 @@ class SEdge:
       if self.lineValid:
         for i in range(8):
           self.BOB += weights[i] * self.edge_n[i]
-        print(self.BOB)
+        #print(self.BOB)
+
+      if self.lineValid and self.lineValidCnt < 20:
+        self.lineValidCnt += 1
+      elif not self.lineValid:
+        if self.lineValidCnt > 0:
+          self.lineValidCnt -= 1
+        else:
+          self.lineValidCnt = 0
+      if self.crossingLine and self.crossingLineCnt < 20:
+        self.crossingLineCnt += 1
+      elif not self.crossingLine:
+        self.crossingLineCnt -= 1
+        if self.crossingLineCnt < 0:
+          self.crossingLineCnt = 0
+      pass
+      
       
       
 
