@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>bobROS Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="views-row">
+        <!-- Camera View -->
+        <div class="view-box camera-box" id="camera-box">
+            <img id="main-stream" alt="Main Stream">
+            <img id="cameratest-stream" alt="ArUco Stream" class="d-none">
+        </div>
+        
+        <!-- 3D View -->
+        <div class="view-box box-3d" id="box-3d">
+            <div id="canvas-container"></div>
+        </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="tools-row">
+        <!-- Mission Control Box -->
+        <div class="tool-box">
+            <h3>Mission Control</h3>
+            <div class="buttons-container">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label class="switch">
+                            <input type="checkbox" id="aruco-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="aruco-status-text" class="status-text">Detection Disabled</span>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons-container mt-15">
+                <button id="catch-btn" class="btn btn-catch">Catch Cube</button>
+                <button id="disable-servo-btn" class="btn btn-warn">Disable Servo</button>
+                <button id="stop-btn" class="btn btn-stop">Stop Mission</button>
+            </div>
+            
+            <div id="cube-center-info" class="mt-15 info-box d-none">
+                Cube (ID 53) Center (Avg): <br><span id="cube-center-coords">N/A</span>
+            </div>
+        </div>
+        
+        <!-- Detected Markers Box -->
+        <div class="tool-box flex-grow">
+            <h3>Detected Markers (Real-time)</h3>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Right (X, mm)</th>
+                            <th>Forward (Y, mm)</th>
+                            <th>Up (Z, mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aruco-table-body">
+                        <tr><td colspan="4">No markers detected</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Position Estimates Box -->
+        <div class="tool-box flex-grow">
+            <h3>Position Estimates (from ArUco)</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>From ID</th>
+                            <th>X (mm)</th>
+                            <th>Y (mm)</th>
+                            <th>Yaw (deg)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aruco-estimates-body">
+                        <tr><td colspan="4">No estimates available</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="averaged-pose-info" class="mt-15 info-box d-none">
+                Averaged Pose:<br><span id="averaged-pose-coords">N/A</span>
+            </div>
+        </div>
+        
+        <!-- Position Estimates Box -->
+        <div class="tool-box flex-grow">
+            <h3>Position Estimates (from ArUco)</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>From ID</th>
+                            <th>X (mm)</th>
+                            <th>Y (mm)</th>
+                            <th>Yaw (deg)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aruco-estimates-body">
+                        <tr><td colspan="4">No estimates available</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="averaged-pose-info" class="mt-15 info-box d-none">
+                Averaged Pose:<br><span id="averaged-pose-coords">N/A</span>
+            </div>
+        </div>
+        
+        <!-- 3D Controls Box -->
+        <div class="tool-box">
+            <h3>3D Pose Override</h3>
+            <div class="pose-controls">
+                <div class="control-group">
+                    <label>X</label> <input type="number" id="posX" value="0" step="10"> mm
+                </div>
+                <div class="control-group">
+                    <label>Y</label> <input type="number" id="posY" value="0" step="10"> mm
+                </div>
+                <div class="control-group">
+                    <label>Z</label> <input type="number" id="posZ" value="0" step="10"> mm
+                </div>
+                <div class="control-group">
+                    <label>Roll</label> <input type="number" id="rotRoll" value="0" step="5"> deg
+                </div>
+                <div class="control-group">
+                    <label>Pitch</label> <input type="number" id="rotPitch" value="0" step="5"> deg
+                </div>
+                <div class="control-group">
+                    <label>Yaw</label> <input type="number" id="rotYaw" value="0" step="5"> deg
+                </div>
+            </div>
+            <button id="resetBtn" class="btn btn-reset mt-15">Reset Pose</button>
+        </div>
+    </div>
+
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="main.js" defer></script>
+    <script type="module" src="app3d.js" defer></script>
+</body>
+</html>
