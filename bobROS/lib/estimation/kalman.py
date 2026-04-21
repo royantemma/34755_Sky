@@ -323,11 +323,6 @@ class KalmanFilter:
       except Exception as e:
         print(f"Logging Error: {e}")
 
-      from uservice import service
-      service.send("robobot/iwo/pos",f"{self.fused_x} {self.fused_y} {self.fused_z}")
-      service.send("robobot/iwo/ang",f"{self.fused_roll} {self.fused_pitch} {self.fused_yaw}")
-      service.send("robobot/map",f"{self.fused_x} {self.fused_y} {self.fused_yaw}")
-
     def reset_kalman(self):
       self.X = np.array([0, 0, 0, 1.0, 0, 0, 0]) # x y z q_wxyz
       self.P = 10*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
@@ -356,77 +351,29 @@ class KalmanFilter:
       # radians per second
       return (self.wheelVelocity[0] - self.wheelVelocity[1])/self.wheelBase
 
-    def setup(self):
-      from uservice import service
-      loops = 0
-      configured = False
-      # get robot configuration (once)
-      # data subscription is set in teensy_interface/build/robot.ini
-      while not service.stop:
-        # wait for data to arrive
-        t.sleep(0.02)
-        # wheel configuration info
-        if self.infoCnt == 0 and False:
-          # get configuration (once)
-          service.send("robobot/cmd/T0","confi")
-          pass
-        elif not configured:
-          # reset pose
-          service.send("robobot/cmd/T0","enc0")
-          ## send robot configuration
-          # confw rl rr g t wb Set configuration 
-          #     radius (left,right (m)), gear, encTick, wheelbase (m)
-          service.send("robobot/cmd/T0","confw 0.1036 0.1036 19 92 0.23")
-          # encoder reversed (motortest only)
-          # service.send("robobot/cmd/T0/encrev","1")
-          # request new configuration from Teensy
-          service.send("robobot/cmd/T0","confi")
-          # wait for new config message
-          # self.infoCnt = 0
-          configured = True
-        elif self.wheelVelocityCnt == 0:
-          # wait for wheel velocity (set in robot.ini)
-          pass
-        elif self.poseCnt == 0:
-          # wait for pose data (set in robot.ini)
-          pass
-        else: # finished
-          print(f"% Pose:: configured, and got data stream; {loops} loops.")
-          break
-        loops += 1
-        if loops > 20:
-          print(f"% Pose:: missing data updates after {loops} wait loops (continues).")
-          print(f"% Pose:: got wheelVelocityCnt={self.wheelVelocityCnt}.")
-          print(f"% Pose:: got motorVelocityCnt={self.motorVelocityCnt} (expected 0).")
-          print(f"% Pose:: got wheelVelocityCnt={self.poseCnt}.")
-          break
-        pass
-      pass
-
     def printMVel(self):
-      from uservice import service
-      print("% Pose motor velocity " + str(self.motorVelocityTime - service.startTime) + " (" +
+      print("% Pose motor velocity (" +
             str(self.motorVelocity[0]) + ", " +
             str(self.motorVelocity[1]) + f") (rad/sec) {self.motorVelocityInterval:.4f} sec " +
             str(self.motorVelocityCnt))
+
     def printWVel(self):
-      from uservice import service
-      print("% Pose wheel velocity " + str(self.wheelVelocityTime - service.startTime) + " (" +
+      print("% Pose wheel velocity (" +
             str(self.wheelVelocity[0]) + ", " +
             str(self.wheelVelocity[1]) + f") (m/sec) {self.wheelVelocityInterval:.4f} sec " +
             str(self.wheelVelocityCnt))
+
     def printPose(self):
-      from uservice import service
-      print("% Pose  " + str(self.poseTime - service.startTime) + " (" +
+      print("% Pose (" +
             f"{self.pose[0]:.3f}, " +
             f"{self.pose[1]:.3f}, " +
             f"{self.pose[2]:.4f}, " +
             f"{self.pose[3]:.4f}) (m,m,rad,rad) {self.poseInterval:.4f} sec " +
             str(self.poseCnt))
+
     def printInfo(self):
-      from uservice import service
-      print(f"% SPose.py:: Robot config info {self.infoCnt} at " + str(self.motorVelocityTime - service.startTime))
-      print(f"%    - Wheel radius (left,right): ({self.radiusLeft}, {self.radiusRight} m")
+      print(f"% SPose.py:: Robot config info {self.infoCnt}")
+      print(f"%    - Wheel radius (left,right): ({self.radiusLeft}, {self.radiusRight} m)")
       print(f"%    - Encoder tick per rev: {self.tickPerRev}")
       print(f"%    - Gearing: {self.gear}:1")
       print(f"%    - Wheel base: {self.wheelBase} m")

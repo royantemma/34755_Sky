@@ -1,9 +1,30 @@
 const mainStream = document.getElementById('main-stream');
-const cameratestStream = document.getElementById('cameratest-stream');
 
 window.addEventListener('load', () => {
-    mainStream.src = '/stream/main';
+    mainStream.src = `${window.location.protocol}//${window.location.hostname}:7124/stream/main`;
     setInterval(fetchArucoData, 200);
+
+    // Vision Layer Toggles
+    const layerAruco = document.getElementById('layer-aruco');
+    const layerRed = document.getElementById('layer-red');
+    const layerBW = document.getElementById('layer-bw');
+
+    function updateLayers() {
+        const layers = {
+            aruco: layerAruco.checked,
+            red_mask: layerRed.checked,
+            bw_threshold: layerBW.checked
+        };
+        fetch('/api/vision/layers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(layers)
+        }).catch(err => console.error("Error updating vision layers:", err));
+    }
+
+    layerAruco.addEventListener('change', updateLayers);
+    layerRed.addEventListener('change', updateLayers);
+    layerBW.addEventListener('change', updateLayers);
 });
 
 const cameraBox = document.getElementById('camera-box');
@@ -50,15 +71,8 @@ function fetchArucoData() {
 
             if (data.enabled) {
                 statusText.innerText = "Detection Enabled";
-                if (!cameratestStream.src || !cameratestStream.src.includes('/stream/cameratest')) {
-                    cameratestStream.src = '/stream/cameratest';
-                }
-                cameratestStream.classList.remove('d-none');
-                mainStream.classList.add('d-none');
             } else {
                 statusText.innerText = "Detection Disabled";
-                cameratestStream.classList.add('d-none');
-                mainStream.classList.remove('d-none');
             }
 
             if (!data.enabled) {

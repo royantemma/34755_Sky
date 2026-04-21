@@ -9,13 +9,18 @@ from nodes.mqtt_base import MQTTNode
 class NavigationNode(MQTTNode):
     def __init__(self):
         super().__init__("NavigationNode")
-        iwo.setup() # Initialize the Kalman filter matrices
+        iwo.reset_kalman() # Initialize the Kalman filter matrices
 
     def on_connect(self, client, userdata, flags, rc):
         super().on_connect(client, userdata, flags, rc)
         self.client.subscribe("robobot/drive/imu")
         self.client.subscribe("robobot/drive/motor")
         self.client.subscribe("robobot/drive/pose")
+
+        # Setup configuration
+        self.client.publish("robobot/cmd/T0", "enc0")
+        self.client.publish("robobot/cmd/T0", "confw 0.1036 0.1036 19 92 0.23")
+        self.client.publish("robobot/cmd/T0", "confi")
 
     def on_message(self, client, userdata, msg):
         topic = msg.topic
@@ -37,6 +42,9 @@ class NavigationNode(MQTTNode):
                 "tripBh": iwo.tripBh
             }
             self.client.publish("robobot/state/pose", json.dumps(pose_data))
+            self.client.publish("robobot/iwo/pos", f"{iwo.fused_x} {iwo.fused_y} {iwo.fused_z}")
+            self.client.publish("robobot/iwo/ang", f"{iwo.fused_roll} {iwo.fused_pitch} {iwo.fused_yaw}")
+            self.client.publish("robobot/map", f"{iwo.fused_x} {iwo.fused_y} {iwo.fused_yaw}")
             time.sleep(0.01) # 100Hz tick rate
 
 def start_navigation():

@@ -78,11 +78,11 @@ class ArucoProcessor:
             [-size/2, -size/2, 0]
         ], dtype=np.float32)
 
-    def process_image(self, frame, valid_ids=None):
+    def process_image(self, frame, overlay_frame, valid_ids=None):
         if self.mtx is None or self.dist is None:
-            return frame, {"markers": [], "cube_center": None, "estimates": []}
+            return overlay_frame, {"markers": [], "cube_center": None, "estimates": []}
             
-        # Convert RGB to BGR for OpenCV drawing correctly
+        # Convert RGB to BGR for OpenCV detection correctly
         frame_bgr = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
         gray = cv.cvtColor(frame_bgr, cv.COLOR_BGR2GRAY)
         try:
@@ -96,7 +96,7 @@ class ArucoProcessor:
         estimates = [] # position estimates
 
         if ids is not None:
-            cv.aruco.drawDetectedMarkers(frame_bgr, corners, ids)
+            cv.aruco.drawDetectedMarkers(overlay_frame, corners, ids)
             for i in range(len(ids)):
                 marker_id = int(ids[i][0])
                 if marker_id not in MARKER_DB:
@@ -110,7 +110,7 @@ class ArucoProcessor:
                 marker_corners = corners[i][0]
                 ret, rvec, tvec = cv.solvePnP(obj_pts, marker_corners, self.mtx, self.dist)
                 if ret:
-                    cv.drawFrameAxes(frame_bgr, self.mtx, self.dist, rvec, tvec, size)
+                    cv.drawFrameAxes(overlay_frame, self.mtx, self.dist, rvec, tvec, size)
                     
                     tvec_mm = tvec * 1000.0
                     R_marker, _ = cv.Rodrigues(rvec)

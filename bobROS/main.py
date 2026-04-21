@@ -4,7 +4,14 @@ import sys
 import subprocess
 import os
 
-from nodes.vision import start_vision
+os.environ["LIBCAMERA_LOG_LEVELS"] = "ERROR"
+
+from nodes.vision.camera import start_camera
+from nodes.vision.stream import start_stream
+from nodes.vision.aruco import start_aruco
+from nodes.vision.red_mask import start_red_mask
+from nodes.vision.bw_threshold import start_bw_threshold
+
 from nodes.mission import start_mission
 from nodes.navigation import start_navigation
 from nodes.web import start_web
@@ -17,12 +24,17 @@ def start_teensy_interface():
     subprocess.run(cmd, cwd=path_to_build)
 
 if __name__ == "__main__":
-    print("[Main] Initializing bobROS Architecture...")
+    print("[Main] Initializing bobROS Architecture (Option B: Layered Vision)...")
 
     # Define processes
     processes = {
         #"TeensyInterface": multiprocessing.Process(target=start_teensy_interface),
-        "Vision": multiprocessing.Process(target=start_vision),
+        "Camera": multiprocessing.Process(target=start_camera),
+        "Stream": multiprocessing.Process(target=start_stream),
+        "Aruco": multiprocessing.Process(target=start_aruco),
+        "RedMask": multiprocessing.Process(target=start_red_mask),
+        "BWThreshold": multiprocessing.Process(target=start_bw_threshold),
+        
         "Navigation": multiprocessing.Process(target=start_navigation),
         "Mission_Control": multiprocessing.Process(target=start_mission),
         "Web_Interface": multiprocessing.Process(target=start_web)

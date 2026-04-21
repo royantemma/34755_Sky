@@ -10,7 +10,6 @@
         <!-- Camera View -->
         <div class="view-box camera-box" id="camera-box">
             <img id="main-stream" alt="Main Stream">
-            <img id="cameratest-stream" alt="ArUco Stream" class="d-none">
         </div>
         
         <!-- 3D View -->
@@ -23,7 +22,32 @@
     <div class="tools-row">
         <!-- Mission Control Box -->
         <div class="tool-box">
-            <h3>Mission Control</h3>
+            <h3>Vision Layers</h3>
+            <div class="buttons-container vision-layer-row">
+                <div class="layer-control">
+                    <label class="switch">
+                        <input type="checkbox" id="layer-aruco" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text">ArUco</span>
+                </div>
+                <div class="layer-control">
+                    <label class="switch">
+                        <input type="checkbox" id="layer-red">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text">Red Mask</span>
+                </div>
+                <div class="layer-control">
+                    <label class="switch">
+                        <input type="checkbox" id="layer-bw">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text">BW Threshold</span>
+                </div>
+            </div>
+
+            <h3 class="mt-15">Mission Control</h3>
             <div class="buttons-container">
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <div style="display: flex; align-items: center; gap: 10px;">
