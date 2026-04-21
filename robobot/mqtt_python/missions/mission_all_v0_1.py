@@ -19,7 +19,7 @@ TASKS = [
         "junction": 'left',
         "start_speed": 0,
         "nominal_speed": 0.6,
-        "stop_speed": 0.3,
+        "stop_speed": 0.25,
         "turn_sensitivity": 0.005,
         "time_to_full_speed": 0.2,
         "stop_time": 0.4,
@@ -28,30 +28,46 @@ TASKS = [
 
     {
         "type":     "drive_straight",
-        "speed":    0.3,
-        "distance": 0.45,
+        "speed":    0.25,
+        "distance": 0.15,
         "timeout":  200,
         "is_stopping_at_end": True
     },
 
     {
         "type":     "drive_curved",
-        "speed":    -0.1,
+        "nominal_speed":    0.25,
+        "stop_speed": 0.25,
         "turn_rate": 1,
-        "heading_deg": -55,
+        "final_turn_rate": 0,
+        "heading_deg": -15,
         "timeout":  200,
-        "tolerance": 4
+        "tolerance": 2,
     },
+
+    # {
+    #     "type":     "drive_roundabout",
+    #     "nominal_speed":    0.4,
+    #     "stop_speed": 0.4,
+    #     "turn_rate": 1.15,
+    #     "final_turn_rate": 0,
+    #     "heading_deg": 15,
+    #     "timeout":  200,
+    #     "tolerance": 2,
+    #     "min_run_time": 2.5
+    # },
 
 
     { # Theo: I tried higher speeds, but I didn't managed to get it work well, so don't loose your time on this ;)
         "type": "roundabout_vision", # controlling speed ? stops ?
-        "timeout": 4,
+        "timeout": 10,
         "speed": 0.4, # 0.4 recommended
+        "start_speed": 0.25, # choose same as before
         "stop_speed": 0.4,
-        "time_to_full_speed": 0.3,
-        "Kp": 6, # 6 recommended
-        "Ki": 0.02 # 0.2 recommended
+        "time_to_full_speed": 0.06,
+        "Kp": 6, # 6 recommended (not implemented)
+        "Ki": 0.5, # 0.2 recommended (not implemented)
+        "percentage_of_white": 30 # this parameters tunes the center of the roundabout (i think smaller is smaller radius)
     },
 
     {
@@ -71,16 +87,16 @@ TASKS = [
         "stop_speed": 0,
         "turn_sensitivity": 0.007, # nice value is 0.005
         "time_to_full_speed": 2.5,
-        "stop_time": 0.2
+        "stop_time": 1.5
     }, 
 
-    {
-        "type":     "drive_straight",
-        "speed":    0.01,
-        "distance": 0.2,
-        "timeout":  200,
-        "is_stopping_at_end": False
-    },
+    # {
+    #     "type":     "drive_straight",
+    #     "speed":    0.01,
+    #     "distance": 0.2,
+    #     "timeout":  200,
+    #     "is_stopping_at_end": False
+    # },
 
     # {
     #     "type":      "turn_to_heading",

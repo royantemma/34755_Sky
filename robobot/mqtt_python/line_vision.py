@@ -83,7 +83,15 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-def line_follow_vision(junctions = [JunctionDirection.LEFT], speed=0.2, sensitivity=0.0025):
+def line_follow_vision(junctions = 'straight',
+                       start_speed=0,
+                       nominal_speed=0.2,
+                       sensitivity=0.0025,
+                       stop_speed=0,
+                       time_to_full_speed=0,
+                       stop_time=0,
+                       timeout=None,
+                       min_pixels_to_detect_line=-1):
     #print("Starting camera test stream...")
 
     # 1. Connect to the robot's main camera stream
@@ -91,17 +99,26 @@ def line_follow_vision(junctions = [JunctionDirection.LEFT], speed=0.2, sensitiv
     cap = cv.VideoCapture("http://localhost:7123/stream/main")
 
     stop_event = threading.Event()
-    def my_signal_handler(sig, frame):
-        print('UService:: You pressed Ctrl+C!')
-        service.send("robobot/cmd/ti","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
-        stop_event.set()
-    signal.signal(signal.SIGINT, my_signal_handler)
+
+    # THIS ONLY WORKS IN THE MAIN THREAD, SO IT NEEDS TO BE DEACTIVATED WHEN RUNNING THE MISSION_RUNNER (THERE IS ALSO A PART BELOW THAT NEEDS TO BE UNCOMMENTED)
+    # def my_signal_handler(sig, frame):
+    #     print('UService:: You pressed Ctrl+C!')
+    #     service.send("robobot/cmd/ti","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+    #     stop_event.set()
+    # signal.signal(signal.SIGINT, my_signal_handler)
+
+    # Start the mini web server on port 7124
+    address = ('0.0.0.0', 7124)
+    print("Starting OpenCV test stream on port 7124...")
+    httpd = ThreadedHTTPServer(address, TestStreamHandler)
     
     def process_and_stream():
         global latest_jpeg
-        junction_start_index = 0
-        prev_position_intersections = []
-        # prev_time = t.perf_counter()
+        failed_recognitions = 0
+        MIN_PIXELS_TO_DETECT_LINE = min_pixels_to_detect_line if min_pixels_to_detect_line >= 0 else 10
+        MAX_FAILED_RECOGNITIONS = 3
+        speed = start_speed
+        start_time = t.time()
 
         try:
             while not stop_event.is_set():
@@ -112,15 +129,43 @@ def line_follow_vision(junctions = [JunctionDirection.LEFT], speed=0.2, sensitiv
                     #image, heading = process_frame(frame, percentage_width=80)
                     #vision_steer_robot(heading, forward_speed=0.6, turn_sensitivity=0.005)
                     # vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
-                    # clean_binary = process_frame2(frame, percentage_width=80)
-                    # heading, image, position_intersections = get_heading(clean_binary, junctions, junction_start_index)
-                    # junction_start_index = update_junction_index(prev_position_intersections, position_intersections, junction_start_index)
-                    # prev_position_intersections = position_intersections
-                    # print(t.time()-t0)
-                    
-                    image, heading = process_frame2(frame, 'right', percentage_width=80)
-                    #vision_steer_robot(heading, forward_speed=0.2, turn_sensitivity=0.0025)
-                    
+                    heading = None
+                    if junctions == 'straight':
+                        image, heading = process_frame(frame, MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+                    elif junctions == 'left':
+                        image, heading = process_frame2(frame, 'left', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+                    elif junctions == 'right':
+                        image, heading = process_frame2(frame, 'right', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+
+                    #image, heading = process_frame2(frame, 'left', percentage_width=80, percentage_height=40)
+                    if heading is None:
+                        failed_recognitions += 1
+                        print(failed_recognitions)
+                        if failed_recognitions >= MAX_FAILED_RECOGNITIONS:
+                            print("Warning: heading was None, stopping vision")
+                            if stop_time <= 0:
+                                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                            else:
+                                slow_down(stop_time, speed, stop_speed)
+                            stop_event.set()
+                            threading.Thread(target=httpd.shutdown, daemon=True).start()
+                            break   # IMPORTANT: exit immediately
+                    else:
+                        #vision_steer_robot(heading, forward_speed=0.4, turn_sensitivity=0.005)
+                        current_time = t.time()
+                        failed_recognitions = 0
+
+                        if timeout is not None and current_time - start_time > timeout - stop_time:
+                            print("timeout is approaching, reducing speed...")
+                            remaining_time = timeout - (current_time - start_time)
+                            factor = max(0, min(1, remaining_time / stop_time))
+                            speed = stop_speed + (nominal_speed - stop_speed) * factor
+                            print(f"timeout is approaching, reducing speed... {speed}")
+                            vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=0.005+(sensitivity-0.005)*speed/nominal_speed)
+                        else:
+                            speed = start_speed + (nominal_speed-start_speed) * min(time_to_full_speed, t.time()-start_time) / time_to_full_speed
+                            vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
+                    #print(t.time()-t0)
 
                     # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
                     thresh_bgr = image
@@ -138,22 +183,55 @@ def line_follow_vision(junctions = [JunctionDirection.LEFT], speed=0.2, sensitiv
                 t.sleep(0.02) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
         finally:
             print("Thread stopping robot")
-            service.send("robobot/cmd/ti", "rc 0.0 0.0")
+            if stop_speed <= 0:
+                print("Stopping Robot")
+                t.sleep(5)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+            
 
-    # Start the OpenCV processing in the background
-    threading.Thread(target=process_and_stream, daemon=True).start()
+    # 🔹 Start worker thread
+    worker_thread = threading.Thread(target=process_and_stream, daemon=True)
+    worker_thread.start()
 
-    # Start the mini web server on port 7124
-    address = ('0.0.0.0', 7124)
-    print("Starting OpenCV test stream on port 7124...")
-    httpd = ThreadedHTTPServer(address, TestStreamHandler)
     try:
         httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down test stream.")
-        httpd.server_close()
-        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+        
+    # except KeyboardInterrupt:
+    #     print("\nShutting down test stream.")
+    #     httpd.server_close()
+    #     service.send("robobot/cmd/ti", "rc 0.0 0.0")
+    #     stop_event.set()
+    finally:
+        print("HTTP server stopped")
+        # if stop_time > 0:
+        #     print("Slowing Down Robot")
+        #     slow_down(stop_time, nominal_speed, stop_speed)
+        if stop_speed <= 0:
+                #t.sleep(5)
+                print("Stopping Robot")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+
         stop_event.set()
+        worker_thread.join()
+
+        httpd.server_close()
+        print("Vision fully stopped")
+
+def slow_down(stop_time, speed, stop_speed):
+    start_time = t.time()
+
+    while True:
+        elapsed = t.time() - start_time
+        alpha = max(0.0, stop_time - elapsed / stop_time)
+
+        v = stop_speed + (speed-stop_speed) * alpha
+        service.send("robobot/cmd/ti", f"rc {v:.3f} 0.0")
+
+        if alpha <= 0.0:
+            break
+
+        t.sleep(0.02)  # keep update rate similar to control loop
+
 
 def drive_to_line():
     #print("Starting camera test stream...")
@@ -215,7 +293,7 @@ def drive_to_line():
         stop_event.set()
 
 
-def process_frame(img, percentage_height=40, percentage_width=100):
+def process_frame(img, MIN_PIXELS_TO_DETECT_LINE, percentage_height=40, percentage_width=100):
     # Choose relevant portion of the image and convert to grayscale
     h, w = img.shape[:2]
     h_relevant = (h * percentage_height) // 100
@@ -242,7 +320,7 @@ def process_frame(img, percentage_height=40, percentage_width=100):
     sums = np.sum(weights, axis=1)
     valid_rows = sums > 0  # Ignore rows with no white pixels
 
-    if not np.any(valid_rows):
+    if len(valid_rows) < MIN_PIXELS_TO_DETECT_LINE:
         heading = 0  # no line detected
     else:
         row_centers = np.sum(weights[valid_rows] * indices, axis=1) / sums[valid_rows]
@@ -259,7 +337,7 @@ def process_frame(img, percentage_height=40, percentage_width=100):
     return frame, heading
 
 
-def process_frame2(img, follow, percentage_height=40, percentage_width=100):
+def process_frame2(img, follow, MIN_PIXELS_TO_DETECT_LINE, percentage_height=40, percentage_width=100):
 
     # Choose relevant portion of the image and convert to grayscale
     h, w = img.shape[:2]
@@ -274,11 +352,19 @@ def process_frame2(img, follow, percentage_height=40, percentage_width=100):
     # Only keep large areas
     num_labels, labels, stats, _ = cv.connectedComponentsWithStats(frame_gray)
     clean = np.zeros_like(frame_gray)
-    for i in range(1, num_labels):  # skip background
-        area = stats[i, cv.CC_STAT_AREA]
-        if area > 200:
-            clean[labels == i] = 255
+    # for i in range(1, num_labels):  # skip background
+    #     area = stats[i, cv.CC_STAT_AREA]
+    #     if area > 200:
+    #         clean[labels == i] = 255
     
+    if num_labels > 1:
+        # skip background (index 0)
+        areas = stats[1:, cv.CC_STAT_AREA]
+        # find largest component index (add 1 because we skipped background)
+        largest_label = 1 + np.argmax(areas)
+        # keep only that component
+        clean[labels == largest_label] = 255
+
     # --- Step 1: Contours ---
     contours, _ = cv.findContours(clean, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
@@ -313,7 +399,8 @@ def process_frame2(img, follow, percentage_height=40, percentage_width=100):
             continue
 
         # Base score: prefer lower (closer to robot)
-        score = cy
+        #score = cy
+        score = 0
 
         if follow == 'left':
             score -= cx * 0.5
@@ -334,19 +421,21 @@ def process_frame2(img, follow, percentage_height=40, percentage_width=100):
 
     heading = 0
 
-    if len(xs) > 0:
-
+    if len(xs) > MIN_PIXELS_TO_DETECT_LINE:
         # normalize row indices (same idea as your valid_indices / h_relevant)
-        norm_y = ys / h
+        norm_y = ys / h2
 
         # same weighting function as your original code
         row_weights = -2 * norm_y + 2
 
         # horizontal error from center
-        x_error = xs - (w / 2)
+        x_error = xs - (w2 / 2)
 
         # weighted sum over ALL pixels (not per-row)
         heading = np.sum(x_error * row_weights) / np.sum(row_weights)
+    
+    else:
+        heading = None
 
     # --- Visualization ---
     output = cv.cvtColor(clean, cv.COLOR_GRAY2BGR)

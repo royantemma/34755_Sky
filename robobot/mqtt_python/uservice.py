@@ -123,6 +123,7 @@ class UService:
     self.parser.add_argument('-rt', '--randomtest', action='store_true')
     self.parser.add_argument('-b', '--base', action='store_true')
     self.parser.add_argument('-dxy', '--drivexy', action='store_true')
+    self.parser.add_argument('-xyyaw', '--xyyaw', action='store_true')
     self.parser.add_argument('-bob', '--testbob', action='store_true')
     self.parser.add_argument('-c', '--controller', action='store_true',
                              help='Manual controller mode')

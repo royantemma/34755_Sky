@@ -12,6 +12,8 @@ from scam import getImage
 from http import server
 import socketserver
 
+import math
+
 
 # robot function
 from spose import pose
@@ -54,6 +56,97 @@ import socketserver
 latest_jpeg = None
 frame_condition = threading.Condition()
 
+def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8):
+    yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
+    # PID Gains
+    Kp_lin = 0.4; Ki_lin = 0.0; Kd_lin = 0.02
+    Kp_ang = 1.5; Ki_ang = 0.0; Kd_ang = 0.05
+    
+    from sfuse import iwo
+    e_lin_int = 0; e_lin_prev = 0
+    e_ang_int = 0; e_ang_prev = 0
+    last_time = t.time()
+
+    xy_reached = False
+
+    while True:
+        # Get current state
+        curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
+        dt = t.time() - last_time
+        if dt <= 0: dt = 0.001 # Prevent division by zero
+
+        if not xy_reached:
+            # --- PHASE 1: Drive to XY ---
+            dist_error = math.sqrt((x_goal - curr_x)**2 + (y_goal - curr_y)**2)
+            desired_heading = math.atan2(y_goal - curr_y, x_goal - curr_x)
+            angle_error = math.atan2(math.sin(desired_heading - curr_yaw), math.cos(desired_heading - curr_yaw))
+
+            if dist_error < 0.05: 
+                print("XY Target reached!")
+                if yaw_goal is None:
+                    break # Exit completely if no yaw is requested
+                xy_reached = True
+                # Reset PID terms for the rotation phase
+                e_ang_int = 0; e_ang_prev = 0 
+                continue
+
+            v = (Kp_lin * dist_error) + (Ki_lin * e_lin_int) + (Kd_lin * (dist_error - e_lin_prev) / dt)
+            # Prioritize turning: don't drive forward if pointing the wrong way
+            if abs(angle_error) > 0.5: v = 0 
+            
+            w = (Kp_ang * angle_error) + (Ki_ang * e_ang_int) + (Kd_ang * (angle_error - e_ang_prev) / dt)
+            e_lin_prev = dist_error
+
+        else:
+            # --- PHASE 2: Reach Final Heading ---
+            angle_error = math.atan2(math.sin(yaw_goal - curr_yaw), math.cos(yaw_goal - curr_yaw))
+            
+            if abs(angle_error) < 0.03: # Within ~1.7 degrees
+                print("Final heading reached!")
+                break
+
+            v = 0 # No forward movement in phase 2
+            w = (Kp_ang * angle_error) + (Ki_ang * e_ang_int) + (Kd_ang * (angle_error - e_ang_prev) / dt)
+            e_ang_prev = angle_error
+
+        # Speed Saturation & Command
+        v = max(min(v, max_speed), -max_speed)
+        w = max(min(w, 1.5), -1.5)
+        service.send("robobot/cmd/ti", f"rc {v:.3f} {w:.3f}")
+
+        last_time = t.time()
+        t.sleep(0.05)
+
+    # Final Stop
+    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+        
+
+
+def test_xyyaw(x=5.41+0.28,y=-2.33+0.48,yaw=0):
+  
+  # Resetting Odometry
+  state = 0
+  pose.tripBreset()
+
+  print("% Starting XY mission! -------------------------")
+  service.send("robobot/cmd/T0","leds 16 0 100 0") # green
+
+  # Main "State Machine of the Mission"
+  while not (service.stop):
+      if state == 0: # wait for start signal
+          go_to_xy(x, y, yaw)
+          state = 1
+      if state == 1: # go back where you came from
+          go_to_xy(0, 0, 0)
+          state = 2
+      else:
+          print(f"# drive 1m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+          service.send("robobot/cmd/ti","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+          break
+  pass
+  service.send("robobot/cmd/T0","leds 16 0 0 0") # end
+  print("% Testing XY YAW ------------------------- end")
+  
 def test_BOB():
   print("Testing BOB")
   # Resetting Odometry
@@ -79,7 +172,7 @@ def test_BOB():
       t.sleep(0.05)
   pass
   service.send("robobot/cmd/T0","leds 16 0 0 0") # end
-  print("% Testing BOB ------------------------- end")
+  print("% Testing xy ------------------------- end")
 
 
 class TestStreamHandler(server.BaseHTTPRequestHandler):

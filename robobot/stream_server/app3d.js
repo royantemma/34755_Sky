@@ -125,15 +125,15 @@ window.addEventListener('robotPoseUpdate', (e) => {
     const isFocused = Object.values(inputs).some(i => document.activeElement === i);
     if (isFocused) return; // Don't snatch focus or values while user is typing
     
-    const { x, y, yaw } = e.detail;
+    const { x, y, z, yaw, pitch, roll } = e.detail;
     
-    // Convert yaw (radians) to degrees for UI, keep Pitch and Roll 0
+    // Convert radians to degrees for UI
     inputs.x.value = Math.round(x);
     inputs.y.value = Math.round(y);
-    inputs.z.value = 0;
+    inputs.z.value = Math.round(z);
     inputs.yw.value = Math.round(yaw * 180 / Math.PI);
-    inputs.r.value = 0;
-    inputs.p.value = 0;
+    inputs.p.value = Math.round(pitch * 180 / Math.PI);
+    inputs.r.value = Math.round(roll * 180 / Math.PI);
     
     updateRobotPose();
 });

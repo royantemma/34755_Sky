@@ -230,6 +230,9 @@ def loop():
   elif service.args.custom_mission:
     SKY114.custom_mission()
     return
+  elif service.args.xyyaw:
+    SKY114.test_xyyaw()
+    return
   elif service.args.imanal:
     SKY114.imageAnalysis(True)
     return
@@ -277,7 +280,7 @@ def loop():
     line_vision.line_follow_vision()
     return
   elif service.args.roundabout_vision:
-    roundabout_vision.drive_roundabout()
+    roundabout_vision.drive_roundabout(0.4, 0.25, 0.4, 0.06, Kp=6, Ki=0.5)
     return
   elif service.args.drive_to_line:
     line_vision.drive_to_line()
@@ -429,7 +432,7 @@ if __name__ == "__main__":
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         elif service.args.mission_final:
-          from missions.mission_all_v0_0 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from missions.mission_all_v0_1 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:
