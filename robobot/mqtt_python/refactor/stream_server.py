@@ -19,6 +19,21 @@ import os
 import sys
 import time
 
+
+from simu import imu
+from spose import pose
+from sir import ir
+from srobot import robot
+from scam import cam
+from sedge import edge
+from sgpio import gpio
+from ulog import flog
+import psutil
+
+from sfuse import iwo
+
+from mqtt_client import service
+
 # Add mqtt_python to path so we can import aruco module
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python"))
 import aruco
@@ -175,37 +190,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
-
-        elif self.path == '/api/mission/set?taskset=1':
-            # Taskset 1
-
-
-            # reply to the browser
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'taskset 1'}).encode('utf-8'))
+        elif self.path == 'example/url/mission/stuff':
             pass
-        elif self.path == '/api/mission/set?taskset=2':
-            # Taskset 2
-
-
-            # reply to the browser
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'taskset 2'}).encode('utf-8'))
-            pass
-        elif self.path == '/api/mission/set?taskset=3':
-            # Taskset 3
-
-
-            # reply to the browser
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'taskset 3'}).encode('utf-8'))
-
         else:
             try:
                 import mimetypes
@@ -241,7 +227,7 @@ line_vision_stream_output = stream_manager.add_stream("line_vision")
 def process_frames():
     global latest_frame
     picam2 = Picamera2()
-    picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (50000, 50000)}))
+    picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
     picam2.start()
     
     while True:
@@ -291,17 +277,18 @@ def start_stream_server():
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
 
-    # service.setup('localhost') # spawns its own rx and tx threads
+    service.setup('localhost') # spawns its own rx and tx threads
 
-    # gpio.setup()
-    # robot.setup()
-    # ir.setup()
-    # pose.setup()
-    # imu.setup()
-    # cam.setup()
-    # edge.setup()
+    gpio.setup()
+    robot.setup()
+    ir.setup()
+    pose.setup()
+    imu.setup()
+    cam.setup()
+    edge.setup()
 
-    # iwo.setup()
+    iwo.setup()
+
 
     address = ('', 7123)
     server = StreamingServer(address, StreamingHandler)

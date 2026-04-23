@@ -1,0 +1,3 @@
+"""
+The web node starts the web server (using the web_assets), and sends MQTT messages when button are pressed, information entered...
+"""
