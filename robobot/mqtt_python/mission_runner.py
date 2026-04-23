@@ -12,6 +12,7 @@ from datetime import datetime
 
 from spose import pose
 from sfuse import iwo
+from simu import imu
 from sedge import edge
 from uservice import service
 from sir import ir
@@ -19,6 +20,9 @@ from sir import ir
 import threading
 from line_vision import line_follow_vision
 from roundabout_vision import drive_roundabout
+from eight_vision import wait_for_police
+
+from SKY114 import go_to_xy
 
 class MissionRunner:
 
@@ -102,11 +106,16 @@ class MissionRunner:
             elif task_type == "line_follow_vision":
                 self.run_line_follow_vision(current_task)
 
+            elif task_type == "correct_IWO":
+                self.correct_IWO(current_task)
+
             elif task_type == "roundabout_vision":
                 self.run_roundabout_vision(current_task)
 
             elif task_type == "drive_to_xy":
                 self.run_drive_to_xy(current_task)
+            elif task_type == "drive_to_xyyaw_IWO":
+                self.run_drive_to_xyyaw_IWO(current_task)
                 
             elif task_type == "line_follow_until_xy":
                 self.run_line_follow_until_xy(current_task)
@@ -119,6 +128,10 @@ class MissionRunner:
 
             elif task_type == "drive_roundabout":
                 self.run_drive_roundabout(current_task)
+
+            elif task_type == "wait_for_police":
+                self.wait_for_police(current_task)
+
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
                 self.next_task()
@@ -193,6 +206,8 @@ class MissionRunner:
         stop_time = task.get("stop_time", 0)
         time_to_full_speed = task.get("time_to_full_speed", 0)
         min_pixels_to_detect_line = task.get("min_pixels_to_detect_line", -1)
+        percentage_height = task.get("percentage_height", 50)
+        final_heading = task.get("final_heading", None)
 
 
 
@@ -211,7 +226,9 @@ class MissionRunner:
                                                            "time_to_full_speed": time_to_full_speed,
                                                            "stop_time": stop_time,
                                                            "min_pixels_to_detect_line": min_pixels_to_detect_line,
-                                                           "timeout": timeout},
+                                                           "timeout": timeout,
+                                                           "percentage_height": percentage_height,
+                                                           "final_heading": final_heading},
                                                    daemon=True)
             self._vision_thread.start()
             self.task_state = 1
@@ -225,7 +242,7 @@ class MissionRunner:
                     service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 self.task_state = 2
 
-            elif self.task_time() > timeout: # is normally already implemented in line_vision
+            elif self.task_time() > timeout+1: # is normally already implemented in line_vision
                 print("% [line_follow_vision] Timeout — stopping")
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 self.task_state = 2
@@ -836,3 +853,92 @@ class MissionRunner:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 print(f"% [drive_heading] Distance reached.")
                 self.next_task()
+
+
+    def wait_for_police(self, task):
+        """
+        Turn in place using odometry.
+
+        Task keys:
+            angle_deg   degrees; positive = left/CCW, negative = right/CW
+            speed       turn rate rad/s (default 0.3)
+            timeout     seconds (default 15)
+        """
+        timeout   = task.get("timeout", 20)
+        percentage_height = task.get("percentage_height", 60)
+        min_time_between_checks = task.get("min_time_between_frames", 0.2)
+        min_free_frames_to_move = task.get("min_free_frames_to_move", 5)
+        min_distance_for_movement = task.get("min_distance_for_movement", 5)
+        
+        if self.task_state == 0:
+            print("% [wait_for_police] Waiting for clear space")
+            service.send("robobot/cmd/T0", "leds 16 0 100 0")
+            service.send("robobot/cmd/ti", f"rc 0.0 0") 
+            # Start vision controller in background
+            self._vision_thread = threading.Thread(target=wait_for_police(percentage_height=percentage_height, time_between_checks=min_time_between_checks, min_distance_for_movement=min_distance_for_movement, min_free_frames_to_move=min_free_frames_to_move), daemon=True)
+            self._vision_thread.start()
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            if not self._vision_thread.is_alive():
+                print("% [wait_for_police] Clear space detected")
+                self.task_state = 2
+            elif pose.tripBtimePassed() > timeout:
+                print("% [wait_for_police] Timeout, continuing further with mission")
+                self.task_state = 2
+
+        
+        elif self.task_state == 2:
+            print("% [wait_for_police] Stopped - next task")
+            self.next_task()
+    
+    def run_drive_to_xyyaw_IWO(self, task):
+        """
+        Drives to a specific global X, Y coordinate using IWO
+        """
+        
+        target_x = task["target_x"]
+        target_y = task["target_y"]
+        target_yaw = task.get("target_yaw", None)
+        max_speed = task.get("max_speed", 0.8)
+        timeout = task.get("timeout", 30)
+        dist_tol = task.get("distance_tolerance", 0.05)
+        
+        
+        if self.task_state == 0:
+            print(f"\n% [drive_to_xy] Turning towards {target_x}, {target_y}")
+            go_to_xy(target_x, target_y, target_yaw, max_speed=max_speed)
+            self.task_state = 1
+            
+        elif self.task_state == 1:
+            self.next_task()
+            
+    def correct_IWO(self, task):
+        """
+        Update IWO
+        """
+        print(f"Current Estimate X: {iwo.X}")
+        # Print roll pitch yaw from quaternion X[3:7]
+        qw, qx, qy, qz = iwo.X[3:7]
+        rpy = iwo._quaternion_to_euler(qw, qx, qy, qz)
+        print(f"Current roll, pitch, yaw: {np.degrees(rpy)}")
+        print(f"\n% [correct_IWO] Updating IWO with measurements: {task}")
+        x = task["x"]
+        y = task["y"]
+        z = task.get("z",0)
+        roll = task.get("roll", 0)
+        pitch = task.get("pitch", 0)
+        yaw = task.get("yaw", 0)
+
+        att_meas = iwo._normalize_attitude_measurement([roll, pitch, yaw])
+        
+        acc_meas = imu.acc
+
+        iwo.correct(pos_meas=[x,y,z],acc_meas=acc_meas,att_meas=att_meas)
+        print(f"Corrected Estimate: {iwo.X}")
+        qw, qx, qy, qz = iwo.X[3:7]
+        rpy = iwo._quaternion_to_euler(qw, qx, qy, qz)
+        print(f"Updated roll, pitch, yaw: {np.degrees(rpy)}")
+
+        self.next_task()
+            

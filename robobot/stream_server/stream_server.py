@@ -175,6 +175,37 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
+
+        elif self.path == '/api/mission/set?taskset=1':
+            # Taskset 1
+
+
+            # reply to the browser
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'taskset 1'}).encode('utf-8'))
+            pass
+        elif self.path == '/api/mission/set?taskset=2':
+            # Taskset 2
+
+
+            # reply to the browser
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'taskset 2'}).encode('utf-8'))
+            pass
+        elif self.path == '/api/mission/set?taskset=3':
+            # Taskset 3
+
+
+            # reply to the browser
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'taskset 3'}).encode('utf-8'))
+
         else:
             try:
                 import mimetypes
@@ -259,6 +290,18 @@ def start_stream_server():
     subprocess.Popen(["python3", "navigation.py"], cwd=mqtt_dir)
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
+
+    # service.setup('localhost') # spawns its own rx and tx threads
+
+    # gpio.setup()
+    # robot.setup()
+    # ir.setup()
+    # pose.setup()
+    # imu.setup()
+    # cam.setup()
+    # edge.setup()
+
+    # iwo.setup()
 
     address = ('', 7123)
     server = StreamingServer(address, StreamingHandler)

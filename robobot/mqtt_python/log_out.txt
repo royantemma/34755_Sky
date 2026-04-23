@@ -1228,3 +1228,10 @@ subscribed to robobot/controller
 % logfile closed
 Ended at 2026-03-27 14:25:41.305078
 % Main Terminated
+% No GPIO (not on a Pi?) - continue without GPIO support
+% mqtt-client is already running - terminating
+%   if it is partially crashed in the background, then try:
+%     pkill mqtt-client
+%   or, if that fails use the most brutal kill
+%     pkill -9 mqtt-client
+% Main Terminated

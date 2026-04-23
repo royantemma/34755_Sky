@@ -52,6 +52,7 @@ import manual_controller
 import calibrate_odom
 import line_vision
 import roundabout_vision
+import eight_vision
 
 #import lineTest
 
@@ -280,11 +281,12 @@ def loop():
     line_vision.line_follow_vision()
     return
   elif service.args.roundabout_vision:
-    roundabout_vision.drive_roundabout(0.4, 0.25, 0.4, 0.06, Kp=6, Ki=0.5)
+    roundabout_vision.drive_roundabout(0.4, 0.25, 0, 0.06, Kp=6, Ki=0.5)
     return
   elif service.args.drive_to_line:
     line_vision.drive_to_line()
     return
+
 
   #elif service.args.base:
     #SKY114.base()
@@ -432,7 +434,7 @@ if __name__ == "__main__":
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         elif service.args.mission_final:
-          from missions.mission_all_v0_1 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from missions.mission_all_v0_3 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:

@@ -46,7 +46,7 @@ class SFuse:
     P = 0.0001*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
     acc_var = ((2.409e-01)/6)**2
     gyro_var = 1*(( np.pi /180) * (0.07) ) 
-    vb_var = 0.001
+    vb_var = 0.01 # 0.001 was good
     Sigma_u = np.diag([vb_var, gyro_var,gyro_var,gyro_var]) # Process Noise Covariance
     R = np.eye(10) # Measurement Noise Covariance
     R[0:3, 0:3] *= 0.00000001 # Noise Pos
@@ -93,7 +93,7 @@ class SFuse:
      
       for i in range(3):
         if pos_meas is not None and pos_meas[i] is not None:
-          self.R[i, i] = 0.0001 # Very low noise for position measurements
+          self.R[i, i] = 0.001 # Very low noise for position measurements
         else:
           self.R[i, i] = 10 # High noise for missing position measurements
           pos_meas[i] = self.X[i] # Use predicted position as measurement if not provided
@@ -101,7 +101,7 @@ class SFuse:
       # Attitude measurements as quaternion
       for i in range(4):
         if att_meas is not None and att_meas[i] is not None:
-          self.R[6+i, 6+i] = 0.0001 # Very low noise for attitude measurements
+          self.R[6+i, 6+i] = 0.001 # Very low noise for attitude measurements
         else:
           self.R[6+i, 6+i] = 10 # High noise for missing attitude measurements
           att_meas[i] = self.X[3+i] # Use predicted attitude as measurement if not provided
@@ -224,6 +224,12 @@ class SFuse:
       qy = cr * sp * cy + sr * cp * sy
       qz = cr * cp * sy - sr * sp * cy
       return [qw, qx, qy, qz]
+
+    def _quaternion_to_euler(self, qw, qx, qy, qz):
+      roll = np.arctan2(2*(qw*qx + qy*qz), 1 - 2*(qx**2 + qy**2))
+      pitch = np.arcsin(2*(qw*qy - qz*qx))
+      yaw = np.arctan2(2*(qw*qz + qx*qy), 1 - 2*(qy**2 + qz**2))
+      return roll, pitch, yaw
 
     def _normalize_attitude_measurement(self, att_meas):
       if att_meas is None:

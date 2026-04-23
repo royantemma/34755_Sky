@@ -5,6 +5,7 @@ from datetime import *
 from setproctitle import setproctitle
 import signal
 from skimage.morphology import skeletonize
+from sfuse import iwo
 
 import threading
 import simplejpeg
@@ -91,7 +92,9 @@ def line_follow_vision(junctions = 'straight',
                        time_to_full_speed=0,
                        stop_time=0,
                        timeout=None,
-                       min_pixels_to_detect_line=-1):
+                       min_pixels_to_detect_line=-1,
+                       percentage_height = 50,
+                       final_heading = None): # BE CAUTIOUS, these parameters are initialised in MISSION RUNNER
     #print("Starting camera test stream...")
 
     # 1. Connect to the robot's main camera stream
@@ -131,11 +134,11 @@ def line_follow_vision(junctions = 'straight',
                     # vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
                     heading = None
                     if junctions == 'straight':
-                        image, heading = process_frame(frame, MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+                        image, heading = process_frame(frame, MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=percentage_height)
                     elif junctions == 'left':
-                        image, heading = process_frame2(frame, 'left', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+                        image, heading = process_frame2(frame, 'left', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=percentage_height)
                     elif junctions == 'right':
-                        image, heading = process_frame2(frame, 'right', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=50)
+                        image, heading = process_frame2(frame, 'right', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=percentage_height)
 
                     #image, heading = process_frame2(frame, 'left', percentage_width=80, percentage_height=40)
                     if heading is None:
@@ -150,18 +153,26 @@ def line_follow_vision(junctions = 'straight',
                             stop_event.set()
                             threading.Thread(target=httpd.shutdown, daemon=True).start()
                             break   # IMPORTANT: exit immediately
+                    elif final_heading is not None and final_heading[0] < iwo.fused_yaw < final_heading[1]:
+                        stop_event.set()
+                        threading.Thread(target=httpd.shutdown, daemon=True).start()
+                        break   # IMPORTANT: exit immediately
                     else:
                         #vision_steer_robot(heading, forward_speed=0.4, turn_sensitivity=0.005)
                         current_time = t.time()
                         failed_recognitions = 0
 
                         if timeout is not None and current_time - start_time > timeout - stop_time:
-                            print("timeout is approaching, reducing speed...")
                             remaining_time = timeout - (current_time - start_time)
                             factor = max(0, min(1, remaining_time / stop_time))
                             speed = stop_speed + (nominal_speed - stop_speed) * factor
-                            print(f"timeout is approaching, reducing speed... {speed}")
+                            #print(f"timeout is approaching, reducing speed... {speed}")
                             vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=0.005+(sensitivity-0.005)*speed/nominal_speed)
+                            if timeout is not None and current_time - start_time > timeout - 0.02:
+                                print("Timeout - stopping")
+                                stop_event.set()
+                                threading.Thread(target=httpd.shutdown, daemon=True).start()
+                                break   # IMPORTANT: exit immediately
                         else:
                             speed = start_speed + (nominal_speed-start_speed) * min(time_to_full_speed, t.time()-start_time) / time_to_full_speed
                             vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
@@ -185,7 +196,7 @@ def line_follow_vision(junctions = 'straight',
             print("Thread stopping robot")
             if stop_speed <= 0:
                 print("Stopping Robot")
-                t.sleep(5)
+                #t.sleep(5)
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
             
 
