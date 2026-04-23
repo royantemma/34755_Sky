@@ -19,6 +19,21 @@ import os
 import sys
 import time
 
+
+from simu import imu
+from spose import pose
+from sir import ir
+from srobot import robot
+from scam import cam
+from sedge import edge
+from sgpio import gpio
+from ulog import flog
+import psutil
+
+from sfuse import iwo
+
+from mqtt_client import service
+
 # Add mqtt_python to path so we can import aruco module
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python"))
 import aruco
@@ -175,6 +190,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
+        elif self.path == 'example/url/mission/stuff':
+            pass
         else:
             try:
                 import mimetypes
@@ -259,6 +276,19 @@ def start_stream_server():
     subprocess.Popen(["python3", "navigation.py"], cwd=mqtt_dir)
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
+
+    service.setup('localhost') # spawns its own rx and tx threads
+
+    gpio.setup()
+    robot.setup()
+    ir.setup()
+    pose.setup()
+    imu.setup()
+    cam.setup()
+    edge.setup()
+
+    iwo.setup()
+
 
     address = ('', 7123)
     server = StreamingServer(address, StreamingHandler)
