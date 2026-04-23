@@ -103,33 +103,41 @@ function fetchArucoData() {
                 tbodyEst.innerHTML = data.estimates.map(e => `
                     <tr>
                         <td><strong>${e.marker_id}</strong></td>
-                        <td>${Math.round(e.robot_x)}</td>
-                        <td>${Math.round(e.robot_y)}</td>
-                        <td>${Math.round(e.robot_yaw * 180 / Math.PI)}</td>
+                        <td>${Math.round(e.robot_x)}, ${Math.round(e.robot_y)}, ${Math.round(e.robot_z)}</td>
+                        <td>${Math.round(e.robot_yaw * 180 / Math.PI)}, ${Math.round(e.robot_pitch * 180 / Math.PI)}, ${Math.round(e.robot_roll * 180 / Math.PI)}</td>
                     </tr>
                 `).join('');
                 
-                let sumX = 0, sumY = 0, sumSin = 0, sumCos = 0;
+                let sumX = 0, sumY = 0, sumZ = 0, sumSinYaw = 0, sumCosYaw = 0, sumSinPitch = 0, sumCosPitch = 0, sumSinRoll = 0, sumCosRoll = 0;
                 data.estimates.forEach(e => {
                     sumX += e.robot_x;
                     sumY += e.robot_y;
-                    sumSin += Math.sin(e.robot_yaw);
-                    sumCos += Math.cos(e.robot_yaw);
+                    sumZ += e.robot_z;
+                    sumSinYaw += Math.sin(e.robot_yaw);
+                    sumCosYaw += Math.cos(e.robot_yaw);
+                    sumSinPitch += Math.sin(e.robot_pitch);
+                    sumCosPitch += Math.cos(e.robot_pitch);
+                    sumSinRoll += Math.sin(e.robot_roll);
+                    sumCosRoll += Math.cos(e.robot_roll);
                 });
                 
-                const avgX = sumX / data.estimates.length;
-                const avgY = sumY / data.estimates.length;
-                const avgYaw = Math.atan2(sumSin, sumCos);
+                const dec = data.estimates.length;
+                const avgX = sumX / dec;
+                const avgY = sumY / dec;
+                const avgZ = sumZ / dec;
+                const avgYaw = Math.atan2(sumSinYaw, sumCosYaw);
+                const avgPitch = Math.atan2(sumSinPitch, sumCosPitch);
+                const avgRoll = Math.atan2(sumSinRoll, sumCosRoll);
                 
                 poseInfo.classList.remove('d-none');
-                poseCoords.innerText = `X: ${Math.round(avgX)} mm, Y: ${Math.round(avgY)} mm, Yaw: ${Math.round(avgYaw * 180 / Math.PI)} deg`;
+                poseCoords.innerText = `X: ${Math.round(avgX)}, Y: ${Math.round(avgY)}, Z: ${Math.round(avgZ)}\nYaw: ${Math.round(avgYaw * 180 / Math.PI)}\u00b0, Pitch: ${Math.round(avgPitch * 180 / Math.PI)}\u00b0, Roll: ${Math.round(avgRoll * 180 / Math.PI)}\u00b0`;
                 
                 // Dispatch event for app3d.js
                 window.dispatchEvent(new CustomEvent('robotPoseUpdate', {
-                    detail: { x: avgX, y: avgY, yaw: avgYaw }
+                    detail: { x: avgX, y: avgY, z: avgZ, yaw: avgYaw, pitch: avgPitch, roll: avgRoll }
                 }));
             } else {
-                tbodyEst.innerHTML = '<tr><td colspan="4">No estimates available</td></tr>';
+                tbodyEst.innerHTML = '<tr><td colspan="3">No estimates available</td></tr>';
                 poseInfo.classList.add('d-none');
             }
         })

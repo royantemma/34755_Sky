@@ -11,9 +11,14 @@ import numpy as np
 from datetime import datetime
 
 from spose import pose
+from sfuse import iwo
 from sedge import edge
 from uservice import service
 from sir import ir
+
+import threading
+from line_vision import line_follow_vision
+from roundabout_vision import drive_roundabout
 
 class MissionRunner:
 
@@ -94,6 +99,26 @@ class MissionRunner:
             elif task_type == "turn_to_heading":
                 self.run_turn_to_heading(current_task)
 
+            elif task_type == "line_follow_vision":
+                self.run_line_follow_vision(current_task)
+
+            elif task_type == "roundabout_vision":
+                self.run_roundabout_vision(current_task)
+
+            elif task_type == "drive_to_xy":
+                self.run_drive_to_xy(current_task)
+                
+            elif task_type == "line_follow_until_xy":
+                self.run_line_follow_until_xy(current_task)
+
+            elif task_type == "drive_curved":
+                self.run_drive_curved(current_task)
+
+            elif task_type == "drive_straight_heading":
+                self.run_drive_straight_heading(current_task)
+
+            elif task_type == "drive_roundabout":
+                self.run_drive_roundabout(current_task)
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
                 self.next_task()
@@ -116,6 +141,7 @@ class MissionRunner:
         follow_left = (task["side"] == "left")
         speed = task.get("speed", 0.2)
         timeout = task.get("timeout", 30)
+        edge.CUSTOM_CONTROL_ENABLED = True
 
         if self.task_state == 0:
             print("% [line_follow] Starting — moving forward to find line")
@@ -150,6 +176,69 @@ class MissionRunner:
             if abs(pose.velocity()) < 0.001:
                 print("% [line_follow] Stopped — next task")
                 self.next_task()
+
+
+    def run_line_follow_vision(self, task):
+        """
+        Follow a line using vision (camera-based controller running in background).
+        Stops on timeout or when externally stopped.
+        """
+
+        timeout = task.get("timeout", 30)
+        junction = task.get("junction", 'straight')
+        start_speed = task.get("start_speed", 0)
+        nominal_speed = task.get("nominal_speed", 0.4)
+        turn_sensitivity = task.get("turn_sensitivity", 0.005)
+        stop_speed = task.get("stop_speed", 0)
+        stop_time = task.get("stop_time", 0)
+        time_to_full_speed = task.get("time_to_full_speed", 0)
+        min_pixels_to_detect_line = task.get("min_pixels_to_detect_line", -1)
+
+
+
+        if self.task_state == 0:
+            print("% [line_follow_vision] Starting vision-based line following")
+
+            service.send("robobot/cmd/T0", "leds 16 0 100 0")  # green
+
+            # Start vision controller in background
+            self._vision_thread = threading.Thread(target=line_follow_vision,
+                                                   kwargs={"junctions": junction,
+                                                           "start_speed": start_speed,
+                                                           "nominal_speed": nominal_speed,
+                                                           "sensitivity": turn_sensitivity,
+                                                           "stop_speed": stop_speed,
+                                                           "time_to_full_speed": time_to_full_speed,
+                                                           "stop_time": stop_time,
+                                                           "min_pixels_to_detect_line": min_pixels_to_detect_line,
+                                                           "timeout": timeout},
+                                                   daemon=True)
+            self._vision_thread.start()
+            self.task_state = 1
+            
+        elif self.task_state == 1:
+            # Just wait while vision is controlling the robot
+
+            if not self._vision_thread.is_alive():
+                print("% [line_follow_vision] Vision thread stopped")
+                if stop_speed <= 0:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+            elif self.task_time() > timeout: # is normally already implemented in line_vision
+                print("% [line_follow_vision] Timeout — stopping")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            # wait for robot to fully stop
+            if stop_speed <= 0:
+                print("% [line_follow_vision] Stopped — next task")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.next_task()
+            else:
+                self.next_task()
+
 
     def run_line_follow_brake(self, task):
         """
@@ -354,6 +443,48 @@ class MissionRunner:
                 print("% [line_follow] Stopped — next task")
                 self.next_task()
 
+    def run_roundabout_vision(self, task):
+        """
+        Drive roundabout using vision controller (runs in background).
+        Stops on timeout.
+        """
+
+        timeout = task.get("timeout", 30)
+        speed = task.get("speed", 0.4)
+        start_speed = task.get("start_speed", 0)
+        stop_speed = task.get("stop_speed", 0)
+        time_to_full_speed = task.get("time_to_full_speed", 0.4)
+        Kp = task.get("Kp", 6)
+        Ki = task.get("Ki", 0.2)
+        percentage_of_white = task.get("percentage_of_white", 30)
+
+        if self.task_state == 0:
+            print("% [roundabout_vision] Starting vision-based roundabout")
+            service.send("robobot/cmd/T0", "leds 16 100 100 0")  # yellow (different from line follow)
+
+            self._vision_thread = threading.Thread(target=drive_roundabout(speed, start_speed, stop_speed, time_to_full_speed, Kp=Kp, Ki=Ki, percentage_of_white=percentage_of_white),daemon=True)
+            self._vision_thread.start()
+
+
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            # Let vision control everything
+            if not self._vision_thread.is_alive():
+                print("% [roundabout_vision] Vision thread stopped")
+                if stop_speed <= 0:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+            elif self.task_time() > timeout:
+                print("% [roundabout_vision] Timeout — stopping")
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            # Wait until robot actually stops
+            print("% [roundabout_vision] Stopped — next task")
+            self.next_task()
 
     def run_turn(self, task):
         """
@@ -398,19 +529,101 @@ class MissionRunner:
         speed    = task.get("speed",    0.2)
         distance = task.get("distance", 1.0)
         timeout  = task.get("timeout",  20)
+        is_stopping_at_end = task.get("is_stopping_at_end", True)
 
         if self.task_state == 0:
+            print("[run_drive_straight] Start driving forwards")
             service.send("robobot/cmd/ti", f"rc {speed} 0.0")
             self.task_state = 1
 
         elif self.task_state == 1:
             if pose.tripB >= distance or self.task_time() > timeout:
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                if is_stopping_at_end:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 self.task_state = 2
 
         elif self.task_state == 2:
-            if abs(pose.velocity()) < 0.005:
-                self.next_task()
+            print("[run_drive_straight] Ended Task")
+            self.next_task()
+
+    def run_drive_curved(self, task):
+        """
+        Drive curved until a certain heading is reached.
+        """
+        nominal_speed     = task.get("nominal_speed",     0.2)
+        stop_speed = task.get("stop_speed", 0)
+        turn_rate = task.get("turn_rate", 0.01)
+        final_turn_rate = task.get("final_turn_rate", 0)
+        target_rad = np.radians(task["heading_deg"])
+        tolerance = np.radians(task["tolerance"])
+        timeout   = task.get("timeout",   20)
+
+        start_time = t.time()
+
+        if self.task_state == 0:
+            diff = target_rad - pose.pose[2]
+            if diff > np.pi:
+                diff -= 2 * np.pi
+            elif diff < -np.pi:
+                diff += 2 * np.pi
+            self._turn_sign = 1 if diff > 0 else -1
+            print(f"% [run_drive_curved] current={np.degrees(pose.pose[2]):.1f}°, target={task['heading_deg']}°, diff={np.degrees(diff):.1f}°")
+            service.send("robobot/cmd/ti", f"rc {nominal_speed} {self._turn_sign * turn_rate:.3f}")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            diff = target_rad - pose.pose[2]
+            if diff > np.pi:
+                diff -= 2 * np.pi
+            elif diff < -np.pi:
+                diff += 2 * np.pi
+            if abs(diff) <= tolerance or pose.tripBtimePassed() > timeout:
+                if stop_speed <= 0:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                else:
+                    service.send("robobot/cmd/ti", f"rc {nominal_speed} {final_turn_rate}")
+                print(f"% [run_drive_curved] Reached {np.degrees(pose.pose[2]):.1f}°")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            self.next_task()
+
+    def run_drive_roundabout(self, task):
+        """
+        Drive curved until a certain heading is reached.
+        """
+        nominal_speed     = task.get("nominal_speed",     0.4)
+        stop_speed = task.get("stop_speed", 0)
+        turn_rate = task.get("turn_rate", 1.15)
+        final_turn_rate = task.get("final_turn_rate", 0)
+        target_rad = np.radians(task["heading_deg"])
+        tolerance = np.radians(task["tolerance"])
+        timeout   = task.get("timeout",   20)
+        min_run_time = task.get("min_run_time", 2.5)
+
+        start_time = t.time()
+
+        if self.task_state == 0:
+            print("[run_drive_roundabout] Start driving roundabout")
+            service.send("robobot/cmd/ti", f"rc {nominal_speed} {turn_rate}")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            diff = target_rad - pose.pose[2]
+            if diff > np.pi:
+                diff -= 2 * np.pi
+            elif diff < -np.pi:
+                diff += 2 * np.pi
+            if t.time() > min_run_time and abs(diff) <= tolerance or pose.tripBtimePassed() > timeout:
+                if stop_speed <= 0:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                else:
+                    service.send("robobot/cmd/ti", f"rc {stop_speed} {final_turn_rate}")
+                print(f"% [run_drive_roundabout] Reached {np.degrees(pose.pose[2]):.1f}°")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            self.next_task()
 
 
     def run_drive_circle(self, task):
@@ -480,4 +693,146 @@ class MissionRunner:
 
         elif self.task_state == 2:
             if abs(pose.turnrate()) < 0.001:
+                self.next_task()
+
+    def run_drive_to_xy(self, task):
+        """
+        Drives to a specific global X, Y coordinate.
+        """
+        import sys
+        target_x = task["target_x"]
+        target_y = task["target_y"]
+        speed = task.get("speed", 0.2)
+        timeout = task.get("timeout", 30)
+        dist_tol = task.get("distance_tolerance", 0.05)
+        
+        curr_x, curr_y, curr_h = pose.pose[0], pose.pose[1], pose.pose[2]
+        dx = target_x - curr_x
+        dy = target_y - curr_y
+        distance = np.hypot(dx, dy)
+        target_heading = np.arctan2(dy, dx)
+        
+        heading_error = target_heading - curr_h
+        heading_error = (heading_error + np.pi) % (2 * np.pi) - np.pi
+
+        if self.task_state == 0:
+            print(f"\n% [drive_to_xy] Turning towards {target_x}, {target_y}")
+            self.task_state = 1
+            
+        elif self.task_state == 1: # Turn towards point
+            if abs(heading_error) > 0.05:
+                turn_speed = max(min(0.8 * heading_error, 1.0), -1.0)
+                service.send("robobot/cmd/ti", f"rc 0.0 {turn_speed:.3f}")
+            else:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"\n% [drive_to_xy] Facing target. Driving...")
+                self.task_state = 2
+                
+        elif self.task_state == 2: # Drive to point
+            # print pos and heading
+            sys.stdout.write(f"\r% [drive_to_xy] Current X:{curr_x:.3f} Y:{curr_y:.3f} Heading: {curr_h:.3f} | Target X:{target_x:.3f} Y:{target_y:.3f} | Dist:{distance:.3f}   ")
+            sys.stdout.flush()
+
+            if distance > dist_tol and self.task_time() < timeout:
+                turn_speed = max(min(0.5 * heading_error, 1.0), -1.0)
+                service.send("robobot/cmd/ti", f"rc {speed:.3f} {turn_speed:.3f}")
+            else:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"\n\n% [drive_to_xy] Arrived near {target_x}, {target_y}")
+                self.next_task()
+
+    def run_line_follow_until_xy(self, task):
+        """
+        Follows a line until the robot's odometry reaches a specific global (X, Y) coordinate.
+        """
+        import sys
+        
+        follow_left = (task.get("side", "left") == "left")
+        speed = task.get("speed", 0.2)
+        target_x = task["target_x"]
+        target_y = task["target_y"]
+        dist_tol = task.get("distance_tolerance", 0.1)
+        timeout = task.get("timeout", 40)
+
+        if self.task_state == 0:
+            print(f"\n% [line_follow_until_xy] Starting — moving to find line towards ({target_x}, {target_y})")
+            service.send("robobot/cmd/T0", "leds 16 0 100 0") # green
+            service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+            self.task_state = 1
+
+        elif self.task_state == 1: # approaching line
+            if edge.lineValidCnt > 4:
+                edge.lineControl(speed, follow_left)
+                print("\n% [line_follow_until_xy] Line found — following and monitoring coordinates")
+                self.task_state = 2
+                    
+            elif self.task_time() > timeout:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("\n% [line_follow_until_xy] Timeout during approach")
+                self.task_state = 3
+
+        elif self.task_state == 2: # following line
+            curr_x, curr_y = pose.pose[0], pose.pose[1]
+            distance = np.hypot(target_x - curr_x, target_y - curr_y)
+
+
+            # print current x,y
+            sys.stdout.write(f"\r% [line_follow_until_xy] Current X:{curr_x:.3f} Y:{curr_y:.3f} | Target X:{target_x:.3f} Y:{target_y:.3f} | Dist:{distance:.3f}   ")
+            sys.stdout.flush()
+
+            if distance <= dist_tol:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"\n\n% [line_follow_until_xy] REACHED TARGET: ({target_x}, {target_y})!")
+                self.task_state = 3
+                
+            elif self.task_time() > timeout:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("\n\n% [line_follow_until_xy] Timeout while following")
+                self.task_state = 3
+                
+            elif edge.lineValidCnt < 2:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"\n\n% [line_follow_until_xy] Line lost early at X:{curr_x:.3f}, Y:{curr_y:.3f}")
+                self.task_state = 3
+
+        elif self.task_state == 3: # wait for full stop
+            if abs(pose.velocity()) < 0.001:
+                print("% [line_follow_until_xy] Stopped — next task")
+                self.next_task()
+
+    def run_drive_straight_heading(self, task):
+        """
+        Drives a set distance (forward or backward) while actively steering 
+        to maintain a specific global heading using the IMU/Odometry.
+        """
+        speed = task.get("speed", 0.2)
+        distance = task.get("distance", 1.0)
+        target_heading_deg = task.get("heading_deg", 0)
+        timeout = task.get("timeout", 20)
+        
+        target_heading_rad = np.radians(target_heading_deg)
+
+        if self.task_state == 0:
+            pose.tripBreset()
+            print(f"\n% [drive_heading] Locking heading to {target_heading_deg}° and driving {distance}m")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            if pose.tripB < distance and self.task_time() < timeout:
+                # calculate heading error
+                curr_h = pose.pose[2]
+                heading_error = target_heading_rad - curr_h
+                heading_error = (heading_error + np.pi) % (2 * np.pi) - np.pi
+
+                # P controller to correct heading drift
+                turn_speed = max(min(1.0 * heading_error, 1.0), -1.0)
+                
+                # send combined forward/reverse + turn command
+                service.send("robobot/cmd/ti", f"rc {speed:.3f} {turn_speed:.3f}")
+            else:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"% [drive_heading] Distance reached.")
                 self.next_task()

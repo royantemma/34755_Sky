@@ -210,7 +210,7 @@ line_vision_stream_output = stream_manager.add_stream("line_vision")
 def process_frames():
     global latest_frame
     picam2 = Picamera2()
-    picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (200000, 500000)}))
+    picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (50000, 50000)}))
     picam2.start()
     
     while True:

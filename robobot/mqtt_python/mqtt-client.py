@@ -32,7 +32,6 @@ import cv2 as cv
 from datetime import *
 from setproctitle import setproctitle
 # robot function
-import line_vision
 from spose import pose
 from sir import ir
 from srobot import robot
@@ -51,6 +50,8 @@ import find_aruco
 import calibrate_extrinsics
 import manual_controller
 import calibrate_odom
+import line_vision
+import roundabout_vision
 
 #import lineTest
 
@@ -229,6 +230,15 @@ def loop():
   elif service.args.custom_mission:
     SKY114.custom_mission()
     return
+  elif service.args.xyyaw:
+    SKY114.test_xyyaw()
+    return
+  elif service.args.imanal:
+    SKY114.imageAnalysis(True)
+    return
+  elif service.args.testbob:
+    SKY114.test_BOB()
+    return
   elif service.args.linetest:
     SKY114.LineTest()
     return
@@ -268,6 +278,12 @@ def loop():
     state = service.args.usestate
   elif service.args.line_vision:
     line_vision.line_follow_vision()
+    return
+  elif service.args.roundabout_vision:
+    roundabout_vision.drive_roundabout(0.4, 0.25, 0.4, 0.06, Kp=6, Ki=0.5)
+    return
+  elif service.args.drive_to_line:
+    line_vision.drive_to_line()
     return
 
   #elif service.args.base:
@@ -339,12 +355,12 @@ def loop():
       break
     elif state == 106:
       print(f"Servo up")
-      service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up faster)
+      service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up)
       t.sleep(1.5) # wait for servo to reach position
       break
     elif state == 107:
       print(f"Servo down")
-      service.send("robobot/cmd/T0","servo 1 150 400") # (servo down slow)
+      service.send("robobot/cmd/T0","servo 1 150 400") # (servo down)
       t.sleep(1.5) # wait for servo to reach position
       break
     elif state == 10000:
@@ -413,6 +429,10 @@ if __name__ == "__main__":
           golf.find_and_catch()
         elif service.args.mission_gates:
           from missions.mission_gates import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+        elif service.args.mission_final:
+          from missions.mission_all_v0_1 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:
