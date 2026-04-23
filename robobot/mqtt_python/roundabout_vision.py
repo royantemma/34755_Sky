@@ -116,11 +116,14 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
             while not stop_event.is_set():
                 ret, frame = cap.read()
                 if ret and frame is not None:
+                   # image, heading = process_frame2(frame, percentage_width=80, PERCENTAGE_OF_WHITE=PERCENTAGE_OF_WHITE)
+
+
                     # --- YOUR VISION CODE GOES HERE ---
                     image, heading = process_frame(frame, percentage_width=80, PERCENTAGE_OF_WHITE=PERCENTAGE_OF_WHITE)
                     error += heading
                     # print(heading)
-                    print(error)
+                    #print(error)
                     if t.time()-start_time > 2.5 and 10 < iwo.fused_yaw < 20:
                         #print("HOIHOI")
                         stop_event.set()
@@ -131,6 +134,8 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
                         speed = start_speed + (nominal_speed-start_speed) * min(time_to_full_speed, t.time()-start_time) / time_to_full_speed
                         #vision_steer_robot(heading, error, forward_speed=speed, nominal_speed = nominal_speed, Kp=6, Ki=0.2)
                         vision_steer_robot(heading, error, forward_speed=speed, nominal_speed = nominal_speed, Kp=Kp, Ki=Ki)
+
+                    
                     
                     # 2. Encode to JPEG (Note: OpenCV uses BGR colorspace by default!)
                     jpeg = simplejpeg.encode_jpeg(image, quality=80, colorspace='BGR')
@@ -169,6 +174,8 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
         print("HTTP server stopped")
         print("Vision fully stopped")
 
+        
+
 
 def process_frame(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF_WHITE=30):
     # Choose relevant portion of the image and convert to grayscale
@@ -199,6 +206,56 @@ def process_frame(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF
     heading = ratio - PERCENTAGE_OF_WHITE / 100
 
     frame = cv.cvtColor(eroded, cv.COLOR_GRAY2BGR)
+
+    return frame, heading
+
+
+def process_frame2(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF_WHITE=30):
+    SIZE_CALIBRATION = 100
+    NUMBER_OF_SIGMA = 2
+    # Choose relevant portion of the image and convert to grayscale
+    h, w = img.shape[:2]
+    h_relevant = (h * percentage_height) // 100
+    w_relevant = (w * percentage_width) // 100
+    x_start = (w - w_relevant) // 2
+
+    roi = img[-h_relevant:, x_start:x_start + w_relevant]
+    gray = cv.cvtColor(roi, cv.COLOR_BGR2GRAY)
+    
+
+    reference_area = gray[-SIZE_CALIBRATION:, (w_relevant-SIZE_CALIBRATION)//2:(w_relevant+SIZE_CALIBRATION)//2]
+    reference_pixels = np.array(reference_area)
+
+    mean = np.mean(reference_pixels)
+    std = np.std(reference_pixels)
+
+    mask = (gray >= mean - NUMBER_OF_SIGMA*std) & (gray <= mean + NUMBER_OF_SIGMA*std)
+
+    # Convert to binary image
+    result = np.zeros_like(gray)
+    result[mask] = 255  # white
+
+    # # Aggressive closing
+    # kernel = np.ones((5, 5), np.uint8)
+    # eroded = cv.erode(adaptive_thresh, kernel, iterations=6)
+
+    # Process the image
+    white_pixels = np.sum(mask)
+    total_pixels = mask.size
+    ratio = white_pixels / total_pixels
+    heading = ratio - PERCENTAGE_OF_WHITE / 100
+
+    frame = cv.cvtColor(result, cv.COLOR_GRAY2BGR)
+
+
+    #draw square:
+    y1 = h_relevant - SIZE_CALIBRATION
+    y2 = h_relevant
+    x1 = (w_relevant - SIZE_CALIBRATION) // 2
+    x2 = (w_relevant + SIZE_CALIBRATION) // 2
+
+    frame = cv.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+    gray = cv.cvtColor(gray, cv.COLOR_GRAY2BGR)
 
     return frame, heading
 

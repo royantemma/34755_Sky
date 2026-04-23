@@ -80,6 +80,8 @@ h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-
 .btn-warn { background: #ff9800; color: white; }
 .btn-stop { background: #f44336; color: white; }
 .btn-reset { background: #007bff; color: white; }
+.btn-taskset { background: #4ca8f2; color: white; }
+.btn-taskset-active { background: #cc3ae6; outline: 3px solid #ce93d8; }
 
 .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
 .switch input { opacity: 0; width: 0; height: 0; }

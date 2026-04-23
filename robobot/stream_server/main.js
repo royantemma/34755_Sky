@@ -40,6 +40,18 @@ document.getElementById('disable-servo-btn').addEventListener('click', () => {
     fetch('/api/servo/disable').catch(() => alert("Error disabling servo."));
 });
 
+document.getElementById('taskset-1-btn').addEventListener('click', () => {
+    fetch('/api/mission/set?taskset=1').catch(() => alert("Error setting Task Set 1."));
+});
+
+document.getElementById('taskset-2-btn').addEventListener('click', () => {
+    fetch('/api/mission/set?taskset=2').catch(() => alert("Error setting Task Set 2."));
+});
+
+document.getElementById('taskset-3-btn').addEventListener('click', () => {
+    fetch('/api/mission/set?taskset=3').catch(() => alert("Error setting Task Set 3."));
+});
+
 function fetchArucoData() {
     fetch('/api/aruco/data')
         .then(res => res.json())
