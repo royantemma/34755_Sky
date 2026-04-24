@@ -7,20 +7,16 @@
 </head>
 <body>
     <div class="views-row">
-        <!-- Camera View -->
         <div class="view-box camera-box" id="camera-box">
             <img id="main-stream" alt="Main Stream">
         </div>
         
-        <!-- 3D View -->
         <div class="view-box box-3d" id="box-3d">
             <div id="canvas-container"></div>
         </div>
     </div>
 
-    <!-- Tools -->
     <div class="tools-row">
-        <!-- Mission Control Box -->
         <div class="tool-box">
             <h3>Vision Layers</h3>
             <div class="buttons-container vision-layer-row">
@@ -52,17 +48,21 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <label class="switch">
-                            <input type="checkbox" id="aruco-toggle">
+                            <input type="checkbox" id="aruco-toggle" checked>
                             <span class="slider"></span>
                         </label>
-                        <span id="aruco-status-text" class="status-text">Detection Disabled</span>
+                        <span id="aruco-status-text" class="status-text">Detection Enabled</span>
                     </div>
                 </div>
             </div>
+            
             <div class="buttons-container mt-15">
-                <button id="catch-btn" class="btn btn-catch">Catch Cube</button>
+                <button id="btn-cube-catch" class="btn btn-catch">Catch Cube</button>
+                <button id="btn-complete-mission" class="btn btn-catch" style="background: #9c27b0;">Complete Mission</button>
+            </div>
+            <div class="buttons-container mt-15">
                 <button id="disable-servo-btn" class="btn btn-warn">Disable Servo</button>
-                <button id="stop-btn" class="btn btn-stop">Stop Mission</button>
+                <button id="stop-btn" class="btn btn-stop">Stop / Abort</button>
             </div>
             
             <div id="cube-center-info" class="mt-15 info-box d-none">
@@ -70,10 +70,8 @@
             </div>
         </div>
         
-        <!-- Detected Markers Box -->
         <div class="tool-box flex-grow">
             <h3>Detected Markers (Real-time)</h3>
-            
             <div class="table-container">
                 <table>
                     <thead>
@@ -91,7 +89,6 @@
             </div>
         </div>
         
-        <!-- Position Estimates Box -->
         <div class="tool-box flex-grow">
             <h3>Position Estimates (from ArUco)</h3>
             <div class="table-container">
@@ -114,30 +111,6 @@
             </div>
         </div>
         
-        <!-- Position Estimates Box -->
-        <div class="tool-box flex-grow">
-            <h3>Position Estimates (from ArUco)</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>From ID</th>
-                            <th>X (mm)</th>
-                            <th>Y (mm)</th>
-                            <th>Yaw (deg)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="aruco-estimates-body">
-                        <tr><td colspan="4">No estimates available</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="averaged-pose-info" class="mt-15 info-box d-none">
-                Averaged Pose:<br><span id="averaged-pose-coords">N/A</span>
-            </div>
-        </div>
-        
-        <!-- 3D Controls Box -->
         <div class="tool-box">
             <h3>3D Pose Override</h3>
             <div class="pose-controls">
@@ -164,7 +137,6 @@
         </div>
     </div>
 
-    <!-- Import Map for Three.js -->
     <script type="importmap">
         {
             "imports": {
