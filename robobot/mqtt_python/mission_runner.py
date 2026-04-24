@@ -21,8 +21,11 @@ import threading
 from line_vision import line_follow_vision
 from roundabout_vision import drive_roundabout
 from eight_vision import wait_for_police
+from golf import get_ball_location
 
-from SKY114 import go_to_xy
+from SKY114 import go_to_xy, go_to_xy_fast
+
+import golf
 
 class MissionRunner:
 
@@ -74,6 +77,8 @@ class MissionRunner:
 
     def run(self):
         self.mission_start = datetime.now()
+        print("[Mission Runner] Pulling servo up")
+        service.send("robobot/cmd/T0","servo 1 -930 400")
         self.start_task(0)
         service.send("robobot/cmd/T0", "leds 16 0 0 30")   # blue = running
 
@@ -108,20 +113,32 @@ class MissionRunner:
 
             elif task_type == "correct_IWO":
                 self.correct_IWO(current_task)
+            elif task_type == "reset_IWO":
+                self.reset_IWO(current_task)
 
             elif task_type == "roundabout_vision":
                 self.run_roundabout_vision(current_task)
 
             elif task_type == "drive_to_xy":
                 self.run_drive_to_xy(current_task)
+
             elif task_type == "drive_to_xyyaw_IWO":
                 self.run_drive_to_xyyaw_IWO(current_task)
+
+            elif task_type == "drive_to_xyyaw_IWO_fast":
+                self.run_drive_to_xyyaw_IWO_fast(current_task)
                 
             elif task_type == "line_follow_until_xy":
                 self.run_line_follow_until_xy(current_task)
 
             elif task_type == "drive_curved":
                 self.run_drive_curved(current_task)
+
+            elif task_type == "drive_curved_distance":
+                self.run_drive_curved_distance(current_task)
+            
+            elif task_type == "drive_curved_iwo":
+                self.run_drive_curved_iwo(current_task)
 
             elif task_type == "drive_straight_heading":
                 self.run_drive_straight_heading(current_task)
@@ -131,6 +148,27 @@ class MissionRunner:
 
             elif task_type == "wait_for_police":
                 self.wait_for_police(current_task)
+
+            elif task_type == "turn_to_heading_iwo":
+                self.run_turn_to_heading_iwo(current_task)
+            
+            elif task_type == "servo_up":
+                self.run_servo_up(current_task)
+            
+            elif task_type == "servo_down":
+                self.run_servo_down(current_task)
+            
+            elif task_type == "servo_relax":
+                self.run_servo_relax(current_task)
+
+            elif task_type == "get_ball":
+                self.run_get_ball(current_task)
+
+            elif task_type == "linefollow_until_intersection":
+                self.run_linefollow_until_intersection(current_task)
+
+            elif task_type == "golf_visual_approach_and_trap":
+                self.run_golf_visual_approach_and_trap(current_task)
 
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
@@ -208,6 +246,7 @@ class MissionRunner:
         min_pixels_to_detect_line = task.get("min_pixels_to_detect_line", -1)
         percentage_height = task.get("percentage_height", 50)
         final_heading = task.get("final_heading", None)
+        time_after_turn = task.get("time_after_turn", None)
 
 
 
@@ -228,7 +267,8 @@ class MissionRunner:
                                                            "min_pixels_to_detect_line": min_pixels_to_detect_line,
                                                            "timeout": timeout,
                                                            "percentage_height": percentage_height,
-                                                           "final_heading": final_heading},
+                                                           "final_heading": final_heading,
+                                                           "time_after_turn": time_after_turn},
                                                    daemon=True)
             self._vision_thread.start()
             self.task_state = 1
@@ -543,14 +583,50 @@ class MissionRunner:
             speed       m/s (default 0.2)
             timeout     seconds (default 20)
         """
+        nominal_speed    = task.get("speed",    0.2)
+        start_speed = task.get("start_speed", nominal_speed)
+        distance = task.get("distance", 1.0)
+        timeout  = task.get("timeout",  20)
+        is_stopping_at_end = task.get("is_stopping_at_end", True)
+        time_to_full_speed = task.get("time_to_full_speed", 0.02)
+
+
+        if self.task_state == 0:
+            print("[run_drive_straight] Start driving forwards")
+            service.send("robobot/cmd/ti", f"rc {start_speed} 0.0")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            if pose.tripB >= distance or self.task_time() > timeout:
+                if is_stopping_at_end:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                self.task_state = 2
+            else:
+                speed = start_speed + (nominal_speed - start_speed) * min(1, self.task_time()/time_to_full_speed)
+                service.send("robobot/cmd/ti", f"rc {speed} 0.0")
+
+        elif self.task_state == 2:
+            print("[run_drive_straight] Ended Task")
+            self.next_task()
+
+    def run_drive_curved_distance(self, task):
+        """
+        Drive straight for a fixed distance using odometry (no line sensor).
+
+        Task keys:
+            distance    metres (default 1.0)
+            speed       m/s (default 0.2)
+            timeout     seconds (default 20)
+        """
         speed    = task.get("speed",    0.2)
+        turn_rate = task.get("turn_rate", 0.01)
         distance = task.get("distance", 1.0)
         timeout  = task.get("timeout",  20)
         is_stopping_at_end = task.get("is_stopping_at_end", True)
 
         if self.task_state == 0:
-            print("[run_drive_straight] Start driving forwards")
-            service.send("robobot/cmd/ti", f"rc {speed} 0.0")
+            print("[run_drive_curved_distance] Start driving forwards")
+            service.send("robobot/cmd/ti", f"rc {speed} {turn_rate}")
             self.task_state = 1
 
         elif self.task_state == 1:
@@ -560,8 +636,9 @@ class MissionRunner:
                 self.task_state = 2
 
         elif self.task_state == 2:
-            print("[run_drive_straight] Ended Task")
+            print("[run_drive_curved_distance] Ended Task")
             self.next_task()
+
 
     def run_drive_curved(self, task):
         """
@@ -600,6 +677,51 @@ class MissionRunner:
                 else:
                     service.send("robobot/cmd/ti", f"rc {nominal_speed} {final_turn_rate}")
                 print(f"% [run_drive_curved] Reached {np.degrees(pose.pose[2]):.1f}°")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            self.next_task()
+
+
+    def run_drive_curved_iwo(self, task):
+        """
+        Drive curved until a certain heading is reached.
+        """
+        nominal_speed     = task.get("nominal_speed",     0.2)
+        start_speed = task.get("start_speed", nominal_speed)
+        stop_speed = task.get("stop_speed", 0)
+        turn_rate = task.get("turn_rate", 0.01)
+        final_turn_rate = task.get("final_turn_rate", 0)
+        target_deg = task["heading_deg"]
+        tolerance = task["tolerance"]
+        timeout   = task.get("timeout",   20)
+        time_to_full_speed = task.get("time_to_full_speed", 0.02)
+
+
+        if self.task_state == 0:
+            diff = target_deg - iwo.fused_yaw
+            if diff > 180:
+                diff -= 2 * 180
+            elif diff < -180:
+                diff += 2 * 180
+            self._turn_sign = 1 if diff > 0 else -1
+            print(f"% [run_drive_curved_iwo] current={iwo.fused_yaw:.1f}°, target={task['heading_deg']}°, diff={diff:.1f}°")
+            service.send("robobot/cmd/ti", f"rc {start_speed} {self._turn_sign * turn_rate:.3f}")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            speed = start_speed + (nominal_speed - start_speed) * min(1, self.task_time()/time_to_full_speed)
+            diff = target_deg - iwo.fused_yaw
+            if diff > 180:
+                diff -= 2 * 180
+            elif diff < -180:
+                diff += 2 * 180
+            if abs(diff) <= tolerance or pose.tripBtimePassed() > timeout:
+                if stop_speed <= 0:
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                else:
+                    service.send("robobot/cmd/ti", f"rc {speed} {final_turn_rate}")
+                print(f"% [run_drive_curved_iwo] Reached {iwo.fused_yaw:.1f}°")
                 self.task_state = 2
 
         elif self.task_state == 2:
@@ -706,6 +828,38 @@ class MissionRunner:
             if abs(diff) <= tolerance or pose.tripBtimePassed() > timeout:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 print(f"% [turn_to_heading] Reached {np.degrees(pose.pose[2]):.1f}°")
+                self.task_state = 2
+
+        elif self.task_state == 2:
+            if abs(pose.turnrate()) < 0.001:
+                self.next_task()
+
+    def run_turn_to_heading_iwo(self, task):
+        target_deg = task["heading_deg"]
+        speed      = task.get("speed",         0.3)
+        tolerance  = task.get("tolerance_deg", 0.1)
+        timeout    = task.get("timeout",       15)
+
+        if self.task_state == 0:
+            diff = target_deg - iwo.fused_yaw
+            if diff > 180:
+                diff -= 2 * 180
+            elif diff < -180:
+                diff += 2 * 180
+            self._turn_sign = 1 if diff > 0 else -1
+            print(f"% [turn_to_heading_iwo] current={iwo.fused_yaw:.1f}°, target={task['heading_deg']}°, diff={diff:.1f}°")
+            service.send("robobot/cmd/ti", f"rc 0.0 {self._turn_sign * speed:.3f}")
+            self.task_state = 1
+
+        elif self.task_state == 1:
+            diff = target_deg - iwo.fused_yaw
+            if diff > 180:
+                diff -= 2 * 180
+            elif diff < -180:
+                diff += 2 * 180
+            if abs(diff) <= tolerance or pose.tripBtimePassed() > timeout:
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"% [turn_to_heading_iwo] Reached {iwo.fused_yaw:.1f}°")
                 self.task_state = 2
 
         elif self.task_state == 2:
@@ -820,6 +974,16 @@ class MissionRunner:
                 print("% [line_follow_until_xy] Stopped — next task")
                 self.next_task()
 
+    def run_golf_visual_approach_and_trap(self, task):
+        timeout = task.get("timeout", 15)
+        Kp_fwd = task.get("forward_gain", 0.5)
+        Kp_turn = task.get("turn_gain", 1.0)
+        
+        success = golf.capture_ball(timeout, Kp_fwd, Kp_turn)
+        
+        if not success:
+            print("Warning: Failed to capture the ball")
+    
     def run_drive_straight_heading(self, task):
         """
         Drives a set distance (forward or backward) while actively steering 
@@ -869,13 +1033,15 @@ class MissionRunner:
         min_time_between_checks = task.get("min_time_between_frames", 0.2)
         min_free_frames_to_move = task.get("min_free_frames_to_move", 5)
         min_distance_for_movement = task.get("min_distance_for_movement", 5)
+        require_movement_before_start = task.get("require_movement_before_start", False)
+        percentage_from_bottom = task.get("percentage_from_bottom", 0)
         
         if self.task_state == 0:
             print("% [wait_for_police] Waiting for clear space")
             service.send("robobot/cmd/T0", "leds 16 0 100 0")
             service.send("robobot/cmd/ti", f"rc 0.0 0") 
             # Start vision controller in background
-            self._vision_thread = threading.Thread(target=wait_for_police(percentage_height=percentage_height, time_between_checks=min_time_between_checks, min_distance_for_movement=min_distance_for_movement, min_free_frames_to_move=min_free_frames_to_move), daemon=True)
+            self._vision_thread = threading.Thread(target=wait_for_police(percentage_height=percentage_height, time_between_checks=min_time_between_checks, min_distance_for_movement=min_distance_for_movement, min_free_frames_to_move=min_free_frames_to_move, require_movement_before_start=require_movement_before_start, percentage_from_bottom=percentage_from_bottom), daemon=True)
             self._vision_thread.start()
             self.task_state = 1
 
@@ -902,12 +1068,35 @@ class MissionRunner:
         target_yaw = task.get("target_yaw", None)
         max_speed = task.get("max_speed", 0.8)
         timeout = task.get("timeout", 30)
-        dist_tol = task.get("distance_tolerance", 0.05)
+        dist_tol = task.get("distance_tolerance", 0.02)
         
         
         if self.task_state == 0:
             print(f"\n% [drive_to_xy] Turning towards {target_x}, {target_y}")
-            go_to_xy(target_x, target_y, target_yaw, max_speed=max_speed)
+            go_to_xy(target_x, target_y, target_yaw, max_speed=max_speed,dist_tolerance=dist_tol)
+            self.task_state = 1
+            
+        elif self.task_state == 1:
+            self.next_task()
+
+
+    def run_drive_to_xyyaw_IWO_fast(self, task):
+        """
+        Drives to a specific global X, Y coordinate using IWO
+        """
+        
+        target_x = task["target_x"]
+        target_y = task["target_y"]
+        
+        target_yaw = task.get("target_yaw", None)
+        max_speed = task.get("max_speed", 0.8)
+        timeout = task.get("timeout", 30)
+        dist_tol = task.get("distance_tolerance", 0.02)
+        
+        
+        if self.task_state == 0:
+            print(f"\n% [drive_to_xy] Turning towards {target_x}, {target_y}")
+            go_to_xy_fast(target_x, target_y, target_yaw, max_speed=max_speed,dist_tolerance=dist_tol)
             self.task_state = 1
             
         elif self.task_state == 1:
@@ -930,6 +1119,8 @@ class MissionRunner:
         pitch = task.get("pitch", 0)
         yaw = task.get("yaw", 0)
 
+        roll, pitch, yaw = np.radians([roll,pitch,yaw]) # ADDED SO PASS IN AS DEGREES
+
         att_meas = iwo._normalize_attitude_measurement([roll, pitch, yaw])
         
         acc_meas = imu.acc
@@ -941,4 +1132,144 @@ class MissionRunner:
         print(f"Updated roll, pitch, yaw: {np.degrees(rpy)}")
 
         self.next_task()
+    
+    def reset_IWO(self, task):
+        """
+        Reset IWO
+        """
+        print(f"Current Estimate X: {iwo.X}")
+        # Print roll pitch yaw from quaternion X[3:7]
+        qw, qx, qy, qz = iwo.X[3:7]
+        rpy = iwo._quaternion_to_euler(qw, qx, qy, qz)
+        print(f"Current roll, pitch, yaw: {np.degrees(rpy)}")
+        print(f"\n% [reset_IWO] reseting IWO with: {task}")
+        
+        x = task.get("x",0)
+        y = task.get("y",0)
+        z = task.get("z",0)
+        roll = task.get("roll", 0)
+        pitch = task.get("pitch", 0)
+        yaw = task.get("yaw", 0)
+
+        roll, pitch, yaw = np.radians([roll,pitch,yaw])
+
+        iwo.reset_kalman(x,y,z,roll,pitch,yaw)
+        print(f"Reset Estimate: {iwo.X}")
+        qw, qx, qy, qz = iwo.X[3:7]
+        rpy = iwo._quaternion_to_euler(qw, qx, qy, qz)
+        print(f"Reset roll, pitch, yaw: {np.degrees(rpy)}")
+
+        self.next_task()
+
+    def run_linefollow_until_intersection(self, task):
+
+        """
+        Follow a line on the chosen side until intersection is reached, line is lost,
+        or timeout expires.
+        """
+        follow_left = (task["side"] == "left")
+        speed = task.get("speed", 0.2)
+        timeout = task.get("timeout", 30)
+        edge.CUSTOM_CONTROL_ENABLED = True
+
+        if self.task_state == 0:
+            print("% [line_follow] Starting — moving forward to find line")
+            service.send("robobot/cmd/T0", "leds 16 0 100 0") # green
+            service.send("robobot/cmd/ti",f"rc {speed:.3f} 0.0") # (forward m/s, turn-rate rad/sec)
+            self.task_state = 1
+
+        elif self.task_state == 1: # approaching line
+            if edge.lineValidCnt > 4:
+                edge.lineControl(speed, follow_left)
+                pose.tripBreset()
+                print("% [line_follow] Line found — following")
+                self.task_state = 2
+            elif edge.crossingLine or self.task_time() > timeout:
+                service.send("robobot/cmd/ti/","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+                self.task_state = 3
+
+        elif self.task_state == 2: # following line
+            if self.task_time() > timeout:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [line_follow] Timeout")
+                self.task_state = 3
+            elif edge.lineValidCnt < 2:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
+                self.task_state = 3
+            elif edge.crossingLine:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print(f"% [line_follow] Crossing line detected at {pose.tripB:.3f}m")
+                self.task_state = 3
+            # elif : we arrived at destination
+
+        elif self.task_state == 3: # stopping
+            if abs(pose.velocity()) < 0.001:
+                print("% [line_follow] Stopped — next task")
+                self.next_task()
+
+
+    def run_servo_up(self, task):
+        print("[Servo UP] Pulling Servo Up")
+        service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up)
+        t.sleep(1) # wait for servo to reach position
+        self.next_task()
+    def run_servo_down(self, task):
+        print("[Servo DOWN] Pushing Servo Down")
+        service.send("robobot/cmd/T0","servo 1 150 400")
+        self.next_task()
+
+    def run_servo_relax(self, task):
+        print("[Servo RELAX] Relaxing Servo")
+        service.send("robobot/cmd/T0","servo 1 10000 0")
+        self.next_task()
+
+    def run_get_ball(self, task):
+        
+        # Move arm up
+        service.send("robobot/cmd/T0", "servo 1 -930 400") # Arm up
+        t.sleep(1) # wait for servo to reach position
+        
+        # 1. Get local body-frame coordinates
+        d1, d2 = get_ball_location()
+        x_body = d2
+        y_body = -d1
+        
+        # 2. Get global robot state
+        cur_x = iwo.fused_x
+        cur_y = iwo.fused_y
+        cur_yaw = iwo.fused_yaw
+
+        # 3. Transform ball position to Global Frame
+        # Rotation matrix: [cos -sin; sin cos]
+        ball_global_x = cur_x + (x_body * np.cos(cur_yaw) - y_body * np.sin(cur_yaw))
+        ball_global_y = cur_y + (x_body * np.sin(cur_yaw) + y_body * np.cos(cur_yaw))
+
+        # 4. Calculate approach target (0.3m away from global ball position)
+        dx = ball_global_x - cur_x
+        dy = ball_global_y - cur_y
+        dist = np.hypot(dx, dy)
+        
+        approach_dist = 0.3
+        # Only move if we aren't already within the approach distance
+        if dist > approach_dist:
+            scale = (dist - approach_dist) / dist
+            target_x = cur_x + dx * scale
+            target_y = cur_y + dy * scale
+        else:
+            target_x, target_y = cur_x, cur_y
+
+        # 5. Execution
+        service.send("robobot/cmd/T0", "servo 1 -930 400") # Arm up
+        t.sleep(1)
+        
+        go_to_xy(target_x, target_y, max_speed=0.5, dist_tolerance=0.05)
+        
+        service.send("robobot/cmd/T0", "servo 1 150 400") # Arm down
+        self.next_task()
+
+
             

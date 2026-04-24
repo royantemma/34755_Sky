@@ -8,7 +8,7 @@ from uservice import service
 from scam import cam
 from spose import pose
 
-def detect_red_ball(img):
+def detect_red_ball_test(img):
     """
     Converts image to HSV, masks red pixels, finds the ball, 
     and returns a dictionary of all intermediate images for debugging.
@@ -17,7 +17,8 @@ def detect_red_ball(img):
     
     # Red wraps around the 0/180 mark in OpenCV
     lower_red1 = np.array([0, 120, 70])
-    upper_red1 = np.array([10, 255, 255])
+    # upper_red1 = np.array([10, 255, 255])
+    upper_red1 = np.array([70, 255, 255])
     lower_red2 = np.array([170, 120, 70])
     upper_red2 = np.array([180, 255, 255])
     
@@ -51,7 +52,80 @@ def detect_red_ball(img):
     
     for contour in contours:
         area = cv.contourArea(contour)
-        if area > 10:  # Minimum area to filter noise
+        if area > 500:  # Minimum area to filter noise
+            print(f"Contour area: {cv.contourArea(contour)}")
+            ((x, y), radius) = cv.minEnclosingCircle(contour)
+            print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
+            circle_area = np.pi * (radius ** 2)
+            
+            if circle_area > 10:
+                area_ratio = area / circle_area
+                print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
+                # Area of the contour divided by the area of its minimum enclosing
+                # circle is a simple circularity measure. A perfect circle is ~1.0.
+                img_height = img.shape[0]
+                if area_ratio > 0.6 and area > max_area:
+                    max_area = area
+                    best_contour = contour
+                    best_radius = radius
+                    best_center = (x, y)
+    
+    if best_contour is not None and best_radius > 3:
+        x, y = best_center
+        # Draw a green circle and a red dot at the center on the debug image
+        cv.circle(debug_images["01_original"], (int(x), int(y)), int(best_radius), (0, 255, 0), 2)
+        cv.circle(debug_images["01_original"], (int(x), int(y)), 3, (0, 0, 255), -1)
+        
+        return True, int(x), int(y), best_radius, debug_images
+            
+    return False, 0, 0, 0, debug_images
+
+def detect_red_ball(img):
+    """
+    Converts image to HSV, masks red pixels, finds the ball, 
+    and returns a dictionary of all intermediate images for debugging.
+    """
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    
+    # Red wraps around the 0/180 mark in OpenCV
+    lower_red1 = np.array([0, 120, 70])
+    # upper_red1 = np.array([10, 255, 255])
+    upper_red1 = np.array([70, 255, 255])
+    lower_red2 = np.array([170, 120, 70])
+    upper_red2 = np.array([180, 255, 255])
+    
+    # Step 1: Individual Masks
+    mask1 = cv.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv.inRange(hsv, lower_red2, upper_red2)
+    
+    # Step 2: Combined Mask
+    combined_mask = cv.bitwise_or(mask1, mask2)
+    
+    # Step 3: Morphological Cleanup
+    eroded_mask = cv.erode(combined_mask, None, iterations=2)
+    final_mask = cv.dilate(eroded_mask, None, iterations=2)
+    
+    # Pack all steps into a dictionary to send back to the test function
+    debug_images = {
+        "01_original": img.copy(),
+        "02_mask1_low_red": mask1,
+        "03_mask2_high_red": mask2,
+        "04_combined_mask": combined_mask,
+        "05_final_cleaned_mask": final_mask
+    }
+    
+    # Find Contours
+    contours, _ = cv.findContours(final_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    
+    best_contour = None
+    best_radius = 0
+    best_center = (0, 0)
+    max_area = 0
+    
+    for contour in contours:
+        area = cv.contourArea(contour)
+        # if area > 10:  # Minimum area to filter noise
+        if True:  # Minimum area to filter noise
             ((x, y), radius) = cv.minEnclosingCircle(contour)
             circle_area = np.pi * (radius ** 2)
             
@@ -60,13 +134,13 @@ def detect_red_ball(img):
                 # Area of the contour divided by the area of its minimum enclosing
                 # circle is a simple circularity measure. A perfect circle is ~1.0.
                 img_height = img.shape[0]
-                if area_ratio > 0.8 and area > max_area and y > img_height / 2:
+                if area_ratio > 0.6 and area > max_area and y > img_height / 1:
                     max_area = area
                     best_contour = contour
                     best_radius = radius
                     best_center = (x, y)
     
-    if best_contour is not None and best_radius > 5:
+    if best_contour is not None and best_radius > 3:
         x, y = best_center
         # Draw a green circle and a red dot at the center on the debug image
         cv.circle(debug_images["01_original"], (int(x), int(y)), int(best_radius), (0, 255, 0), 2)
@@ -89,10 +163,10 @@ def setup_homography(img_width, img_height):
     #     [img_width, img_height]          # Bottom right pixel
     # ], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [213, 304],           # Middle left pixel
-        [601, 307],   # Middle right pixel
-        [45, 431],                 # Bottom left pixel
-        [774, 437]          # Bottom right pixel
+        [41, 229],           # Middle left pixel
+        [700, 228],   # Middle right pixel
+        [67, 537],                 # Bottom left pixel
+        [646, 523]          # Bottom right pixel
     ], dtype=np.float32)
 
     # 2. Real-world CAD coordinates (Destination) converted from mm to METERS
@@ -111,10 +185,10 @@ def setup_homography(img_width, img_height):
     #     [0.157, 0.228]   # Bottom right CAD
     # ], dtype=np.float32)
     dst_pts = np.array([ # For real measurement of the ball
-        [-0.52, 1.75],   # Middle left CAD
-        [0.52, 1.75],    # Middle right CAD
-        [-0.31, 0.55], # Bottom left CAD
-        [0.31, 0.55]   # Bottom right CAD
+        [-0.50, 1],   # Middle left CAD
+        [0.50, 1],    # Middle right CAD
+        [-0.14, 0.30], # Bottom left CAD
+        [0.14, 0.30]   # Bottom right CAD
     ], dtype=np.float32)
 
     # 3. Calculate and return the 3x3 transformation matrix
@@ -145,6 +219,28 @@ def px_to_xy_homography(px_x, px_y, H_matrix):
     
     return target_distance, target_angle, real_x, real_y
 
+def get_ball_location():
+    """Helper function to get the ball's real-world coordinates and return them."""
+    ok, img, _ = cam.getImage()
+    if not ok:
+        print("% Error: Unable to capture image from camera.")
+        return None
+    
+    h, w, _ = img.shape
+    H_matrix = setup_homography(w, h)
+    
+    found, px_x, px_y, radius, _ = detect_red_ball_test(img)
+    
+    if found:
+        target_distance, target_angle, real_x, real_y = px_to_xy_homography(px_x, px_y, H_matrix)
+        print(f"% Ball found at Px({px_x}, {px_y}), radius={radius:.1f}")
+        print(f"%   World position: x={real_x:.3f} m, y={real_y:.3f} m")
+        print(f"%   Distance={target_distance:.3f} m, Angle={np.degrees(target_angle):.1f} deg")
+        return real_x, real_y
+    else:
+        print("% Ball not found in the image.")
+        return None
+
 def find_and_catch():
     """Main mission state machine with two-phase approach"""
     os.makedirs("golf_test_results", exist_ok=True)
@@ -173,7 +269,7 @@ def find_and_catch():
                     H_matrix = setup_homography(w, h)
                     print(f"% Homography matrix initialized for {w}x{h} camera.")
 
-                found, px_x, px_y, radius, debug_images = detect_red_ball(img)
+                found, px_x, px_y, radius, debug_images = detect_red_ball_test(img)
                 
                 timestamp = imgTime.strftime('%Y%m%d_%H%M%S_%f')[:-3]
                 cv.imwrite(f"golf_test_results/state0_{timestamp}_01_original.jpg", debug_images["01_original"])
@@ -313,7 +409,7 @@ def find_and_print():
             H_matrix = setup_homography(w, h)
             
             # Process the image and get our dictionary of debug images
-            found, px_x, px_y, radius, debug_images = detect_red_ball(img)
+            found, px_x, px_y, radius, debug_images = detect_red_ball_test(img)
             
             timestamp = imgTime.strftime('%Y%m%d_%H%M%S')
             
@@ -343,3 +439,65 @@ def find_and_print():
             break
         
         t.sleep(0.1)
+
+def capture_ball(timeout=15, Kp_fwd=0.5, Kp_turn=1.0):
+    """
+    Takes control of the robot to visually approach and trap the red ball.
+    Returns True if successful, False if it times out.
+    """
+    print("--- Starting Golf Visual Approach ---")
+    start_time = t.time()
+    
+    while (t.time() - start_time) < timeout:
+        img = cam.getImage()
+        if img is None:
+            t.sleep(0.05)
+            continue
+            
+        # Get dimensions and setup homography (using your existing function)
+        h, w, _ = img.shape
+        H_matrix = setup_homography(w, h)
+        
+        # Run the detection pipeline
+        found, px_x, px_y, radius, _ = detect_red_ball(img)
+        
+        if found:
+            # Get real-world coordinates relative to the robot
+            target_dist, target_angle, _, _ = px_to_xy_homography(px_x, px_y, H_matrix)
+            
+            # Calculate Proportional Turn Rate
+            turn_rate = target_angle * Kp_turn
+            
+            # Calculate Proportional Forward Speed (Cap at 0.15 m/s, slow down within 20cm)
+            if target_dist > 0.20:
+                forward_speed = 0.15 
+            else:
+                forward_speed = target_dist * Kp_fwd 
+                
+            # Check Capture Condition (ball is within 4cm and roughly centered)
+            if target_dist < 0.04 and abs(target_angle) < 0.05:
+                # Stop motors immediately
+                service.send("robobot/cmd/ti", "rc 0 0")
+                
+                # Actuate the servo to drop the trap 
+                # IMPORTANT: Verify '1 1000' matches your Teensy servo channel and down-position PWM
+                service.send("robobot/cmd/servo", "1 1000") 
+                
+                t.sleep(0.5) # Wait for mechanical actuation
+                print("--- Ball Trapped Successfully ---")
+                return True
+                
+            else:
+                # Stream the calculated velocities to the robot
+                service.send("robobot/cmd/ti", f"rc {forward_speed:.3f} {turn_rate:.3f}")
+                
+        else:
+            # Ball lost in frame - stop moving to avoid driving blindly
+            service.send("robobot/cmd/ti", "rc 0 0")
+            
+        t.sleep(0.05) # Loop delay to prevent overwhelming the command queue
+        
+    # If the loop exits because of the timeout
+    print("--- Task Failed: Golf Ball approach timed out ---")
+    service.send("robobot/cmd/ti", "rc 0 0")
+    return False

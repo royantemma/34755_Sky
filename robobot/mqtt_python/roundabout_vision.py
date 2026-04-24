@@ -125,6 +125,7 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
                     # print(heading)
                     #print(error)
                     if t.time()-start_time > 2.5 and 10 < iwo.fused_yaw < 20:
+                    #if t.time()-start_time > 2.5 and 10 < heading < 20:
                         #print("HOIHOI")
                         stop_event.set()
                         threading.Thread(target=httpd.shutdown, daemon=True).start()
@@ -197,7 +198,9 @@ def process_frame(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF
 
     # Aggressive closing
     kernel = np.ones((5, 5), np.uint8)
-    eroded = cv.erode(adaptive_thresh, kernel, iterations=6)
+    eroded = cv.erode(adaptive_thresh, kernel, iterations=5)
+    dilated = cv.dilate(eroded, kernel, iterations=10)
+    eroded = cv.erode(dilated, kernel, iterations=10)
 
     # Process the image
     white_pixels = np.sum(eroded == 255)

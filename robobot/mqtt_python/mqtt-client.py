@@ -281,7 +281,7 @@ def loop():
     line_vision.line_follow_vision()
     return
   elif service.args.roundabout_vision:
-    roundabout_vision.drive_roundabout(0.4, 0.25, 0, 0.06, Kp=6, Ki=0.5)
+    roundabout_vision.drive_roundabout(0.4, 0.25, 0, 0.06, Kp=12, Ki=0, percentage_of_white=55)
     return
   elif service.args.drive_to_line:
     line_vision.drive_to_line()
@@ -433,8 +433,12 @@ if __name__ == "__main__":
           from missions.mission_gates import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+        elif service.args.mission_golf:
+          from missions.mission_golf import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         elif service.args.mission_final:
-          from missions.mission_all_v0_3 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from missions.mission_all_v1_0 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:

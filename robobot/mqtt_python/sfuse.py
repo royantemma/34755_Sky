@@ -56,6 +56,7 @@ class SFuse:
     fused_roll = 0
     fused_pitch = 0
     fused_yaw = 0
+    accumulative_fused_yaw = 0
     fused_x = 0
     fused_y = 0
     fused_z = 0
@@ -93,7 +94,7 @@ class SFuse:
      
       for i in range(3):
         if pos_meas is not None and pos_meas[i] is not None:
-          self.R[i, i] = 0.001 # Very low noise for position measurements
+          self.R[i, i] = 0.00001 # Very low noise for position measurements
         else:
           self.R[i, i] = 10 # High noise for missing position measurements
           pos_meas[i] = self.X[i] # Use predicted position as measurement if not provided
@@ -308,6 +309,19 @@ class SFuse:
       self.fused_pitch = np.rad2deg(np.arcsin(2*(qw*qy - qz*qx)))
       self.fused_roll = np.rad2deg(np.arctan2(2*(qw*qx + qy*qz), 1 - 2*(qx**2 + qy**2)))
       
+      # Accumulate fused yaw
+      dh= self.fused_yaw - last_yaw
+      if dh > 180:
+        dh -= 360
+      elif dh < -180:
+        dh += 360
+      
+      self.accumulative_fused_yaw += dh
+
+
+      #print("Current fused orientation: roll={:.2f} deg, pitch={:.2f} deg, yaw={:.2f} deg".format(self.fused_roll, self.fused_pitch, self.fused_yaw))
+      #print("Current fused position: x={:.3f} m, y={:.3f} m, z={:.3f} m".format(self.fused_x, self.fused_y, self.fused_z))
+
       dh = np.deg2rad(self.fused_yaw - last_yaw)
       if dh > np.pi:
         dh -= 2.0 * np.pi
@@ -334,9 +348,11 @@ class SFuse:
       service.send("robobot/iwo/ang",f"{self.fused_roll} {self.fused_pitch} {self.fused_yaw}")
       service.send("robobot/map",f"{self.fused_x} {self.fused_y} {self.fused_yaw}")
 
-    def reset_kalman(self):
-      self.X = np.array([0, 0, 0, 1.0, 0, 0, 0]) # x y z q_wxyz
-      self.P = 10*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
+    def reset_kalman(self,x=0,y=0,z=0,roll=0,pitch=0,yaw=0):
+      
+      qw, qx, qy, qz = self.euler_to_quaternion(roll,pitch,yaw)
+      self.X = np.array([x, y, z, qw, qx, qy, qz]) # x y z q_wxyz
+      self.P = 0.00001*np.eye(7) # Initial Error Covariance small because we know it starts at 0,0,0 with no rotation
       self.acc_var = ((2.409e-01)/6)**2
       self.gyro_var = 1*(( np.pi /180) * (0.07) ) 
       self.vb_var = 0.001
@@ -346,12 +362,18 @@ class SFuse:
       self.R[3:6, 3:6] *= self.acc_var  # Noise in Acc
       self.R[6:10, 6:10] *= 0.00000001 # Noise Att
 
-      self.fused_roll = 0
-      self.fused_pitch = 0
-      self.fused_yaw = 0
-      self.fused_x = 0
-      self.fused_y = 0
-      self.fused_z = 0
+      self.fused_roll = np.degrees(roll)
+      self.fused_pitch = np.degrees(pitch)
+      self.fused_yaw = np.degrees(yaw)
+      self.accumulative_fused_yaw = self.fused_yaw
+      self.fused_x = x
+      self.fused_y = y
+      self.fused_z = z
+
+      print(f"[IWO] - Kalman filter has been reset to {self.X}")
+      qw, qx, qy, qz = self.X[3:7]
+      rpy = iwo._quaternion_to_euler(qw, qx, qy, qz)
+      print(f"Current roll, pitch, yaw: {np.degrees(rpy)}")
 
 
     def velocity(self):

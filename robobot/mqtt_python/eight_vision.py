@@ -82,7 +82,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-def wait_for_police(percentage_height, time_between_checks, min_distance_for_movement, min_free_frames_to_move): 
+def wait_for_police(percentage_height, time_between_checks, min_distance_for_movement, min_free_frames_to_move, require_movement_before_start, percentage_from_bottom): 
 
     # 1. Connect to the robot's main camera stream
     print("Connecting to main camera stream at localhost:7123...")
@@ -112,6 +112,7 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
         prev_time = start_time
         centers = []
         counter_free_frames = 0
+        movement_detected = False
         
 
         try:
@@ -121,15 +122,19 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
                     # ROBOT is in front of the eight (next to the red extra time) and await for a free entry to the eight
                     if t.time() - prev_time >= time_between_checks: # only get 5fps for clear movement detection
                         prev_time = t.time()
-                        image, centers = process_frame(frame, centers, percentage_width=100, percentage_height=percentage_height)
+                        image, centers = process_frame(frame, centers, percentage_width=100, percentage_height=percentage_height, percentage_from_bottom=percentage_from_bottom)
                         # Check for movement
                         if len(centers) > 1:
                             if np.linalg.norm(np.subtract(centers[-1], centers[-2])) > MIN_DISTANCE_FOR_MOVEMENT:
                                 #print("Movement Detected")
                                 counter_free_frames = 0
+                                movement_detected = True
                             else:
                                 #print("Clear Space Detected")
-                                counter_free_frames += 1
+                                if require_movement_before_start and movement_detected:
+                                    counter_free_frames += 1
+                                elif not require_movement_before_start:
+                                    counter_free_frames += 1
                         
                         if counter_free_frames >= MIN_FREE_FRAMES_TO_MOVE:
                             stop_event.set()
@@ -168,12 +173,13 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
         
 
 
-def process_frame(img, prev_centers, percentage_height=60, percentage_width=100):
+def process_frame(img, prev_centers, percentage_height=60, percentage_width=100, percentage_from_bottom=0):
     # Choose relevant portion of the image and convert to grayscale
     h, w = img.shape[:2]
     h_relevant = (h * percentage_height) // 100
+    h_start = h * percentage_from_bottom // 100
 
-    roi = img[-h_relevant:, :]
+    roi = img[h-h_relevant:h-h_start, :]
     gray = cv.cvtColor(roi, cv.COLOR_BGR2GRAY)
     _ , frame_gray = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)
     # frame_gray = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 10)

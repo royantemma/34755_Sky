@@ -94,7 +94,8 @@ def line_follow_vision(junctions = 'straight',
                        timeout=None,
                        min_pixels_to_detect_line=-1,
                        percentage_height = 50,
-                       final_heading = None): # BE CAUTIOUS, these parameters are initialised in MISSION RUNNER
+                       final_heading = None,
+                       time_after_turn=None): # BE CAUTIOUS, these parameters are initialised in MISSION RUNNER
     #print("Starting camera test stream...")
 
     # 1. Connect to the robot's main camera stream
@@ -123,6 +124,12 @@ def line_follow_vision(junctions = 'straight',
         speed = start_speed
         start_time = t.time()
 
+        # Variables for line following after the roundabout
+        TURN_DETECTED = False
+        TIME_AFTER_TURN = time_after_turn
+        start_time_after_turn = 0
+
+
         try:
             while not stop_event.is_set():
                 ret, frame = cap.read()
@@ -133,6 +140,7 @@ def line_follow_vision(junctions = 'straight',
                     #vision_steer_robot(heading, forward_speed=0.6, turn_sensitivity=0.005)
                     # vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
                     heading = None
+                    
                     if junctions == 'straight':
                         image, heading = process_frame(frame, MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=percentage_height)
                     elif junctions == 'left':
@@ -140,6 +148,21 @@ def line_follow_vision(junctions = 'straight',
                     elif junctions == 'right':
                         image, heading = process_frame2(frame, 'right', MIN_PIXELS_TO_DETECT_LINE, percentage_width=80, percentage_height=percentage_height)
 
+                    # Handles line section after roundabout
+                    if time_after_turn is not None and heading is not None:
+                        if iwo.fused_yaw < -60:
+                            #print("Turn Detected")
+                            TURN_DETECTED = True
+                            start_time_after_turn = t.time()
+
+                        if TURN_DETECTED and TIME_AFTER_TURN < t.time()-start_time_after_turn:
+                            print("TIME AFTER TURN REACHED - Robot slowing down")
+                            slow_down(stop_time, speed, stop_speed)
+                            stop_event.set()
+                            threading.Thread(target=httpd.shutdown, daemon=True).start()
+                            break   # IMPORTANT: exit immediately
+                        
+                    
                     #image, heading = process_frame2(frame, 'left', percentage_width=80, percentage_height=40)
                     if heading is None:
                         failed_recognitions += 1
@@ -153,10 +176,13 @@ def line_follow_vision(junctions = 'straight',
                             stop_event.set()
                             threading.Thread(target=httpd.shutdown, daemon=True).start()
                             break   # IMPORTANT: exit immediately
+                    
                     elif final_heading is not None and final_heading[0] < iwo.fused_yaw < final_heading[1]:
+                        print(iwo.fused_yaw)
                         stop_event.set()
                         threading.Thread(target=httpd.shutdown, daemon=True).start()
                         break   # IMPORTANT: exit immediately
+                        
                     else:
                         #vision_steer_robot(heading, forward_speed=0.4, turn_sensitivity=0.005)
                         current_time = t.time()

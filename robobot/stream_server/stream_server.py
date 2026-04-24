@@ -11,6 +11,7 @@ import logging
 import socketserver
 import socket
 import threading
+from unittest import runner
 import simplejpeg
 import numpy as np
 import cv2 as cv
@@ -19,9 +20,21 @@ import os
 import sys
 import time
 
+
 # Add mqtt_python to path so we can import aruco module
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mqtt_python"))
 import aruco
+
+from mission_runner import MissionRunner
+from missions.mission_all_v1_0 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+from sfuse import iwo
+# import missions.current_mission as current_mission
+# from mqtt_python.mission_runner import MissionRunner
+# from ..mqtt_python.mission_runner import MissionRunner
+
+# import mqtt_python.missions.current_mission as current_mission
+# from ..mqtt_python.missions.current_mission import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+
 
 from http import server
 from threading import Condition
@@ -30,6 +43,18 @@ from setproctitle import setproctitle
 from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
+
+
+# Mission runner thread and runner
+mission_thread = None
+current_runner = None
+
+TOTAL_TIME = 0
+GOAL_TIME_BUFFER = 0
+TASKS = []
+
+iwo_data = []
+
 
 # set title of process, so that it is not just called Python
 setproctitle("stream_server")
@@ -79,6 +104,9 @@ stream_manager = StreamManager()
 # ADD TO THE IF STATEMENT TO EXTEND FUNCTIONALITY
 class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
+
+        global mission_thread, current_runner
+
         if self.path == '/':
             self.send_response(301)
             self.send_header('Location', '/index.html')
@@ -115,6 +143,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 'cube_center': aruco_data.get('cube_center', None) if isinstance(aruco_data, dict) else None,
                 'estimates': est
             }
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -176,8 +205,49 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
 
+        elif self.path == '/api/mission/start':
+
+            # Don't start if already running
+            if mission_thread and mission_thread.is_alive():
+                self.send_response(409)  # 409 = Conflict
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Mission already running'}).encode('utf-8'))
+                return
+
+            def run():
+                runner = MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER)
+                current_runner = runner
+                runner.run()
+                current_runner = None
+            
+            mission_thread = threading.Thread(target=run, daemon=True)
+            mission_thread.start()
+
+            # reply to the browser
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'Start'}).encode('utf-8'))
+
+        elif self.path == '/api/mission/stop':
+
+            if mission_thread and mission_thread.is_alive():
+                if current_runner:
+                    current_runner.stop = True
+                mission_thread.join(timeout=3)
+
+            # reply to the browser
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'Stop'}).encode('utf-8'))
+
         elif self.path == '/api/mission/set?taskset=1':
+
             # Taskset 1
+            TASKS = mission_all_v1_0.TASKS
+            TOTAL_TIME = mission_all_v1_0.TOTAL_TIME
+            GOAL_TIME_BUFFER = mission_all_v1_0.GOAL_TIME_BUFFER
 
 
             # reply to the browser
@@ -185,7 +255,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'taskset 1'}).encode('utf-8'))
-            pass
+
         elif self.path == '/api/mission/set?taskset=2':
             # Taskset 2
 
@@ -195,7 +265,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'taskset 2'}).encode('utf-8'))
-            pass
+
         elif self.path == '/api/mission/set?taskset=3':
             # Taskset 3
 
@@ -205,6 +275,34 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'taskset 3'}).encode('utf-8'))
+
+        elif self.path == '/api/iwo/data':
+            response = {
+                'data': {
+                    'robot_x': iwo.fused_x,           # in meters                    
+                    'robot_y': iwo.fused_y,           # in meters
+                    'robot_z': iwo.fused_z,           # in meters
+                    # 'robot_roll': iwo.fused_roll,   
+                    # 'robot_pitch': iwo.fused_pitch, # convert degrees to radians
+                    # 'robot_yaw': iwo.fused_yaw      # convert degrees to radians
+
+
+                    'robot_roll': np.radians(iwo.fused_roll),   # convert degrees to radians
+                    'robot_pitch': np.radians(iwo.fused_pitch), # convert degrees to radians
+                    'robot_yaw': np.radians(iwo.fused_yaw)      # convert degrees to radians
+                    # 'robot_x': iwo_data.get('fused_x', 0),           # in meters
+                    # 'robot_y': iwo_data.get('fused_y', 0),           # in meters
+                    # 'robot_z': iwo_data.get('fused_z', 0),           # in meters
+                    # 'robot_roll': np.radians(iwo_data.get('fused_roll', 0)),   # convert degrees to radians
+                    # 'robot_pitch': np.radians(iwo_data.get('fused_pitch', 0)), # convert degrees to radians
+                    # 'robot_yaw': np.radians(iwo_data.get('fused_yaw', 0))      # convert degrees to radians
+                }
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            # self.wfile.write(json.dumps(response).encode('utf-8'))
+            self.wfile.write(json.dumps(response['data']).encode('utf-8'))
 
         else:
             try:
@@ -283,6 +381,32 @@ def aruco_worker():
         jpeg_bw = simplejpeg.encode_jpeg(annotated_frame, quality=80, colorspace="RGB")
         cameratest_output.write(jpeg_bw)
 
+def iwo_worker():
+    global iwo_data
+    while True:
+        # Fetch IMU data (replace with actual IMU reading)
+        # Example dummy data; integrate real IMU calls here
+        x, y, z = 0, 0, 0  # Position (mm, if available; IMU typically gives orientation)
+        yaw, pitch, roll = 0, 0, 0  # Orientation in radians
+
+        x = iwo.fused_x
+        y = iwo.fused_y
+        z = iwo.fused_z
+        yaw = iwo.fused_yaw
+        pitch = iwo.fused_pitch
+        roll = iwo.fused_roll
+
+        iwo_data = [{
+            'robot_x': x,
+            'robot_y': y,
+            'robot_z': z,
+            'robot_yaw': yaw,
+            'robot_pitch': pitch,
+            'robot_roll': roll
+        }]
+        time.sleep(0.1)  # Poll rate, adjust as needed
+
+
 # ADD TO THIS FUNCTION TO SPAWN MORE THREADS
 def start_stream_server():
     import subprocess
@@ -290,6 +414,7 @@ def start_stream_server():
     subprocess.Popen(["python3", "navigation.py"], cwd=mqtt_dir)
     threading.Thread(target=process_frames, daemon=True).start()
     threading.Thread(target=aruco_worker, daemon=True).start()
+    threading.Thread(target=iwo_worker, daemon=True).start()
 
     # service.setup('localhost') # spawns its own rx and tx threads
 

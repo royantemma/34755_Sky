@@ -77,6 +77,7 @@ h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-
 }
 .btn:hover { opacity: 0.85; }
 .btn-catch { background: #4CAF50; color: white; }
+.btn-start { background: #4CAF50; color: white; }
 .btn-warn { background: #ff9800; color: white; }
 .btn-stop { background: #f44336; color: white; }
 .btn-reset { background: #007bff; color: white; }

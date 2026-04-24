@@ -140,6 +140,7 @@ class UService:
     self.parser.add_argument('--mission_gates', action='store_true', 
                              help='Run the mission from start to goal with gates')
     self.parser.add_argument('--mission_half', action='store_true')
+    self.parser.add_argument('--mission_golf', action='store_true')
     self.parser.add_argument('--mission_half_HALF', action='store_true')
     self.parser.add_argument('--line_vision', action='store_true',
                              help='Run the line following with vision (might be used for other vision tests later)')

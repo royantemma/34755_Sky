@@ -56,7 +56,8 @@ import socketserver
 latest_jpeg = None
 frame_condition = threading.Condition()
 
-def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8):
+"""
+def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
     yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
     # PID Gains
     Kp_lin = 0.4; Ki_lin = 0.0; Kd_lin = 0.02
@@ -81,7 +82,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8):
             desired_heading = math.atan2(y_goal - curr_y, x_goal - curr_x)
             angle_error = math.atan2(math.sin(desired_heading - curr_yaw), math.cos(desired_heading - curr_yaw))
 
-            if dist_error < 0.05: 
+            if dist_error < dist_tolerance: 
                 print("XY Target reached!")
                 if yaw_goal is None:
                     break # Exit completely if no yaw is requested
@@ -107,6 +108,190 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8):
 
             v = 0 # No forward movement in phase 2
             w = (Kp_ang * angle_error) + (Ki_ang * e_ang_int) + (Kd_ang * (angle_error - e_ang_prev) / dt)
+            e_ang_prev = angle_error
+
+        # Speed Saturation & Command
+        v = max(min(v, max_speed), -max_speed)
+        w = max(min(w, 1.5), -1.5)
+        service.send("robobot/cmd/ti", f"rc {v:.3f} {w:.3f}")
+
+        last_time = t.time()
+        t.sleep(0.05)
+
+    # Final Stop
+    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+"""
+
+def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
+    from sfuse import iwo
+
+    yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
+
+    # PID Gains
+    Kp_lin = 0.4; Ki_lin = 0.0; Kd_lin = 0.02
+    Kp_ang = 1.5; Ki_ang = 0.0; Kd_ang = 0.05
+
+    e_lin_int = 0.0; e_lin_prev = 0.0
+    e_ang_int = 0.0; e_ang_prev = 0.0
+    last_time = t.time()
+
+    xy_reached = False
+    rot_phase_initialized = False  # for shortest-path yaw phase
+
+    def shortest_yaw_error(curr_yaw, yaw_target):
+        return math.atan2(math.sin(yaw_target - curr_yaw),
+                          math.cos(yaw_target - curr_yaw))
+
+    while True:
+        # Get current state
+        curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
+        now = t.time()
+        dt = now - last_time
+        if dt <= 0: dt = 0.001
+
+        if not xy_reached:
+            # --- PHASE 1: Drive to XY ---
+            dist_error = math.sqrt((x_goal - curr_x)**2 + (y_goal - curr_y)**2)
+            desired_heading = math.atan2(y_goal - curr_y, x_goal - curr_x)
+            angle_error = shortest_yaw_error(curr_yaw, desired_heading)
+
+            if dist_error < dist_tolerance:
+                print("XY Target reached!")
+                if yaw_goal is None:
+                    break
+                xy_reached = True
+                # Reset angular PID terms for rotation phase
+                e_ang_int = 0.0; e_ang_prev = 0.0
+                rot_phase_initialized = False
+                last_time = now
+                continue
+
+            # Linear PID
+            v = (Kp_lin * dist_error
+                 + Ki_lin * e_lin_int
+                 + Kd_lin * (dist_error - e_lin_prev) / dt)
+            
+            # Taken over from the fast method
+            v = max(v, max_speed/6) if v >= 0 else min(v, -max_speed/6)
+            # Prioritize turning
+            if abs(angle_error) > 0.5:
+                v = 0.0
+
+            # Angular PID
+            w = (Kp_ang * angle_error
+                 + Ki_ang * e_ang_int
+                 + Kd_ang * (angle_error - e_ang_prev) / dt)
+
+            e_lin_prev = dist_error
+            # (optional) e_lin_int += dist_error * dt
+
+        else:
+            # --- PHASE 2: Shortest‑path yaw rotation with continuous reference ---
+            if not rot_phase_initialized:
+                yaw_start = curr_yaw
+                delta = shortest_yaw_error(yaw_start, yaw_goal)
+                # Nominal rotation speed ~1 rad/s → duration:
+                T_rot = max(0.5, abs(delta) / 1.0)
+                t_start = now
+                rot_phase_initialized = True
+
+            # Progress 0→1
+            s = (now - t_start) / T_rot
+            if s > 1.0:
+                s = 1.0
+
+            # Smooth interpolation (cosine ease-in-out)
+            s_smooth = 0.5 * (1.0 - math.cos(math.pi * s))
+
+            # Continuous yaw reference
+            yaw_ref = yaw_start + delta * s_smooth
+            yaw_ref = math.atan2(math.sin(yaw_ref), math.cos(yaw_ref))
+
+            angle_error = shortest_yaw_error(curr_yaw, yaw_ref)
+
+            # Stop condition: close to final goal and reference finished
+            final_err = shortest_yaw_error(curr_yaw, yaw_goal)
+            if abs(final_err) < 0.03 and s >= 1.0:
+                print("Final heading reached!")
+                break
+
+            v = 0.0  # no forward motion in rotation phase
+            w = (Kp_ang * angle_error
+                 + Ki_ang * e_ang_int
+                 + Kd_ang * (angle_error - e_ang_prev) / dt)
+            
+            # Taken over from the fast method
+            w = max(w, 0.1) if w >= 0 else min(w, -0.1)
+            
+            e_ang_prev = angle_error
+            # (optional) e_ang_int += angle_error * dt
+
+        # Saturation
+        v = max(min(v, max_speed), -max_speed)
+        w = max(min(w, 1.5), -1.5)
+
+        service.send("robobot/cmd/ti", f"rc {v:.3f} {w:.3f}")
+
+        last_time = now
+        t.sleep(0.05)
+
+    # Final Stop
+    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+
+
+def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
+    yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
+    # PID Gains
+    Kp_lin = 0.4; Ki_lin = 0.0; Kd_lin = 0.02
+    Kp_ang = 1.5; Ki_ang = 0.0; Kd_ang = 0.05
+    
+    from sfuse import iwo
+    e_lin_int = 0; e_lin_prev = 0
+    e_ang_int = 0; e_ang_prev = 0
+    last_time = t.time()
+
+    xy_reached = False
+
+    while True:
+        # Get current state
+        curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
+        dt = t.time() - last_time
+        if dt <= 0: dt = 0.001 # Prevent division by zero
+
+        if not xy_reached:
+            # --- PHASE 1: Drive to XY ---
+            dist_error = math.sqrt((x_goal - curr_x)**2 + (y_goal - curr_y)**2)
+            desired_heading = math.atan2(y_goal - curr_y, x_goal - curr_x)
+            angle_error = math.atan2(math.sin(desired_heading - curr_yaw), math.cos(desired_heading - curr_yaw))
+
+            if dist_error < dist_tolerance: 
+                print("XY Target reached!")
+                if yaw_goal is None:
+                    break # Exit completely if no yaw is requested
+                xy_reached = True
+                # Reset PID terms for the rotation phase
+                e_ang_int = 0; e_ang_prev = 0 
+                continue
+
+            v = (Kp_lin * dist_error) + (Ki_lin * e_lin_int) + (Kd_lin * (dist_error - e_lin_prev) / dt)
+            v = max(v, max_speed/6) if v >= 0 else min(v, -max_speed/6)
+            # Prioritize turning: don't drive forward if pointing the wrong way
+            if abs(angle_error) > 0.5: v = 0 
+            
+            w = (Kp_ang * angle_error) + (Ki_ang * e_ang_int) + (Kd_ang * (angle_error - e_ang_prev) / dt)
+            e_lin_prev = dist_error
+
+        else:
+            # --- PHASE 2: Reach Final Heading ---
+            angle_error = math.atan2(math.sin(yaw_goal - curr_yaw), math.cos(yaw_goal - curr_yaw))
+            
+            if abs(angle_error) < 0.03: # Within ~1.7 degrees
+                print("Final heading reached!")
+                break
+
+            v = 0 # No forward movement in phase 2
+            w = (Kp_ang * angle_error) + (Ki_ang * e_ang_int) + (Kd_ang * (angle_error - e_ang_prev) / dt)
+            w = max(w, 0.1) if w >= 0 else min(w, -0.1)
             e_ang_prev = angle_error
 
         # Speed Saturation & Command
