@@ -49,7 +49,8 @@ class SEdge:
     # line detection levels
     lineValidThreshold = 700 # 1000 is calibrated white # RR change here to determine which sensor readings after normalization are invalid (too high)
     # RR lineValid = high >= lineValidThreshold; (if highest current reading above threshold)
-    crossingThreshold = 500 # average above this is assumed to be crossing line
+    #crossingThreshold = 500 # average above this is assumed to be crossing line
+    crossingThreshold = 700 # average above this is assumed to be crossing line
     crossingOverride = False  # when True, followLine() is suppressed
     # level for relevant white values
     # low = lineValidThreshold - 100;

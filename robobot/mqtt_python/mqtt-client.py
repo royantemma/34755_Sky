@@ -357,7 +357,8 @@ def loop():
       break
     elif state == 106:
       print(f"Servo up")
-      service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up)
+      #service.send("robobot/cmd/T0","servo 1 -930 400") # (servo up)
+      service.send("robobot/cmd/T0","servo 1 -890 400") # (servo up)
       t.sleep(1.5) # wait for servo to reach position
       break
     elif state == 107:

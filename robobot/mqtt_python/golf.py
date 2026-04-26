@@ -162,11 +162,17 @@ def setup_homography(img_width, img_height):
     #     [0, img_height],                 # Bottom left pixel
     #     [img_width, img_height]          # Bottom right pixel
     # ], dtype=np.float32)
+    #src_pts = np.array([ # For real measurement of the ball
+    #    [41, 229],           # Middle left pixel
+    #    [700, 228],   # Middle right pixel
+    #    [67, 537],                 # Bottom left pixel
+    #    [646, 523]          # Bottom right pixel
+    #], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [41, 229],           # Middle left pixel
-        [700, 228],   # Middle right pixel
-        [67, 537],                 # Bottom left pixel
-        [646, 523]          # Bottom right pixel
+        [195, 200],           # Middle left pixel
+        [605, 202],   # Middle right pixel
+        [152, 335],                 # Bottom left pixel
+        [661, 340]          # Bottom right pixel
     ], dtype=np.float32)
 
     # 2. Real-world CAD coordinates (Destination) converted from mm to METERS
@@ -184,11 +190,17 @@ def setup_homography(img_width, img_height):
     #     [-0.157, 0.228], # Bottom left CAD
     #     [0.157, 0.228]   # Bottom right CAD
     # ], dtype=np.float32)
+    #dst_pts = np.array([ # For real measurement of the ball
+    #    [-0.50, 1],   # Middle left CAD
+    #    [0.50, 1],    # Middle right CAD
+    #    [-0.14, 0.30], # Bottom left CAD
+    #    [0.14, 0.30]   # Bottom right CAD
+    #], dtype=np.float32)
     dst_pts = np.array([ # For real measurement of the ball
-        [-0.50, 1],   # Middle left CAD
-        [0.50, 1],    # Middle right CAD
-        [-0.14, 0.30], # Bottom left CAD
-        [0.14, 0.30]   # Bottom right CAD
+        [-0.3,1],   # Middle left CAD
+        [0.3,1],  
+        [-0.2, 0.50], # Bottom left CAD
+        [0.2, 0.50]   # Bottom right CAD
     ], dtype=np.float32)
 
     # 3. Calculate and return the 3x3 transformation matrix
@@ -224,7 +236,7 @@ def get_ball_location():
     ok, img, _ = cam.getImage()
     if not ok:
         print("% Error: Unable to capture image from camera.")
-        return None
+        return (None, None)
     
     h, w, _ = img.shape
     H_matrix = setup_homography(w, h)
@@ -239,7 +251,7 @@ def get_ball_location():
         return real_x, real_y
     else:
         print("% Ball not found in the image.")
-        return None
+        return (None, None)
 
 def find_and_catch():
     """Main mission state machine with two-phase approach"""

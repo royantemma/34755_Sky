@@ -12,27 +12,27 @@ import signal
 # Format: ("path/to/script.py", delay_after_start_in_seconds)
 NODES = [
     # --- Hardware Nodes ---
-    ("biscaROS/nodes/hardware/imu_node.py", 0.1),
-    ("biscaROS/nodes/hardware/ir_node.py", 0.1),
-    ("biscaROS/nodes/hardware/robot_node.py", 0.1),
+    ("nodes/hardware/imu_node.py", 0.1),
+    ("nodes/hardware/ir_node.py", 0.1),
+    ("nodes/hardware/robot_node.py", 0.1),
 
     # --- Core Nodes ---
-    ("biscaROS/nodes/navigation.py", 0.1),  
-    ("biscaROS/nodes/mission_node.py", 0.1),
+    ("nodes/navigation.py", 0.1),  
+    ("nodes/mission_node.py", 0.1),
 
     # --- Vision Nodes ---
     # CRITICAL: Camera node requires a delay to allocate Shared Memory
     # before the other vision nodes attempt to attach to it.
-    ("biscaROS/nodes/vision/camera_node.py", 2.5),
+    ("nodes/vision/camera_node.py", 2.5),
     
-    ("biscaROS/nodes/vision/aruco_node.py", 0.1),
-    # ("biscaROS/nodes/vision/ball_node.py", 0.1),
+    ("nodes/vision/aruco_node.py", 0.1),
+    # ("nodes/vision/ball_node.py", 0.1),
     
     # Stream compositor must start after all overlays are available
-    ("biscaROS/nodes/vision/stream_node.py", 0.1),
+    ("nodes/vision/stream_node.py", 0.1),
 
     # --- Web/UI Nodes ---
-    ("biscaROS/nodes/web_node.py", 0.1),
+    ("nodes/web_node.py", 0.1),
 ]
 
 processes = []

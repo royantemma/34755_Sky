@@ -268,8 +268,9 @@ class SFuse:
       #print(pos_meas)
       #print(att_meas)
       vb = self.velocity()
-      gyro = np.array(gyro, dtype='float64') - np.array([-0.1834, -0.1299, -0.1700])
+      gyro = np.array(gyro, dtype='float64') # - np.array([-0.1834, -0.1299, -0.1700])
       # Convert to radians/sec and apply bias correction
+      #print(f"Raw gyro: {gyro}, bias-corrected gyro: {gyro}")
       omega = np.deg2rad(gyro) 
 
       #print(f"vb: {vb} m/s, omega: {omega} rad/s, dt: {dt} sec")
