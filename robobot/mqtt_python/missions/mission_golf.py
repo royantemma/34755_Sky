@@ -114,11 +114,13 @@ TASKS = [
     "type": "servo_mid"
 },
 
-{
-    "type": "drive_straight_crossing_x_lines",
-    "speed": 0.4, # 0.4 seems robust
-    "lines_to_cross": 1,
-},
+
+
+#{
+#   "type": "drive_straight_crossing_x_lines",
+#    "speed": 0.4, # 0.4 seems robust
+#    "lines_to_cross": 1,
+#},
 
 #{
 #    "type": "linefollow_until_intersection",

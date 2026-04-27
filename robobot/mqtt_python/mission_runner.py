@@ -190,6 +190,9 @@ class MissionRunner:
             elif task_type == "golf_visual_approach_and_trap":
                 self.run_golf_visual_approach_and_trap(current_task)
 
+            elif task_type == "stairs_down":
+                self.run_stairs_down(current_task)
+
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
                 self.next_task()
@@ -1544,7 +1547,7 @@ class MissionRunner:
         self.next_task()
     def run_servo_mid(self, task):
         print("[Servo MID] Setting Servo to Mid Position")
-        service.send("robobot/cmd/T0","servo 1 -100 400")
+        service.send("robobot/cmd/T0","servo 1 -200 400")
         t.sleep(1.5) # wait for servo to reach position
         self.next_task()
 
@@ -1607,6 +1610,132 @@ class MissionRunner:
         t.sleep(1)
         self.next_task()
 
+    def run_stairs_down(self, task):
+        """
+        Go down stairs by:
+        1. Drive fast forward until inclined (pitch != 0)
+        2. For each stair (5 times):
+           a. Drive slow while following line for 10cm
+           b. Drive fast when back to horizontal (pitch ~= 0)
+        3. Follow line until intersection is detected
+        """
+        follow_left = (task.get("side", "left") == "left")
+        fast_speed = task.get("fast_speed", 0.5)
+        slow_speed = task.get("slow_speed", 0.15)  # Reduced for gentler turns
+        step_distance = task.get("step_distance", 0.10)  # 10cm per stair
+        pitch_threshold = task.get("pitch_threshold", 0.1)  # radians (~5.7°)
+        timeout = task.get("timeout", 60)
+        num_stairs = task.get("num_stairs", 5)
+        
+        edge.CUSTOM_CONTROL_ENABLED = True
+        
+        # Initialize tracking variables on first run
+        if self.task_state == 0:
+            print("% [stairs_down] Starting — driving fast forward to find stairs")
+            service.send("robobot/cmd/T0", "leds 16 100 0 0")  # red
+            service.send("robobot/cmd/ti", f"rc {fast_speed:.3f} 0.0")
+            self._stairs_completed = 0
+            self._on_descent = False
+            self._waiting_for_horizontal = False
+            self._initial_pitch = iwo.fused_pitch
+            pose.tripBreset()
+            self.task_state = 1
+        
+        # State 1: Search for first stair (detect pitch change)
+        elif self.task_state == 1:
+            if self.task_time() > timeout:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [stairs_down] Timeout searching for stairs")
+                self.task_state = 10
+            else:
+                curr_pitch = iwo.fused_pitch
+                pitch_diff = abs(curr_pitch - self._initial_pitch)
+                
+                # Detected incline - first stair found
+                if pitch_diff > pitch_threshold:
+                    print(f"% [stairs_down] First stair detected (pitch change: {pitch_diff:.3f} rad)")
+                    edge.lineControl(slow_speed, follow_left, refPosition=2.0)  # Gentler control
+                    pose.tripBreset()
+                    self._stairs_completed = 0
+                    self._on_descent = True
+                    self._waiting_for_horizontal = False
+                    self.task_state = 2
+        
+        # State 2: Main loop for stairs
+        elif self.task_state == 2:
+            if self._stairs_completed >= num_stairs:
+                print(f"% [stairs_down] Completed {num_stairs} stairs — following line to intersection")
+                pose.tripBreset()
+                self.task_state = 3
+            else:
+                curr_pitch = iwo.fused_pitch
+                pitch_diff = abs(curr_pitch - self._initial_pitch)
+                dist_traveled = pose.tripB
+                
+                # On descent: move slow following line
+                if pitch_diff > pitch_threshold:
+                    if not self._on_descent:
+                        # Just started descending
+                        print(f"% [stairs_down] Starting descent for stair {self._stairs_completed + 1}")
+                        edge.lineControl(slow_speed, follow_left, refPosition=2.0)  # Gentler control
+                        pose.tripBreset()
+                        self._on_descent = True
+                        self._waiting_for_horizontal = False
+                    
+                    # Continue descending slowly
+                    edge.lineControl(slow_speed, follow_left, refPosition=2.0)
+                
+                # Back to horizontal: complete the stair
+                else:
+                    if self._on_descent and not self._waiting_for_horizontal:
+                        # Just finished descent, now on horizontal
+                        print(f"% [stairs_down] Stair {self._stairs_completed + 1} completed (traveled {dist_traveled:.3f}m)")
+                        self._stairs_completed += 1
+                        self._on_descent = False
+                        self._waiting_for_horizontal = True
+                        
+                        # Drive fast on horizontal section
+                        edge.lineControl(fast_speed, follow_left, refPosition=0.0)  # Normal control for fast driving
+                        
+                        # Reset for next stair
+                        if self._stairs_completed < num_stairs:
+                            pose.tripBreset()
+                            print(f"% [stairs_down] Ready for stair {self._stairs_completed + 1}")
+        
+        # State 3: Follow line until intersection
+        elif self.task_state == 3:
+            if self.task_time() > timeout:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [stairs_down] Timeout following line to intersection")
+                self.task_state = 4
+            elif edge.crossingLine:
+                # Intersection detected - stop immediately
+                print(f"% [stairs_down] Crossing detected at {pose.tripB:.3f}m - stopping")
+                edge.lineControl(0, True)  # Disable line control
+                # Send multiple stop commands to ensure robot stops
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                t.sleep(0.05)  # Brief pause
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")  # Ensure stop
+                print(f"% [stairs_down] Intersection stopped")
+                self.task_state = 4
+            elif edge.lineValidCnt < 2:
+                # Line lost
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                print("% [stairs_down] Line lost before intersection")
+                self.task_state = 4
+            else:
+                # Keep following line with gentle control and slower speed
+                edge.lineControl(0.1, follow_left, refPosition=0.5)  # Slower, gentler control
+        
+        # State 4: Stopping
+        elif self.task_state == 4:
+            if abs(pose.velocity()) < 0.001:
+                print("% [stairs_down] Stopped — next task")
+                edge.lineControl(0, True)
+                self.next_task()
 
 
    
