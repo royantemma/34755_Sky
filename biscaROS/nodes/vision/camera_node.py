@@ -29,43 +29,53 @@ class CameraNode(BaseNode):
         try:
             self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=self.frame_size)
         except FileExistsError:
-            # If the node crashed previously, the memory block might still exist. Attach to it.
             self.shm = shared_memory.SharedMemory(name=self.shm_name, create=False)
             
-        # Create a NumPy array that directly writes into the shared memory block
         self.shared_array = np.ndarray(self.frame_shape, dtype=np.uint8, buffer=self.shm.buf)
 
         # 2. Initialize Camera
         self.picam2 = Picamera2()
-        config = self.picam2.create_video_configuration(main={"size": (self.width, self.height)}, controls={
-            "ExposureTime": 15000, 
-            "AnalogueGain": 4.0, 
-            "FrameDurationLimits": (33333, 33333) # Forces ~30 fps
-        })
+        
+        # ADDED: "format": "RGB888" forces 3 channels instead of XBGR8888
+        config = self.picam2.create_video_configuration(
+            main={"size": (self.width, self.height), "format": "BGR888"}, 
+            controls={
+                "ExposureTime": 15000, 
+                "AnalogueGain": 4.0, 
+                "FrameDurationLimits": (33333, 33333)
+            }
+        )
         self.picam2.configure(config)
         self.picam2.start()
 
     def run(self):
-        # We don't just use self.start() here because we need a blocking loop to capture frames
-        super().start() # Starts the background MQTT thread
+        super().start()
         frame_count = 0
         
         print("[CameraNode] Starting capture loop...")
         try:
             while True:
-                # Capture frame (blocks until next frame is ready)
-                frame = self.picam2.capture_array()
+                # Request the specific "main" stream array
+                frame = self.picam2.capture_array("main")
                 
-                # Copy the new frame data directly into the shared memory block
+                # SAFEGUARD: If the hardware still returns 4 channels, strip the 4th (alpha/dummy) channel
+                if frame.shape[2] == 4:
+                    frame = frame[:, :, :3]
+                
+                # Now it is guaranteed to be (616, 820, 3)
                 np.copyto(self.shared_array, frame)
                 
-                # Ring the "MQTT Doorbell" so vision nodes know a new frame is ready
                 timestamp = time.time()
                 self.publish("biscaROS/vision/camera/new_frame", f"{frame_count},{timestamp}")
                 
                 frame_count += 1
                 
         except KeyboardInterrupt:
+            pass # Expected behavior, moving to finally block
+        except Exception as e:
+            print(f"[CameraNode] Crashed: {e}")
+        finally:
+            # FINALLY BLOCK: Guarantees shared memory is unlinked even if the script crashes
             self.stop()
 
     def stop(self):

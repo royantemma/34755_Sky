@@ -125,7 +125,7 @@ def line_follow_vision(junctions = 'straight',
         start_time = t.time()
 
         # Variables for line following after the roundabout
-        TURN_DETECTED = False
+        TURN_DETECTED = 0
         TIME_AFTER_TURN = time_after_turn
         start_time_after_turn = 0
 
@@ -150,12 +150,17 @@ def line_follow_vision(junctions = 'straight',
 
                     # Handles line section after roundabout
                     if time_after_turn is not None and heading is not None:
-                        if iwo.fused_yaw < -60:
-                            #print("Turn Detected")
-                            TURN_DETECTED = True
+                        #if iwo.fused_yaw < -60:
+                        if heading > 180:
+                            print("Turn Detected")
+                            TURN_DETECTED += 1
                             start_time_after_turn = t.time()
+                        elif TURN_DETECTED >= 4:
+                            TURN_DETECTED = 4
+                        else:
+                            TURN_DETECTED = 0
 
-                        if TURN_DETECTED and TIME_AFTER_TURN < t.time()-start_time_after_turn:
+                        if TURN_DETECTED >= 4 and TIME_AFTER_TURN < t.time()-start_time_after_turn:
                             print("TIME AFTER TURN REACHED - Robot slowing down")
                             slow_down(stop_time, speed, stop_speed)
                             stop_event.set()
@@ -364,7 +369,11 @@ def process_frame(img, MIN_PIXELS_TO_DETECT_LINE, percentage_height=40, percenta
         valid_indices = np.arange(h_relevant)[valid_rows]
         # row_weights = 1.5 * (valid_indices / h_relevant) + 0.5 # works for low speed
         row_weights = -2 * (valid_indices / h_relevant) + 2
-        heading = np.sum((row_centers - w_relevant/2) * row_weights) / np.sum(row_weights)
+        weight_sum = np.sum(row_weights)
+        if weight_sum > 0:
+            heading = np.sum((row_centers - w_relevant/2) * row_weights) / weight_sum
+        else:
+            heading = 0
 
         # Draw smooth continuous red line along the center
         points = [(int(row_centers[i]), valid_indices[i]) for i in range(len(valid_indices))]

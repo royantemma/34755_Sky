@@ -467,7 +467,7 @@ class SEdge:
       self.e_prev = e
 
       self.lineY = P + I + D #+ I + D
-
+      self.lineY = max(min(self.lineY, 1), -1) # limit to [-4, 4]
       par = f"rc {self.velocity:.3f} {self.lineY:.3f} {t.time()}"
       #print(par)
       service.send("robobot/cmd/ti", par) # send new turn command, maintaining velocity

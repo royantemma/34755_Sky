@@ -3,7 +3,7 @@
 # Complete project details at https://RandomNerdTutorials.com/raspberry-pi-mjpeg-streaming-web-server-picamera2/
 
 # Mostly copied from https://picamera.readthedocs.io/en/release-1.13/recipes2.html
-# Run this script, then point a web browser at http:<this-ip-address>:7123
+# Run this script, then point a web browser at http://<this-ip-address>:7123
 # Note: needs simplejpeg to be installed (pip3 install simplejpeg).
 
 import io

@@ -40,18 +40,18 @@ class BallNode(BaseNode):
 
     def _setup_homography(self):
         # Using the hardcoded calibration points from golf.py
-        src_pts = np.array([ 
-            [213, 304],  # Middle left pixel
-            [601, 307],  # Middle right pixel
-            [45, 431],   # Bottom left pixel
-            [774, 437]   # Bottom right pixel
+        src_pts = np.array([ # For real measurement of the ball
+            [243, 216],      # Middle left pixel
+            [569, 219],      # Middle right pixel
+            [76, 352],       # Bottom left pixel
+            [739, 364]       # Bottom right pixel
         ], dtype=np.float32)
 
-        dst_pts = np.array([ 
-            [-0.52, 1.75], # Middle left CAD
-            [0.52, 1.75],  # Middle right CAD
-            [-0.31, 0.55], # Bottom left CAD
-            [0.31, 0.55]   # Bottom right CAD
+        dst_pts = np.array([ # For real measurement of the ball
+            [-0.25,1],   # Middle left CAD
+            [0.25,1],  
+            [-0.25, 0.50], # Bottom left CAD
+            [0.25, 0.50]   # Bottom right CAD
         ], dtype=np.float32)
 
         return cv.getPerspectiveTransform(src_pts, dst_pts)
@@ -81,7 +81,8 @@ class BallNode(BaseNode):
         # 2. Detect Red Ball (HSV Thresholding)
         hsv = cv.cvtColor(frame_bgr, cv.COLOR_BGR2HSV)
         lower_red1 = np.array([0, 120, 70])
-        upper_red1 = np.array([10, 255, 255])
+        # upper_red1 = np.array([10, 255, 255])
+        upper_red1 = np.array([70, 255, 255])
         lower_red2 = np.array([170, 120, 70])
         upper_red2 = np.array([180, 255, 255])
         
@@ -108,7 +109,7 @@ class BallNode(BaseNode):
                 
                 if circle_area > 0:
                     area_ratio = area / circle_area
-                    if area_ratio > 0.8 and area > max_area and y > img_height / 2:
+                    if area_ratio > 0.8 and area > max_area and y > img_height / 4:
                         max_area = area
                         best_contour = contour
                         best_radius = radius

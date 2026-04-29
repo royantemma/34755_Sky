@@ -12,97 +12,115 @@ TOTAL_TIME       = 200
 GOAL_TIME_BUFFER = 20
 
 TASKS = [
+    # MISSION START
 
-    {
-        "type": "line_follow_vision", # controlling speed ? stops ? crossings ?
-        "timeout": 20,
-        "junction": 'left',
-        "start_speed": 0,
-        "nominal_speed": 0.6,
-        "stop_speed": 0.25,
-        "turn_sensitivity": 0.005,
-        "time_to_full_speed": 0.2,
-        "stop_time": 0.4,
-        "min_pixels_to_detect_line": 200
-    }, 
-    # maybe add iwo corrct here
-    {
-        "type":     "drive_straight",
-        "start_speed": 0.25,
-        "speed":    0.25,
-        "distance": 0.15,
-        "timeout":  200,
-        "is_stopping_at_end": True
-    },
+# Drive to roundabout
+#     {
+#         "type": "line_follow_vision", # controlling speed ? stops ? crossings ?
+#         "timeout": 20,
+#         "junction": 'left',
+#         "start_speed": 0,
+#         "nominal_speed": 0.6,
+#         "stop_speed": 0.25,
+#         "turn_sensitivity": 0.005,
+#         "time_to_full_speed": 0.2,
+#         "stop_time": 0.4,
+#         "min_pixels_to_detect_line": 200
+#     }, 
+#     # maybe add iwo corrct here
+#     {
+#         "type":     "drive_straight",
+#         "start_speed": 0.25,
+#         "speed":    0.25,
+#         "distance": 0.15,
+#         "timeout":  200,
+#         "is_stopping_at_end": True
+#     },
 
-    {
-        "type":     "drive_curved",
-        "nominal_speed":    0.25,
-        "stop_speed": 0.25,
-        "turn_rate": 1,
-        "final_turn_rate": 0,
-        "heading_deg": -15,
-        "timeout":  200,
-        "tolerance": 2,
-    },
-
-
-
-    { # Theo: I tried higher speeds, but I didn't managed to get it work well, so don't loose your time on this ;)
-        "type": "roundabout_vision", # controlling speed ? stops ?
-        "timeout": 10,
-        "speed": 0.4, # 0.4 recommended
-        "start_speed": 0.25, # choose same as before
-        "stop_speed": 0.4,
-        "time_to_full_speed": 0.06,
-        "Kp": 12, # 6 recommended (not implemented)
-        "Ki": 0, # 0.2 recommended (not implemented)
-        "percentage_of_white": 60 # this parameters tunes the center of the roundabout (i think bigger is smaller radius)
-    },
-
-    {
-        "type":     "drive_straight",
-        "start_speed": 0.4,
-        "speed":    0.4,
-        "distance": 0.2,
-        "timeout":  200,
-        "is_stopping_at_end": False
-    },
-
-    {
-        "type": "line_follow_vision",
-        "timeout": 7,
-        "junction": 'right',
-        "start_speed": 0.4, # choose same as speed in "roundabout_vision"
-        "nominal_speed": 0.9, # nice value is 0.6
-        "stop_speed": 0,
-        "turn_sensitivity": 0.007, # nice value is 0.005
-        "time_to_full_speed": 2,
-        "stop_time": 0.6,
-        "time_after_turn": 0.3
-    }, 
-
-    {
-        "type":     "correct_IWO",
-        "x": 4.95,
-        "y": -1.2,
-        "z": 0,
-        "roll":    0,
-        "pitch":  0,
-        "yaw":  -90
-    },
+# # Drive Roundabout
+#     # Small correction on roundabout
+#     {
+#         "type":     "drive_curved",
+#         "nominal_speed":    0.25,
+#         "stop_speed": 0.25,
+#         "turn_rate": 1,
+#         "final_turn_rate": 0,
+#         "heading_deg": -15,
+#         "timeout":  200,
+#         "tolerance": 2,
+#     },
 
 
-    {
-        "type":     "drive_to_xyyaw_IWO_fast",
-        "target_x": 3.55,
-        "target_y": -2.1,
-        "target_yaw": 155,
-        "max_speed":    0.5,
-        "timeout":  30
-    },
+#     # Drive roundabout
+#     { # Theo: I tried higher speeds, but I didn't managed to get it work well, so don't loose your time on this ;)
+#         "type": "roundabout_vision", # controlling speed ? stops ?
+#         "timeout": 10,
+#         "speed": 0.4, # 0.4 recommended
+#         "start_speed": 0.25, # choose same as before
+#         "stop_speed": 0.4,
+#         "time_to_full_speed": 0.06,
+#         "Kp": 12, # 6 recommended (not implemented)
+#         "Ki": 0, # 0.2 recommended (not implemented)
+#         "percentage_of_white": 60 # this parameters tunes the center of the roundabout (i think bigger is smaller radius)
+#     },
 
-    # Get extra time
+
+#     # Drive off roundabout
+#     {
+#         "type":     "drive_straight",
+#         "start_speed": 0.4,
+#         "speed":    0.4,
+#         "distance": 0.2,
+#         "timeout":  200,
+#         "is_stopping_at_end": False
+#     },
+
+
+#     # Drive until 6secs pass? approx after the second gate after leaving roundabout
+#     {
+#         "type": "line_follow_vision",
+#         "timeout": 6,
+#         "junction": 'right',
+#         "start_speed": 0.4, # choose same as speed in "roundabout_vision"
+#         "nominal_speed": 0.9, # nice value is 0.6
+#         "stop_speed": 0,
+#         "turn_sensitivity": 0.007, # nice value is 0.005
+#         "time_to_full_speed": 2,
+#         "stop_time": 0.6,
+#         "time_after_turn": 0.3
+#     }, 
+
+#     {
+#         "type":     "correct_IWO",
+#         "x": 4.95,
+#         "y": -1.2,
+#         "z": 0,
+#         "roll":    0,
+#         "pitch":  0,
+#         "yaw":  -90
+#     },
+
+#     # Drive to extra time
+#     {
+#         "type":     "drive_to_xyyaw_IWO_fast",
+#         "target_x": 3.55,
+#         "target_y": -2.1,
+#         "target_yaw": 155,
+#         "max_speed":    0.5,
+#         "timeout":  30
+#     },
+
+    # Infinity Loop 
+
+    # 1. Wait for the police bot to clear the intersection
+    # {
+    #     "type": "wait_for_police",
+    #     "timeout": 20,
+    #     "percentage_height": 60
+    # },
+    
+    # python mqtt-client.py --mission_all_v1_0
+
 
     {
         "type": "wait_for_police",
@@ -113,67 +131,58 @@ TASKS = [
         "timeout": 20,
         "require_movement_before_start": False
     },
-
-    # Option drive to xy yaw task
+    
     {
-        "type":     "drive_curved_distance",
-        "speed":    0.5,
-        "distance": 0.8,
-        "turn_rate": -0.23,
-        "timeout":  200,
+    "type": "drive_until_line_detection",
+    "speed": 0.4,
+    "timeout": 2
+    },
+
+    {
+    "type": "drive_to_xyyaw_IWO",
+    "target_yaw": -90, 
+    "just_yaw": True
+    },
+    
+    # 2. Follow the police bot and pass through the gate
+    {
+        "type": "line_follow_vision", 
+        "junction": "right",         # Follow the right path
+        "nominal_speed": 0.6,
+        "timeout": 4.5               # MEASURE THIS: How many seconds it takes to clear the gate
+    },
+    
+    # 3. Stop and Reverse out of the infinity loop
+    {
+        "type": "drive_straight",
+        "speed": -0.4,               # Negative speed to reverse
+        "distance": 0.3,             # Back up 30cm (adjust as needed to clear the gate)
         "is_stopping_at_end": True
     },
-
-
-
+    
+    # 4. Turn 90 degrees to the left
     {
-        "type":      "turn_to_heading_iwo",
-        "heading_deg": 90, # 0 is the heading at the beginning ot the mission, so this is a relative turn
-        "speed":     1.2,
-        "tolerance_deg": 2,
-        "timeout":   200,
+        "type": "turn_to_heading",
+        "heading_deg": 90,           # Relative 90 degrees left
+        "speed": 0.4,
+        "tolerance_deg": 2
     },
-
-    # Centered in right half of the eight
-
+    
+    # 5. Odometry drive directly to the line before the ramp
     {
-        "type": "wait_for_police",
-        "percentage_height": 75,
-        "time_between_checks": 0.2, # originally 0.2
-        "min_distance_for_movement": 1,
-        "min_free_frames_to_move": 7,
-        "timeout": 20,
-        "require_movement_before_start": False,
-        "percentage_from_bottom": 20
+        "type": "drive_curved_iwo",
+        "nominal_speed": 0.8,
+        "turn_rate": 0,              # Adjust if you need an arc instead of a straight line
+        "heading_deg": 0,            # Target heading to align with the ramp line
+        "timeout": 10
     },
-
-
+    
+    # 6. Re-engage line following to go up the ramp
     {
         "type": "line_follow_vision",
-        "timeout": 0.4, # used to be 0.6
-        "junction": 'straight',
-        "start_speed": 0, 
-        "nominal_speed": 0.4, # nice value is 0.6
-        "stop_speed": 0.4,
-        "turn_sensitivity": 0.005, # nice value is 0.005
-        "time_to_full_speed": 0.3,
-        "stop_time": 0.4
-    }, 
-
-
-    {
-        "type": "line_follow_vision",
-        "timeout": 5,
-        "junction": 'left',
-        "start_speed": 0.4, # choose same as speed in "roundabout_vision"
-        "nominal_speed": 0.4, # nice value is 0.6
-        "stop_speed": 0.4,
-        "turn_sensitivity": 0.006, # nice value is 0.005
-        "time_to_full_speed": 0.4,
-        "stop_time": 1.5,
-        "percentage_height": 10,
-        "final_heading": [0, 20] # first smallest (or most negative) element
-    }, 
+        "nominal_speed": 0.6,
+        # ... parameters for the ramp ...
+    },
 
     {
         "type":     "drive_straight",
@@ -220,7 +229,75 @@ TASKS = [
         "turn_sensitivity": 0.007, # nice value is 0.005
         "time_to_full_speed": 0.3,
         "stop_time": 0.6
-    }, 
+    },
+
+]
+
+# {
+    #     "type": "wait_for_police",
+    #     "percentage_height": 70,
+    #     'time_between_checks': 0.15,
+    #     "min_distance_for_movement": 5,
+    #     "min_free_frames_to_move": 5,
+    #     "timeout": 20,
+    #     "require_movement_before_start": False
+    # },
+
+    # # Drive to center of right inf loop circle (Alt option drive to xy yaw task?)
+    # {
+    #     "type":     "drive_curved_distance",
+    #     "speed":    0.5,
+    #     "distance": 0.8,
+    #     "turn_rate": -0.23,
+    #     "timeout":  200,
+    #     "is_stopping_at_end": True
+    # },
 
 
-]   
+    # # Face West
+    # {
+    #     "type":      "turn_to_heading_iwo",
+    #     "heading_deg": 90, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+    #     "speed":     1.2,
+    #     "tolerance_deg": 2,
+    #     "timeout":   200,
+    # },
+
+    # {
+    #     "type": "wait_for_police",
+    #     "percentage_height": 75,
+    #     "time_between_checks": 0.2, # originally 0.2
+    #     "min_distance_for_movement": 1,
+    #     "min_free_frames_to_move": 7,
+    #     "timeout": 20,
+    #     "require_movement_before_start": False,
+    #     "percentage_from_bottom": 20
+    # },
+
+    # # Drive inf loop
+    # {
+    #     "type": "line_follow_vision",
+    #     "timeout": 0.4, # used to be 0.6
+    #     "junction": 'straight',
+    #     "start_speed": 0, 
+    #     "nominal_speed": 0.4, # nice value is 0.6
+    #     "stop_speed": 0.4,
+    #     "turn_sensitivity": 0.005, # nice value is 0.005
+    #     "time_to_full_speed": 0.3,
+    #     "stop_time": 0.4
+    # }, 
+
+
+    # {
+    #     "type": "line_follow_vision",
+    #     "timeout": 5,
+    #     "junction": 'left',
+    #     "start_speed": 0.4, # choose same as speed in "roundabout_vision"
+    #     "nominal_speed": 0.4, # nice value is 0.6
+    #     "stop_speed": 0.4,
+    #     "turn_sensitivity": 0.006, # nice value is 0.005
+    #     "time_to_full_speed": 0.4,
+    #     "stop_time": 1.5,
+    #     "percentage_height": 10,
+    #     "final_heading": [0, 20] # first smallest (or most negative) element
+    # }, 

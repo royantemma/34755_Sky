@@ -2,7 +2,9 @@
 const mainStream = document.getElementById('main-stream');
 
 window.addEventListener('load', () => {
-    mainStream.src = `${window.location.protocol}//${window.location.hostname}:7124/stream`;
+    // Revert to relative path to force it through the allowed port (7123)
+    mainStream.src = '/stream'; 
+    
     setInterval(fetchRobotData, 200);
 
     // Vision Layer Toggles

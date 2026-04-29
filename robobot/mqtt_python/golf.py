@@ -53,18 +53,18 @@ def detect_red_ball_test(img):
     for contour in contours:
         area = cv.contourArea(contour)
         if area > 500:  # Minimum area to filter noise
-            print(f"Contour area: {cv.contourArea(contour)}")
+            #print(f"Contour area: {cv.contourArea(contour)}")
             ((x, y), radius) = cv.minEnclosingCircle(contour)
-            print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
+            #print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
             circle_area = np.pi * (radius ** 2)
             
             if circle_area > 10:
                 area_ratio = area / circle_area
-                print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
+                #print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
                 # Area of the contour divided by the area of its minimum enclosing
                 # circle is a simple circularity measure. A perfect circle is ~1.0.
                 img_height = img.shape[0]
-                if area_ratio > 0.6 and area > max_area:
+                if area_ratio > 0.8 and area > max_area and y > img_height / 4:
                     max_area = area
                     best_contour = contour
                     best_radius = radius
@@ -134,7 +134,7 @@ def detect_red_ball(img):
                 # Area of the contour divided by the area of its minimum enclosing
                 # circle is a simple circularity measure. A perfect circle is ~1.0.
                 img_height = img.shape[0]
-                if area_ratio > 0.6 and area > max_area and y > img_height / 1:
+                if area_ratio > 0.6 and area > max_area and y > img_height / 4:
                     max_area = area
                     best_contour = contour
                     best_radius = radius
@@ -168,11 +168,17 @@ def setup_homography(img_width, img_height):
     #    [67, 537],                 # Bottom left pixel
     #    [646, 523]          # Bottom right pixel
     #], dtype=np.float32)
+    # src_pts = np.array([ # For real measurement of the ball
+    #     [195, 200],           # Middle left pixel
+    #     [605, 202],   # Middle right pixel
+    #     [152, 335],                 # Bottom left pixel
+    #     [661, 340]          # Bottom right pixel
+    # ], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [195, 200],           # Middle left pixel
-        [605, 202],   # Middle right pixel
-        [152, 335],                 # Bottom left pixel
-        [661, 340]          # Bottom right pixel
+        [243, 216],           # Middle left pixel
+        [569, 219],   # Middle right pixel
+        [76, 352],                 # Bottom left pixel
+        [739, 364]          # Bottom right pixel
     ], dtype=np.float32)
 
     # 2. Real-world CAD coordinates (Destination) converted from mm to METERS
@@ -196,11 +202,17 @@ def setup_homography(img_width, img_height):
     #    [-0.14, 0.30], # Bottom left CAD
     #    [0.14, 0.30]   # Bottom right CAD
     #], dtype=np.float32)
+    # dst_pts = np.array([ # For real measurement of the ball
+    #     [-0.3,1],   # Middle left CAD
+    #     [0.3,1],  
+    #     [-0.2, 0.50], # Bottom left CAD
+    #     [0.2, 0.50]   # Bottom right CAD
+    # ], dtype=np.float32)
     dst_pts = np.array([ # For real measurement of the ball
-        [-0.3,1],   # Middle left CAD
-        [0.3,1],  
-        [-0.2, 0.50], # Bottom left CAD
-        [0.2, 0.50]   # Bottom right CAD
+        [-0.25,1],   # Middle left CAD
+        [0.25,1],  
+        [-0.25, 0.50], # Bottom left CAD
+        [0.25, 0.50]   # Bottom right CAD
     ], dtype=np.float32)
 
     # 3. Calculate and return the 3x3 transformation matrix
@@ -284,8 +296,8 @@ def find_and_catch():
                 found, px_x, px_y, radius, debug_images = detect_red_ball_test(img)
                 
                 timestamp = imgTime.strftime('%Y%m%d_%H%M%S_%f')[:-3]
-                cv.imwrite(f"golf_test_results/state0_{timestamp}_01_original.jpg", debug_images["01_original"])
-                cv.imwrite(f"golf_test_results/state0_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
+                #cv.imwrite(f"golf_test_results/state0_{timestamp}_01_original.jpg", debug_images["01_original"])
+                #cv.imwrite(f"golf_test_results/state0_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
                 
                 if found:
                     service.send("robobot/cmd/T0", "leds 16 0 100 0") # Green LED: Found
@@ -339,8 +351,8 @@ def find_and_catch():
                 found, px_x, px_y, radius, debug_images = detect_red_ball(img)
                 
                 timestamp = imgTime.strftime('%Y%m%d_%H%M%S_%f')[:-3]
-                cv.imwrite(f"golf_test_results/state10_{timestamp}_01_original.jpg", debug_images["01_original"])
-                cv.imwrite(f"golf_test_results/state10_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
+                #cv.imwrite(f"golf_test_results/state10_{timestamp}_01_original.jpg", debug_images["01_original"])
+                #cv.imwrite(f"golf_test_results/state10_{timestamp}_05_final_cleaned_mask.jpg", debug_images["05_final_cleaned_mask"])
 
                 if found:
                     target_distance, target_angle, real_x, real_y = px_to_xy_homography(px_x, px_y, H_matrix)
@@ -429,7 +441,7 @@ def find_and_print():
             print("% Saving debug images...")
             for name, image_data in debug_images.items():
                 filename = f"golf_test_results/{timestamp}_{name}.jpg"
-                cv.imwrite(filename, image_data)
+                #cv.imwrite(filename, image_data)
                 print(f"  -> Saved {name}")
             
             if found:

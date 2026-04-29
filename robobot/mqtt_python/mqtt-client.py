@@ -429,7 +429,6 @@ if __name__ == "__main__":
           from missions.mission_half_HALF import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
-          golf.find_and_catch()
         elif service.args.mission_gates:
           from missions.mission_gates import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
@@ -439,11 +438,15 @@ if __name__ == "__main__":
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         elif service.args.mission_final:
-          from missions.mission_all_v1_0 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from missions.mission_all_v1_2 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         elif service.args.mission_stairs_down:
           from missions.mission_stairs_down import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+        elif service.args.mission_all_v1_0:
+          from missions.mission_all_v1_0 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:

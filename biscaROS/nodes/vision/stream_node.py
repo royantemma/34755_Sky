@@ -1,7 +1,3 @@
-"""
-The stream node combines visual overlays from the detection algorithms, makes a composite image, and adds it to a MJPEG stream that can be viewed on a web browser.
-"""
-
 # biscaROS/nodes/vision/stream_node.py
 import time
 import threading
@@ -14,32 +10,35 @@ from biscaROS.core.base_node import BaseNode
 
 # --- MJPEG HTTP Server Setup ---
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    """Handle requests in a separate thread to allow multiple web viewers."""
-    pass
+    """Handle requests in separate threads, automatically cleaning up dead ones."""
+    allow_reuse_address = True
+    daemon_threads = True
 
 class MJPEGHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/stream':
+        if self.path.startswith('/stream'):
             self.send_response(200)
             self.send_header('Age', 0)
             self.send_header('Cache-Control', 'no-cache, private')
             self.send_header('Pragma', 'no-cache')
             self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             try:
                 while True:
-                    # Fetch the latest composited JPEG from the main node
-                    jpeg_bytes = self.server.stream_node.get_composite_jpeg()
+                    # Wait for the render thread to broadcast a new frame
+                    with self.server.stream_node.frame_condition:
+                        self.server.stream_node.frame_condition.wait()
+                        jpeg_bytes = self.server.stream_node.latest_jpeg
+                        
                     if jpeg_bytes:
-                        self.wfile.write(b'--FRAME\r\n')
-                        self.send_header('Content-Type', 'image/jpeg')
-                        self.send_header('Content-Length', len(jpeg_bytes))
-                        self.end_headers()
+                        # Safely write the raw MJPEG multipart headers
+                        header = f"--FRAME\r\nContent-Type: image/jpeg\r\nContent-Length: {len(jpeg_bytes)}\r\n\r\n"
+                        self.wfile.write(header.encode('utf-8'))
                         self.wfile.write(jpeg_bytes)
                         self.wfile.write(b'\r\n')
-                    time.sleep(0.033) # Limit to ~30 FPS to save bandwidth
-            except Exception as e:
-                # Client disconnected or network error
+            except Exception:
+                # Client disconnected (e.g. closed browser tab)
                 pass
         else:
             self.send_error(404)
@@ -54,86 +53,85 @@ class StreamNode(BaseNode):
         self.frame_size = int(np.prod(self.frame_shape))
         
         # 1. Attach to Camera SHM (Input Base)
-        try:
-            self.cam_shm = shared_memory.SharedMemory(name="biscaROS_camera_frame")
-            self.cam_array = np.ndarray(self.frame_shape, dtype=np.uint8, buffer=self.cam_shm.buf)
-        except FileNotFoundError:
-            print("[StreamNode] Error: Camera shared memory not found. Start camera node first.")
-            exit(1)
+        print("[StreamNode] Waiting for camera shared memory...", flush=True)
+        while True:
+            try:
+                self.cam_shm = shared_memory.SharedMemory(name="biscaROS_camera_frame")
+                self.cam_array = np.ndarray(self.frame_shape, dtype=np.uint8, buffer=self.cam_shm.buf)
+                print("[StreamNode] Connected to camera memory.", flush=True)
+                break
+            except FileNotFoundError:
+                time.sleep(0.5) # Wait for camera_node to allocate it
             
-        # 2. Overlay Tracker (Dynamic SHM attachment)
-        # Keeps track of overlays, their SHM arrays, and when they were last updated
+        # 2. Overlay Tracker
         self.overlays = {
             "biscaROS_aruco_overlay": {"shm": None, "array": None, "last_seen": 0},
             "biscaROS_ball_overlay": {"shm": None, "array": None, "last_seen": 0}
-            # You can add bw_threshold or others here seamlessly
         }
-        self.overlay_timeout = 1.0 # Seconds before dropping a stale overlay
+        self.overlay_timeout = 1.0 
 
-        # 3. Pre-allocate buffer for the final frame to avoid memory thrashing
         self.composite_buffer = np.zeros(self.frame_shape, dtype=np.uint8)
         
-        # Subscribe to overlay notifications
+        # 3. Broadcasting variables (The Fix)
+        self.latest_jpeg = None
+        self.frame_condition = threading.Condition()
+        
         self.client.subscribe("biscaROS/vision/overlays/ready")
+
+        # 4. Start the central rendering loop
+        self.render_thread = threading.Thread(target=self._render_loop, daemon=True)
+        self.render_thread.start()
 
     def _on_message(self, client, userdata, msg):
         if msg.topic == "biscaROS/vision/overlays/ready":
             overlay_name = msg.payload.decode('utf-8')
-            
             if overlay_name in self.overlays:
                 self.overlays[overlay_name]["last_seen"] = time.time()
-                
-                # Dynamically attach to the overlay SHM if we haven't yet
                 if self.overlays[overlay_name]["shm"] is None:
                     try:
                         shm = shared_memory.SharedMemory(name=overlay_name)
                         arr = np.ndarray(self.frame_shape, dtype=np.uint8, buffer=shm.buf)
                         self.overlays[overlay_name]["shm"] = shm
                         self.overlays[overlay_name]["array"] = arr
-                        print(f"[StreamNode] Successfully attached to {overlay_name}")
+                        print(f"[StreamNode] Successfully attached to {overlay_name}", flush=True)
                     except FileNotFoundError:
-                        pass # Node notified us, but memory isn't ready yet. Will try again next frame.
+                        pass 
 
-    def get_composite_jpeg(self):
-        """Builds the current frame by adding active overlays, then encodes to JPEG."""
-        # 1. Start with the raw camera frame
-        np.copyto(self.composite_buffer, self.cam_array)
-        
-        current_time = time.time()
-        
-        # 2. Add active overlays
-        for name, data in self.overlays.items():
-            if data["array"] is not None:
-                # Check if the vision node is still alive and updating
-                if (current_time - data["last_seen"]) < self.overlay_timeout:
-                    # OpenCV additive blending. Black pixels (0,0,0) do nothing.
-                    # Colored pixels (e.g., Aruco axes) are added directly on top.
-                    cv.add(self.composite_buffer, data["array"], dst=self.composite_buffer)
-        
-        # 3. Convert to RGB for web viewing (OpenCV uses BGR natively, but our SHMs are stored as RGB)
-        # Assuming camera_node and vision nodes output RGB arrays to SHM, 
-        # OpenCV's imencode actually expects BGR. So we flip it before encoding.
-        bgr_composite = cv.cvtColor(self.composite_buffer, cv.COLOR_RGB2BGR)
-        
-        # 4. Compress to JPEG
-        # Optimization: Lower quality slightly for higher framerates over WiFi (default is 95)
+    def _render_loop(self):
+        """Runs continuously in the background, compositing exactly 1 frame for all clients."""
         encode_param = [int(cv.IMWRITE_JPEG_QUALITY), 80]
-        success, jpeg = cv.imencode('.jpg', bgr_composite, encode_param)
         
-        if success:
-            return jpeg.tobytes()
-        return None
+        while True:
+            # Base frame
+            np.copyto(self.composite_buffer, self.cam_array)
+            
+            current_time = time.time()
+            # Add active overlays
+            for name, data in self.overlays.items():
+                if data["array"] is not None and (current_time - data["last_seen"]) < self.overlay_timeout:
+                    cv.add(self.composite_buffer, data["array"], dst=self.composite_buffer)
+            
+            # Convert to BGR and encode
+            bgr_composite = cv.cvtColor(self.composite_buffer, cv.COLOR_RGB2BGR)
+            success, jpeg = cv.imencode('.jpg', bgr_composite, encode_param)
+            
+            if success:
+                # Lock the condition, update the frame, and broadcast it to ALL web clients
+                with self.frame_condition:
+                    self.latest_jpeg = jpeg.tobytes()
+                    self.frame_condition.notify_all()
+            
+            # Target ~30 FPS
+            time.sleep(0.033)
 
     def start_server(self, port=7124):
-        # Link this node instance to the HTTP server so the handler can call get_composite_jpeg()
-        server = ThreadedHTTPServer(('0.0.0.0', port), MJPEGHandler)
+        # Binding to '' means it answers to both localhost and the 10.197... IP
+        server = ThreadedHTTPServer(('', port), MJPEGHandler)
         server.stream_node = self
         
-        print(f"[StreamNode] Serving MJPEG stream on port {port} at /stream")
+        print(f"[StreamNode] Serving MJPEG stream on port {port}...", flush=True)
         
-        # Run server in a background thread
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.daemon = True
+        server_thread = threading.Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
         
         return server
@@ -147,7 +145,7 @@ class StreamNode(BaseNode):
 
 if __name__ == "__main__":
     node = StreamNode()
-    node.start() # Start MQTT loop
+    node.start() 
     http_server = node.start_server(port=7124)
     
     try:

@@ -151,6 +151,7 @@ class UService:
     self.parser.add_argument('--mission_final', action='store_true')
     self.parser.add_argument('--mission_stairs_down', action='store_true',
                              help='Go down stairs by detecting pitch and following line')
+    self.parser.add_argument('--mission_all_v1_0', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):

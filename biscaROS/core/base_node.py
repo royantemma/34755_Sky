@@ -16,3 +16,11 @@ class BaseNode:
 
     def publish(self, topic, payload):
         self.client.publish(topic, payload)
+
+def stop(self):
+        print(f"[{self.node_name}] Stopping MQTT client...")
+        if hasattr(self, 'client') and self.client is not None:
+            # Disconnect immediately, do not wait for pending messages
+            self.client.disconnect()
+            # Force the background thread to exit without blocking
+            self.client.loop_stop(force=True)

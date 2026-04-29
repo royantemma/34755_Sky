@@ -44,6 +44,7 @@ class MissionRunner:
         self.stop = False
 
         self.initial_pitch = None # used in ramp detection
+        self.police_pass_time = None
 
     # time helpers _____________________________
 
@@ -86,7 +87,7 @@ class MissionRunner:
         self.start_task(0)
         service.send("robobot/cmd/T0", "leds 16 0 0 30")   # blue = running
 
-        while not self.stop and not service.stop:
+        while not self.stop and not service.stop and self.task_index < len(self.tasks):
             current_task = self.tasks[self.task_index]
             task_type    = current_task["type"]
 
@@ -192,6 +193,21 @@ class MissionRunner:
 
             elif task_type == "stairs_down":
                 self.run_stairs_down(current_task)
+            
+            elif task_type == "luggage_intercept":
+                if self.run_luggage_catch(current_task):
+                    self.task_index += 1
+                else:
+                    self.task_index += 1 
+
+            elif task_type == "servo_command":
+                cmd = current_task.get("servo_string", "")
+                sleep_time = current_task.get("sleep_after", 0)
+                print(f"% Executing Servo Command: {cmd}")
+                service.send("robobot/cmd/T0", cmd)
+                if sleep_time > 0:
+                    t.sleep(sleep_time)
+                self.task_index += 1
 
             else:
                 print(f"% [MissionRunner] Unknown task type '{task_type}' — skipping")
@@ -214,7 +230,9 @@ class MissionRunner:
         """
         follow_left = (task["side"] == "left")
         speed = task.get("speed", 0.2)
+        stop_speed = task.get("stop_speed", 0)
         timeout = task.get("timeout", 30)
+        max_distance = task.get("max_distance", None)
         edge.CUSTOM_CONTROL_ENABLED = True
 
         if self.task_state == 0:
@@ -225,23 +243,29 @@ class MissionRunner:
 
         elif self.task_state == 1: # approaching line
             if edge.lineValidCnt > 4:
-                edge.lineControl(speed, follow_left)
                 pose.tripBreset()
+                edge.lineControl(speed, follow_left)
+                
                 print("% [line_follow] Line found — following")
                 self.task_state = 2
             elif pose.tripB > 4.0 or self.task_time() > timeout:
-                service.send("robobot/cmd/ti/","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+                service.send("robobot/cmd/ti/",f"rc {stop_speed:.3f} 0.0") # (forward m/s, turn-rate rad/sec)
                 self.task_state = 3
 
         elif self.task_state == 2: # following line
             if self.task_time() > timeout:
                 edge.lineControl(0, True)
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                service.send("robobot/cmd/ti/",f"rc {stop_speed:.3f} 0.0") # (forward m/s, turn-rate rad/sec)
                 print("% [line_follow] Timeout")
+                self.task_state = 3
+            elif max_distance is not None and pose.tripB > max_distance:
+                edge.lineControl(0, True)
+                service.send("robobot/cmd/ti/",f"rc {stop_speed:.3f} 0.0") # (forward m/s, turn-rate rad/sec)
+                print("% [line_follow] Max distance reached")
                 self.task_state = 3
             elif edge.lineValidCnt < 2:
                 edge.lineControl(0, True)
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                service.send("robobot/cmd/ti/",f"rc {stop_speed:.3f} 0.0") # (forward m/s, turn-rate rad/sec)
                 print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
                 self.task_state = 3
             # elif : we arrived at destination
@@ -716,7 +740,7 @@ class MissionRunner:
         turn_rate = task.get("turn_rate", 0.01)
         final_turn_rate = task.get("final_turn_rate", 0)
         target_deg = task["heading_deg"]
-        tolerance = task["tolerance"]
+        tolerance = task.get("tolerance", 2.0)
         timeout   = task.get("timeout",   20)
         time_to_full_speed = task.get("time_to_full_speed", 0.02)
 
@@ -862,6 +886,7 @@ class MissionRunner:
         speed      = task.get("speed",         0.3)
         tolerance  = task.get("tolerance_deg", 0.1)
         timeout    = task.get("timeout",       15)
+        pose.tripBreset()  # reset distance timer to measure timeout from start of turn
 
         if self.task_state == 0:
             diff = target_deg - iwo.fused_yaw
@@ -1071,9 +1096,11 @@ class MissionRunner:
         elif self.task_state == 1:
             if not self._vision_thread.is_alive():
                 print("% [wait_for_police] Clear space detected")
+                self.police_pass_time = t.time()
                 self.task_state = 2
             elif pose.tripBtimePassed() > timeout:
                 print("% [wait_for_police] Timeout, continuing further with mission")
+                self.police_pass_time = t.time()
                 self.task_state = 2
 
         
@@ -1362,7 +1389,8 @@ class MissionRunner:
                 print("\n% [line_follow_ramp_IWO] Detected ramp ascent")
                 
                 # Make arm a bit stiff to reduce friction
-                service.send("robobot/cmd/T0","servo 1 125 400") # (servo low)
+                service.send("robobot/cmd/T0","servo 1 100 400") # (servo low)
+                #service.send("robobot/cmd/T0","servo 1 125 400") # (servo low)
 
                 self.task_state = 2
             elif self.task_time() > timeout:
@@ -1610,22 +1638,152 @@ class MissionRunner:
         t.sleep(1)
         self.next_task()
 
+    def run_luggage_catch(self, task):
+        import aruco
+        import numpy as np
+        from sfuse import iwo as pose 
+        
+        target_id = int(task.get("target_box_id", 20))
+        shuttle_id = 5  
+        timeout = task.get("timeout", 45)
+        
+        client = aruco.get_client()
+        client.set_enabled(True)
+        
+        print("% [Luggage] Lowering arm (midway). Watching for conveyor...")
+        service.send("robobot/cmd/T0", "servo 1 -330 400")
+        
+        start_time = t.time()
+        mission_state = "wait_for_conveyor"
+        box_offset_x = 0.0 
+        
+        while (t.time() - start_time) < timeout and not self.stop and not service.stop:
+            data = client.get_data()
+            markers = data["markers"] if (data and data.get("markers")) else []
+                
+            # wait for conveyor aruco before backing up 
+            if mission_state == "wait_for_conveyor":
+                for m in markers:
+                    if int(m["id"]) in [shuttle_id, target_id]:
+                        print("% [Luggage] Conveyor passing")
+                        t.sleep(2.0) 
+                        
+                        print("% [Luggage] Backing up...")
+                        service.send("robobot/cmd/ti", "rc -0.25 0.0") # back up 25cm
+                        t.sleep(1.5)
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        service.send("robobot/cmd/T0", "servo 1 -890 400") # arm up
+                        t.sleep(1.0) 
+                        
+                        mission_state = "detect"
+                        break 
+                        
+            # calculate box 20 offset
+            elif mission_state == "detect":
+                for m in markers:
+                    if int(m["id"]) == target_id:
+                        box_offset_x = m["x"] / 1000.0 
+                        print(f"% [Luggage] Trapped Box {target_id}! X-Offset: {box_offset_x:.2f}m")
+                        
+                        if abs(box_offset_x) > 0.05:
+                            pose.tripBreset()
+                            t.sleep(0.2) 
+                            mission_state = "align_turn_1"
+                        else:
+                            print("% [Luggage] Box already centered! Moving to approach.")
+                            mission_state = "final_approach"
+                        break
+                        
+            # align sky to be directly in front of box 20 and perpendicular to conveyor
+            elif mission_state == "align_turn_1":
+                if box_offset_x > 0: # Box is Right
+                    service.send("robobot/cmd/ti", "rc 0.0 -0.5")
+                    if pose.tripBh <= -1.57: 
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        pose.tripBreset()
+                        t.sleep(0.5) 
+                        mission_state = "align_drive"
+                else: # Box is Left
+                    service.send("robobot/cmd/ti", "rc 0.0 0.5")
+                    if pose.tripBh >= 1.57:  
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        pose.tripBreset()
+                        t.sleep(0.5)
+                        mission_state = "align_drive"
+                        
+            elif mission_state == "align_drive":
+                service.send("robobot/cmd/ti", "rc 0.15 0.0") 
+                if pose.tripB >= abs(box_offset_x):
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                    pose.tripBreset()
+                    t.sleep(0.5)
+                    mission_state = "align_turn_2"
+                    
+            elif mission_state == "align_turn_2":
+                if box_offset_x > 0: # Turn Left to face forward
+                    service.send("robobot/cmd/ti", "rc 0.0 0.5")
+                    if pose.tripBh >= 1.57:
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        print("% [Luggage] Alignment complete! Initiating final approach.")
+                        t.sleep(0.5)
+                        mission_state = "final_approach"
+                else: # Turn Right to face forward
+                    service.send("robobot/cmd/ti", "rc 0.0 -0.5")
+                    if pose.tripBh <= -1.57:
+                        service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                        print("% [Luggage] Alignment complete! Initiating final approach.")
+                        t.sleep(0.5)
+                        mission_state = "final_approach"
+
+            # approach and catch
+            # need to add logic to wait for conveyor to be out of frame before lowering arm to trap box
+            # also still need to figure out method to trap box 20 w/o trapping other cube under arm preventing it from lowering fully
+            # potential solution would be using a different arm design that is skinnier but still has curved sides to guide boxes off conveyor
+            elif mission_state == "final_approach":
+                box_found = False
+                for m in markers:
+                    if int(m["id"]) == target_id:
+                        box_found = True
+                        target_dist = m["y"] / 1000.0 
+                        target_angle = np.arctan2(m["x"], m["y"])
+                        
+                        if target_dist < 0.30: # need to fine tune this distance
+                            service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                            service.send("robobot/cmd/T0", "servo 1 150 400") # lower arm
+                            t.sleep(0.5)
+                            print("% [Luggage] Box caught!")
+                            return True
+                        else:
+                            # move towards the box (need to fine tune as well)
+                            turn_rate = max(-1.0, min(1.0, -target_angle * 3.0))
+                            fwd_speed = max(0.05, min(0.2, target_dist * 0.3))
+                            service.send("robobot/cmd/ti", f"rc {fwd_speed} {turn_rate}")
+                        break
+                        
+                if not box_found:
+                    # If we momentarily lose sight of the box, hit the brakes and wait
+                    service.send("robobot/cmd/ti", "rc 0.0 0.0")
+
+            t.sleep(0.05) 
+            
+        print("% [Luggage] Task timed out")
+        service.send("robobot/cmd/ti", "rc 0 0")
+        return False
+    
     def run_stairs_down(self, task):
         """
-        Go down stairs by:
-        1. Drive fast forward until inclined (pitch != 0)
-        2. For each stair (5 times):
-           a. Drive slow while following line for 10cm
-           b. Drive fast when back to horizontal (pitch ~= 0)
-        3. Follow line until intersection is detected
+        Go down stairs dynamically and robustly:
+        1. Drive fast forward until inclined (pitch != 0).
+        2. Keep traversing stairs (slow on descent, fast on flat).
+        3. Tolerate slight sensor noise/vibrations when checking for flat ground.
+        4. Stop stair phase ONLY when pitch remains near 0 for > 3 seconds.
+        5. Follow line until intersection is detected.
         """
         follow_left = (task.get("side", "left") == "left")
         fast_speed = task.get("fast_speed", 0.5)
         slow_speed = task.get("slow_speed", 0.15)  # Reduced for gentler turns
-        step_distance = task.get("step_distance", 0.10)  # 10cm per stair
-        pitch_threshold = task.get("pitch_threshold", 0.1)  # radians (~5.7°)
+        pitch_threshold = task.get("pitch_threshold", 5)  # degrees
         timeout = task.get("timeout", 60)
-        num_stairs = task.get("num_stairs", 5)
         
         edge.CUSTOM_CONTROL_ENABLED = True
         
@@ -1638,6 +1796,7 @@ class MissionRunner:
             self._on_descent = False
             self._waiting_for_horizontal = False
             self._initial_pitch = iwo.fused_pitch
+            self._horizontal_start_time = None  # Timer for detecting the end of the stairs
             pose.tripBreset()
             self.task_state = 1
         
@@ -1654,7 +1813,7 @@ class MissionRunner:
                 
                 # Detected incline - first stair found
                 if pitch_diff > pitch_threshold:
-                    print(f"% [stairs_down] First stair detected (pitch change: {pitch_diff:.3f} rad)")
+                    print(f"% [stairs_down] First stair detected (pitch change: {pitch_diff:.3f} deg)")
                     edge.lineControl(slow_speed, follow_left, refPosition=2.0)  # Gentler control
                     pose.tripBreset()
                     self._stairs_completed = 0
@@ -1662,46 +1821,64 @@ class MissionRunner:
                     self._waiting_for_horizontal = False
                     self.task_state = 2
         
-        # State 2: Main loop for stairs
+        # State 2: Dynamic loop for stairs with anti-vibration logic
         elif self.task_state == 2:
-            if self._stairs_completed >= num_stairs:
-                print(f"% [stairs_down] Completed {num_stairs} stairs — following line to intersection")
-                pose.tripBreset()
-                self.task_state = 3
-            else:
-                curr_pitch = iwo.fused_pitch
-                pitch_diff = abs(curr_pitch - self._initial_pitch)
-                dist_traveled = pose.tripB
+            curr_pitch = iwo.fused_pitch
+            
+            # Instead of comparing to the start, check if absolute pitch is near zero
+            # Adding a 50% tolerance (1.5 multiplier) to account for vibrations on flat ground
+            is_flat = abs(curr_pitch) < (pitch_threshold * 1.5) 
+            is_steep = abs(curr_pitch) > pitch_threshold
+            
+            dist_traveled = pose.tripB
+            
+            # --- CASE 1: The robot is clearly inclined (Descent) ---
+            if not is_flat:
+                # If the timer was running, warn that it was canceled by a bump/slope
+                if self._horizontal_start_time is not None:
+                    print(f"% [stairs_down] Timer canceled! Current pitch: {curr_pitch:.3f} deg")
+                    self._horizontal_start_time = None
                 
-                # On descent: move slow following line
-                if pitch_diff > pitch_threshold:
-                    if not self._on_descent:
-                        # Just started descending
-                        print(f"% [stairs_down] Starting descent for stair {self._stairs_completed + 1}")
-                        edge.lineControl(slow_speed, follow_left, refPosition=2.0)  # Gentler control
-                        pose.tripBreset()
-                        self._on_descent = True
-                        self._waiting_for_horizontal = False
-                    
-                    # Continue descending slowly
+                if not self._on_descent and is_steep:
+                    # Start of a new stair descent
+                    print(f"% [stairs_down] Starting descent for stair {self._stairs_completed + 1}")
                     edge.lineControl(slow_speed, follow_left, refPosition=2.0)
+                    pose.tripBreset()
+                    self._on_descent = True
+                    self._waiting_for_horizontal = False
                 
-                # Back to horizontal: complete the stair
+                # Continue descending slowly
+                edge.lineControl(slow_speed, follow_left, refPosition=2.0)
+            
+            # --- CASE 2: The robot is horizontal (Flat) ---
+            else:
+                # If it just finished a descent
+                if self._on_descent and not self._waiting_for_horizontal:
+                    print(f"% [stairs_down] Stair {self._stairs_completed + 1} completed (traveled {dist_traveled:.3f}m)")
+                    self._stairs_completed += 1
+                    self._on_descent = False
+                    self._waiting_for_horizontal = True
+                    pose.tripBreset()
+                
+                # Start or maintain the flat terrain timer
+                if self._horizontal_start_time is None:
+                    self._horizontal_start_time = self.task_time()
+                    print(f"% [stairs_down] Horizontal detected (Pitch: {curr_pitch:.3f}), starting 3s timer...")
+                
+                time_flat = self.task_time() - self._horizontal_start_time
+                
+                # Optional debug: Print every second to see if it's progressing
+                if int(time_flat * 10) % 10 == 0 and time_flat > 0: 
+                    print(f"% [stairs_down] Stable for {time_flat:.1f}s ...")
+                
+                # If 3 seconds have passed without returning to a slope
+                if time_flat >= 3.0:
+                    print(f"% [stairs_down] End of stairs confirmed (stable for 3s). Total: {self._stairs_completed} stairs.")
+                    pose.tripBreset()
+                    self.task_state = 3
                 else:
-                    if self._on_descent and not self._waiting_for_horizontal:
-                        # Just finished descent, now on horizontal
-                        print(f"% [stairs_down] Stair {self._stairs_completed + 1} completed (traveled {dist_traveled:.3f}m)")
-                        self._stairs_completed += 1
-                        self._on_descent = False
-                        self._waiting_for_horizontal = True
-                        
-                        # Drive fast on horizontal section
-                        edge.lineControl(fast_speed, follow_left, refPosition=0.0)  # Normal control for fast driving
-                        
-                        # Reset for next stair
-                        if self._stairs_completed < num_stairs:
-                            pose.tripBreset()
-                            print(f"% [stairs_down] Ready for stair {self._stairs_completed + 1}")
+                    # While waiting for the 3 seconds, keep moving forward on the flat ground
+                    edge.lineControl(fast_speed, follow_left, refPosition=0.0)
         
         # State 3: Follow line until intersection
         elif self.task_state == 3:
@@ -1735,8 +1912,10 @@ class MissionRunner:
             if abs(pose.velocity()) < 0.001:
                 print("% [stairs_down] Stopped — next task")
                 edge.lineControl(0, True)
+                # Ensure robot is completely stopped
+                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                t.sleep(0.1)  # Extra pause to ensure stop
                 self.next_task()
-
 
    
             

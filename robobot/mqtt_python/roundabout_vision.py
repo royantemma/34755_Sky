@@ -114,6 +114,11 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
 
         try:
             while not stop_event.is_set():
+                if service.stop:
+                    print("Vision thread shutting down. Stopping motors.")
+                    service.send("robobot/cmd/ti", "rc 0 0")
+                    break
+
                 ret, frame = cap.read()
                 if ret and frame is not None:
                    # image, heading = process_frame2(frame, percentage_width=80, PERCENTAGE_OF_WHITE=PERCENTAGE_OF_WHITE)

@@ -63,17 +63,28 @@ class ArucoNode(BaseNode):
         self.client.subscribe("biscaROS/vision/camera/new_frame")
 
     def _load_calibration(self):
-        calib_dir = os.path.dirname(os.path.abspath(__file__))
-        calib_file = os.path.join(calib_dir, "calibration_checkerboard.npz")
-        fallback_file = os.path.join(calib_dir, "calibration_data.npz")
+        # Get the directory of aruco_node.py (nodes/vision)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Traverse up two levels and into the core directory
+        core_dir = os.path.abspath(os.path.join(current_dir, "..", "..", "core"))
+        
+        calib_file = os.path.join(core_dir, "calibration_checkerboard.npz")
+        fallback_file = os.path.join(core_dir, "calibration_data.npz")
         
         mtx, dist = None, None
+        
         if os.path.exists(calib_file):
+            print(f"[ArucoNode] Loading calibration from: {calib_file}", flush=True)
             with np.load(calib_file) as X:
                 mtx, dist = [X[i] for i in ('mtx', 'dist')]
         elif os.path.exists(fallback_file):
+            print(f"[ArucoNode] Loading fallback calibration from: {fallback_file}", flush=True)
             with np.load(fallback_file) as X:
                 mtx, dist = [X[i] for i in ('mtx', 'dist')]
+        else:
+            print(f"[ArucoNode] ERROR: No calibration files found in {core_dir}", flush=True)
+            
         return mtx, dist
 
     def _get_extrinsic_matrix(self):
@@ -107,12 +118,18 @@ class ArucoNode(BaseNode):
         ], dtype=np.float32)
 
     def _on_message(self, client, userdata, msg):
+        # print(f"[ArucoNode] Triggered by {msg.topic}", flush=True)
+        # print(f"[ArucoNode] Matrix: {self.mtx is not None}, Dist: {self.dist is not None}", flush=True)
+
+        # if msg.topic != "biscaROS/vision/camera/new_frame" or self.mtx is None or self.dist is None:
+        #     print("[ArucoNode] Guard condition failed. Aborting frame.", flush=True)
+        #     return
+
         if msg.topic != "biscaROS/vision/camera/new_frame" or self.mtx is None or self.dist is None:
             return
 
         # Copy frame and create black canvas for isolated overlays
-        frame_rgb = np.copy(self.cam_array)
-        frame_bgr = cv.cvtColor(frame_rgb, cv.COLOR_RGB2BGR)
+        frame_bgr = np.copy(self.cam_array)
         overlay_bgr = np.zeros_like(frame_bgr)
         gray = cv.cvtColor(frame_bgr, cv.COLOR_BGR2GRAY)
         
