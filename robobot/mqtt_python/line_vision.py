@@ -131,6 +131,8 @@ def line_follow_vision(junctions = 'straight',
         TURN_DETECTED = 0
         TIME_AFTER_TURN = time_after_turn
         start_time_after_turn = 0
+        # last_heading = 0
+        # heading = None
 
 
         try:
@@ -142,6 +144,7 @@ def line_follow_vision(junctions = 'straight',
                     #image, heading = process_frame(frame, percentage_width=80)
                     #vision_steer_robot(heading, forward_speed=0.6, turn_sensitivity=0.005)
                     # vision_steer_robot(heading, forward_speed=speed, turn_sensitivity=sensitivity)
+                    # last_heading = heading if heading is not None else last_heading
                     heading = None
                     
                     if junctions == 'straight':
@@ -200,6 +203,10 @@ def line_follow_vision(junctions = 'straight',
                             stop_event.set()
                             threading.Thread(target=httpd.shutdown, daemon=True).start()
                             break   # IMPORTANT: exit immediately
+                        # else:
+                        #     turn_rate = last_heading * sensitivity
+                        #     service.send("robobot/cmd/ti/","rc {} {}".format(nominal_speed, turn_rate)) # (forward m/s, turn-rate rad/sec)
+
                     
                     elif final_heading is not None and final_heading[0] < iwo.fused_yaw < final_heading[1]:
                         print(iwo.fused_yaw)

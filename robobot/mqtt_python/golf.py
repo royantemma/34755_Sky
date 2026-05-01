@@ -16,8 +16,8 @@ def detect_blue_ball_test(img):
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
     
     # Light Blue HSV ranges
-    lower_blue = np.array([90, 50, 50])
-    upper_blue = np.array([120, 255, 255])
+    lower_blue = np.array([100, 50, 50])
+    upper_blue = np.array([130, 255, 255])
     
     # Step 1: Single Mask (Blue doesn't wrap around the 180 mark like Red does)
     mask1 = cv.inRange(hsv, lower_blue, upper_blue)
@@ -55,7 +55,7 @@ def detect_blue_ball_test(img):
                 # Area of the contour divided by the area of its minimum enclosing
                 # circle is a simple circularity measure. A perfect circle is ~1.0.
                 img_height = img.shape[0]
-                if area_ratio > 0.7 and area > max_area: # and y > img_height / 4:
+                if area_ratio > 0.6 and area > max_area and y > img_height / 4:
                 #if area_ratio > 0.8 and area > max_area:
                     max_area = area
                     best_contour = contour
@@ -239,11 +239,17 @@ def setup_homography(img_width, img_height):
     #     [152, 335],                 # Bottom left pixel
     #     [661, 340]          # Bottom right pixel
     # ], dtype=np.float32)
+    # src_pts = np.array([ # For real measurement of the ball
+    #     [197, 229],           # Middle left pixel
+    #     [587, 232],   # Middle right pixel
+    #     [161, 362],                 # Bottom left pixel
+    #     [639, 363]          # Bottom right pixel
+    # ], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [197, 229],           # Middle left pixel
-        [587, 232],   # Middle right pixel
-        [161, 362],                 # Bottom left pixel
-        [639, 363]          # Bottom right pixel
+        [200, 251],           # Middle left pixel
+        [600, 255],   # Middle right pixel
+        [144, 389],                 # Bottom left pixel
+        [647, 390]          # Bottom right pixel
     ], dtype=np.float32)
     # src_pts = np.array([ # For real measurement of the ball
     #     [243, 216],           # Middle left pixel

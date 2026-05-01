@@ -1455,8 +1455,8 @@ class MissionRunner:
     
     def run_put_ball_in_hole(self, task):
         print("[PUT BALL IN HOLE] Putting Ball in Hole")
-        #service.send("robobot/cmd/T0","servo 1 150 400") # (servo down)
         
+        service.send("robobot/cmd/T0","servo 1 100 400") # (servo low)
         # Logic similar to the get ball method: 
         # Hole coordinates
         hole_x = task["hole_x"]
@@ -1491,7 +1491,7 @@ class MissionRunner:
 
         #perform a sweep forward and another sweep
         speed = 0.4
-        duration = 1 # 1.5
+        duration = 1.5 # 1.5
         
         # While ball detected
         t.sleep(1)
@@ -1505,25 +1505,25 @@ class MissionRunner:
         
         sweep_count = 0
         yaw_reference = iwo.fused_yaw
-        yaw_rotation = 15
+        yaw_rotation = 20
         while d1 is not None and d2 is not None and sweep_count < 5: # do at least 5 sweeps to ensure we aren't just losing the ball due to noise
             sweep_count += 1
             # Sweep Left
-            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference+yaw_rotation, max_speed=0.4, dist_tolerance=0.01)
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference+yaw_rotation, max_speed=0.6, dist_tolerance=0.01)
             #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference+yaw_rotation, "just_yaw": True})
             #service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
             print("yaw: " + str(iwo.fused_yaw))
             t.sleep(duration)
 
             # Sweep Right
-            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference-yaw_rotation, max_speed=0.4, dist_tolerance=0.01)
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference-yaw_rotation, max_speed=0.6, dist_tolerance=0.01)
             #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference-2*yaw_rotation, "just_yaw": True})
             #service.send("robobot/cmd/ti", f"rc 0.0 {-speed:.3f}")
             print("yaw: " + str(iwo.fused_yaw))
             t.sleep(duration)
 
             # Return to Center
-            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference, max_speed=0.4, dist_tolerance=0.01)
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference, max_speed=0.6, dist_tolerance=0.01)
             #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference+yaw_rotation, "just_yaw": True})
             #service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
             print("yaw: " + str(iwo.fused_yaw))
@@ -1990,6 +1990,8 @@ class MissionRunner:
         
         if dist_to_ball > 0.60:
             print(f"[%] Ball is far ({dist_to_ball:.2f}m). Executing intermediate approach...")
+
+            service.send("robobot/cmd/T0", "servo 1 150 400")
             
             # Calculate a waypoint exactly 0.5m away from the initially detected ball
             scale = (dist_to_ball - 0.50) / dist_to_ball
@@ -1997,6 +1999,8 @@ class MissionRunner:
             mid_y = cur_y + (ball_global_y - cur_y) * scale
             
             go_to_xy(mid_x, mid_y, max_speed=0.6, dist_tolerance=0.01)
+
+            service.send("robobot/cmd/T0", "servo 1 -890 400")
             
             print("[%] Midpoint reached. Pausing 1.0s to clear camera blur...")
             t.sleep(1.0)

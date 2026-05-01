@@ -126,7 +126,7 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
                         image, centers = process_frame(frame, centers, percentage_width=100, percentage_height=percentage_height, percentage_from_bottom=percentage_from_bottom)
                         # Check for movement
                         if len(centers) > 1:
-                            if np.linalg.norm(np.subtract(centers[-1], centers[-2])) > MIN_DISTANCE_FOR_MOVEMENT:
+                            if np.linalg.norm(np.subtract(centers[-1], centers[-2])) >= MIN_DISTANCE_FOR_MOVEMENT:
                                 #print("Movement Detected")
                                 counter_free_frames = 0
                                 movement_detected = True

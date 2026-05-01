@@ -146,6 +146,7 @@ class UService:
                              help='Run the mission from start to goal with gates')
     self.parser.add_argument('--mission_half', action='store_true')
     self.parser.add_argument('--mission_safe', action='store_true')
+    self.parser.add_argument('--mission_safe8', action='store_true')
     self.parser.add_argument('--mission_home', action='store_true')
     self.parser.add_argument('--mission_golf', action='store_true')
     self.parser.add_argument('--mission_half_HALF', action='store_true')
@@ -160,6 +161,7 @@ class UService:
                              help='Go down stairs by detecting pitch and following line')
     self.parser.add_argument('--mission_all_v1_0', action='store_true')
     self.parser.add_argument('--mission_ball_sorting', action='store_true')
+    self.parser.add_argument('--mission_seesaw', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):

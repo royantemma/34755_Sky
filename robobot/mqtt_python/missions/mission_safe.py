@@ -9,11 +9,14 @@ Route: Start -> line follow -> take left at junction -> go on roundabout -> use 
 -> go to coord (290,-3583) -> back up to (1550,-3583) -> rotate left 90 deg -> drive forward to (1550,-409) -> line follow -> Goal
 """
 
-TOTAL_TIME       = 120
+TOTAL_TIME       = 380
 GOAL_TIME_BUFFER = 20
 
 TASKS = [
 
+    {
+        "type": "servo_down",
+    },
     {
         "type": "servo_up",
     },
@@ -113,15 +116,6 @@ TASKS = [
     }, 
 
 
-
-
-    # {
-    # "type": "linefollow_until_x_intersections",
-    # "side": "left",
-    # "timeout": 30,
-    # "speed": 0.4,
-    # "intersection_count": 2,
-    # },
     
     {
         "type":  "reset_IWO",
@@ -197,6 +191,7 @@ TASKS = [
 
     ### GOOO HOME
     # Reset IWO at starting position
+
     {
     "type": "linefollow_until_x_intersections",
     "side": "left",
@@ -267,18 +262,7 @@ TASKS = [
         "target_yaw": -25, # 0 is good for small speeds, but -5 is for when the robot overshoots
         "just_yaw": True
     },
-    # {
-    #     "type": "line_follow_vision", # controlling speed ? stops ? crossings ?
-    #     "timeout": 10,
-    #     "junction": 'right',
-    #     "start_speed": 0,
-    #     "nominal_speed": 0.6,
-    #     "stop_speed": 0.25,
-    #     "turn_sensitivity": 0.005,
-    #     "time_to_full_speed": 0.2,
-    #     "stop_time": 0.4,
-    #     "min_pixels_to_detect_line": 10
-    # }, 
+
 
     {
         "type": "line_follow_vision",

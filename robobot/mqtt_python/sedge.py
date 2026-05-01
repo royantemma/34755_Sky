@@ -346,7 +346,7 @@ class SEdge:
       self.crossingLine = self.average >= self.crossingThreshold
       
       if self.crossingLine:
-        print("I AM ON A CROSSING")
+        #print("I AM ON A CROSSING")
         if followLeft:
           #weights = [-7, -5, -4, -3, 0, 0, 0, 0]  
           weights = [-4, -3, -2, -1, 1, 1.5, 0, 0]  

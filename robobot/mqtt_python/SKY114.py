@@ -145,7 +145,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
     while True:
         # Get current state
-        print("Current Yaw: " + str(iwo.fused_yaw) )# ",# Gyro: " + str(imu.gyro))
+        #print("Current Yaw: " + str(iwo.fused_yaw) )# ",# Gyro: " + str(imu.gyro))
         curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
         now = t.time()
         dt = now - last_time
