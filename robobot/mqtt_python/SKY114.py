@@ -124,6 +124,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
 def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
     from sfuse import iwo
+    #from simu import imu
 
     yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
 
@@ -144,6 +145,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
     while True:
         # Get current state
+        print("Current Yaw: " + str(iwo.fused_yaw) )# ",# Gyro: " + str(imu.gyro))
         curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
         now = t.time()
         dt = now - last_time
@@ -221,7 +223,8 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
                  + Kd_ang * (angle_error - e_ang_prev) / dt)
             
             # Taken over from the fast method
-            w = max(w, 0.1) if w >= 0 else min(w, -0.1)
+            #w = max(w, 0.1) if w >= 0 else min(w, -0.1)
+            w = max(w, 0.3) if w >= 0 else min(w, -0.3)
             
             e_ang_prev = angle_error
             # (optional) e_ang_int += angle_error * dt
@@ -234,6 +237,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
         last_time = now
         t.sleep(0.05)
+        #t.sleep(0.1)
 
     # Final Stop
     service.send("robobot/cmd/ti", "rc 0.0 0.0")
@@ -300,6 +304,7 @@ def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0
         service.send("robobot/cmd/ti", f"rc {v:.3f} {w:.3f}")
 
         last_time = t.time()
+        #t.sleep(0.1)
         t.sleep(0.05)
 
     # Final Stop

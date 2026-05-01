@@ -64,6 +64,14 @@ class SGpio:
         return v == 1
       else:
         return False
+    
+    def test_start_button(self):
+      v = self.get_value(13)
+      if(v == 1):
+        print(f"Start button (13) pressed")
+        return 1
+      else:
+        return False
 
     def set_value(self, line, value):
       if self.onPi:

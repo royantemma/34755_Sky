@@ -72,17 +72,17 @@ class NavigationNode(BaseNode):
             if len(gg) >= 4:
                 self.acc = [float(gg[1]), float(gg[2]), float(gg[3])]
 
-        elif topic == "biscaROS/vision/aruco/data":
-            try:
-                data = json.loads(payload)
-                estimates = data.get("estimates", [])
-                if len(estimates) > 0:
-                    # Use the first available marker estimate for correction
-                    est = estimates[0]
-                    self.pos_meas = [est["robot_x"], est["robot_y"], est["robot_z"]]
-                    self.att_meas = {'yaw': est["robot_yaw"]}
-            except json.JSONDecodeError:
-                pass
+        # elif topic == "biscaROS/vision/aruco/data":
+        #     try:
+        #         data = json.loads(payload)
+        #         estimates = data.get("estimates", [])
+        #         if len(estimates) > 0:
+        #             # Use the first available marker estimate for correction
+        #             est = estimates[0]
+        #             self.pos_meas = [est["robot_x"], est["robot_y"], est["robot_z"]]
+        #             self.att_meas = {'yaw': est["robot_yaw"]}
+        #     except json.JSONDecodeError:
+        #         pass
 
         elif topic == "robobot/drive/T0/gyro":
             gg = payload.split(" ")

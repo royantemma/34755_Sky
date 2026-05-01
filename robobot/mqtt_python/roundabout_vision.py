@@ -110,6 +110,7 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
         error = 0
         #error=-3
         start_time = t.time()
+        t1 = t.time()
         speed = 0
 
         try:
@@ -130,6 +131,7 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
                     # print(heading)
                     #print(error)
                     if t.time()-start_time > 2.5 and 10 < iwo.fused_yaw < 20:
+                        print(f"Did the roundabout in {t.time()-start_time} seconds!")
                     #if t.time()-start_time > 2.5 and 10 < heading < 20:
                         #print("HOIHOI")
                         stop_event.set()
@@ -152,7 +154,10 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
                         frame_condition.notify_all()
                 else:
                     print("Warning: Failed to grab frame from main stream")
-                t.sleep(0.02) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
+                print("delay with previous frame" + str(t.time() - t1))
+                t1 = t.time()
+                sleep_time = min(t.time()-t1, 0.02)
+                t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
         finally:
             print("Thread stopping robot")
             if stop_speed <= 0:

@@ -22,6 +22,7 @@ from line_vision import line_follow_vision
 from roundabout_vision import drive_roundabout
 from eight_vision import wait_for_police
 from golf import get_ball_location
+from golf import get_ball_location_sorting
 
 from SKY114 import go_to_xy, go_to_xy_fast
 
@@ -185,8 +186,8 @@ class MissionRunner:
             elif task_type == "drive_until_line_detection":
                 self.run_drive_until_line_detection(current_task)
 
-            elif task_type == "linefollow_until_intersection":
-                self.run_linefollow_until_intersection(current_task)
+            elif task_type == "linefollow_until_x_intersections":
+                self.run_linefollow_until_x_intersections(current_task)
 
             elif task_type == "golf_visual_approach_and_trap":
                 self.run_golf_visual_approach_and_trap(current_task)
@@ -199,6 +200,10 @@ class MissionRunner:
                     self.task_index += 1
                 else:
                     self.task_index += 1 
+
+            elif task_type == "run_get_ball_sorting":
+                self.run_get_ball_sorting(current_task)
+                self.task_index += 1
 
             elif task_type == "servo_command":
                 cmd = current_task.get("servo_string", "")
@@ -294,13 +299,15 @@ class MissionRunner:
         percentage_height = task.get("percentage_height", 50)
         final_heading = task.get("final_heading", None)
         time_after_turn = task.get("time_after_turn", None)
+        time_before_ramp_pitch = task.get("time_before_ramp_pitch", None)
+        time_before_ramp_heading = task.get("time_before_ramp_heading", None)
 
 
 
         if self.task_state == 0:
             print("% [line_follow_vision] Starting vision-based line following")
 
-            service.send("robobot/cmd/T0", "leds 16 0 100 0")  # green
+            #service.send("robobot/cmd/T0", "leds 16 0 100 0")  # green
 
             # Start vision controller in background
             self._vision_thread = threading.Thread(target=line_follow_vision,
@@ -315,7 +322,9 @@ class MissionRunner:
                                                            "timeout": timeout,
                                                            "percentage_height": percentage_height,
                                                            "final_heading": final_heading,
-                                                           "time_after_turn": time_after_turn},
+                                                           "time_after_turn": time_after_turn,
+                                                           "time_before_ramp_pitch": time_before_ramp_pitch,
+                                                           "time_before_ramp_heading": time_before_ramp_heading},
                                                    daemon=True)
             self._vision_thread.start()
             self.task_state = 1
@@ -1120,6 +1129,7 @@ class MissionRunner:
         max_speed = task.get("max_speed", 0.8)
         timeout = task.get("timeout", 30)
         dist_tol = task.get("distance_tolerance", 0.02)
+        print("current position: ({:.3f}, {:.3f}), fused yaw: {:.1f}".format(iwo.fused_x, iwo.fused_y, iwo.fused_yaw))
         
         if just_yaw and target_yaw is not None:
             target_x = iwo.fused_x
@@ -1132,6 +1142,7 @@ class MissionRunner:
             self.task_state = 1
             
         elif self.task_state == 1:
+            print(f"\n% [drive_to_xy] Tasked finished - Next task")
             self.next_task()
 
 
@@ -1216,15 +1227,17 @@ class MissionRunner:
 
         self.next_task()
 
-    def run_linefollow_until_intersection(self, task):
+    def run_linefollow_until_x_intersections(self, task):
 
         """
-        Follow a line on the chosen side until intersection is reached, line is lost,
+        Follow a line on the chosen side until x intersections have been counted, line is lost,
         or timeout expires.
         """
         follow_left = (task["side"] == "left")
         speed = task.get("speed", 0.2)
+        stop_speed = task.get("stop_speed",0)
         timeout = task.get("timeout", 30)
+        intersections_to_pass = task.get("intersection_count",1)
         edge.CUSTOM_CONTROL_ENABLED = True
 
         if self.task_state == 0:
@@ -1240,13 +1253,13 @@ class MissionRunner:
                 print("% [line_follow] Line found — following")
                 self.task_state = 2
             elif edge.crossingLine or self.task_time() > timeout:
-                service.send("robobot/cmd/ti/","rc 0.0 0.0") # (forward m/s, turn-rate rad/sec)
+                service.send("robobot/cmd/ti/",f"rc {stop_speed} 0.0") # (forward m/s, turn-rate rad/sec)
                 self.task_state = 3
 
         elif self.task_state == 2: # following line
             if self.task_time() > timeout:
                 edge.lineControl(0, True)
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                service.send("robobot/cmd/ti", f"rc {stop_speed:.3f} 0.0")
                 print("% [line_follow] Timeout")
                 self.task_state = 3
             elif edge.lineValidCnt < 2:
@@ -1255,16 +1268,24 @@ class MissionRunner:
                 print(f"% [line_follow] Line lost at {pose.tripB:.3f}m")
                 self.task_state = 3
             elif edge.crossingLine:
-                edge.lineControl(0, True)
-                service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                print(f"% [line_follow] Crossing line detected at {pose.tripB:.3f}m")
-                self.task_state = 3
-            # elif : we arrived at destination
+                # 
+                if intersections_to_pass > 1:
+                    intersections_to_pass -= 1
+                    print(f"% [line_follow] Crossing line detected at {pose.tripB:.3f}m")
+                    # wait a bit to avoid double-counting the same intersection
+                    t.sleep(0.5)
+                    print(f"% [line_follow] Intersection crossed! Remaining: {intersections_to_pass}")
+                else:
+                    edge.lineControl(0, True)
+                    service.send("robobot/cmd/ti", f"rc {stop_speed:.3f} 0.0")
+                    print(f"% [line_follow] Final crossing line detected at {pose.tripB:.3f}m")
+                    self.task_state = 3
+                    # elif : we arrived at destination
 
         elif self.task_state == 3: # stopping
-            if abs(pose.velocity()) < 0.001:
-                print("% [line_follow] Stopped — next task")
-                self.next_task()
+            # if abs(pose.velocity()) < 0.001:
+            print("% [line_follow] Stopped — next task")
+            self.next_task()
     
     def run_drive_straight_crossing_x_lines(self, task):
         """
@@ -1378,7 +1399,7 @@ class MissionRunner:
             self.initial_pitch = iwo.fused_pitch
             print(f"\n% [line_follow_ramp_IWO] Starting — following line and monitoring pitch. Initial pitch: {self.initial_pitch:.1f}°")
             service.send("robobot/cmd/T0", "leds 16 0 100 0") # green
-            service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
+            #service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
             self.task_state = 1
         if self.task_state == 1:
             edge.lineControl(speed, follow_left)
@@ -1402,7 +1423,14 @@ class MissionRunner:
             curr_pitch = iwo.fused_pitch
             pitch_diff = curr_pitch - self.initial_pitch
             print(f"\r% [line_follow_ramp_IWO] Current pitch: {curr_pitch:.1f}°, diff from initial: {pitch_diff:.1f}°   ", end="")
-            
+
+            # if abs(iwo.fused_yaw) > 10:  # Check if yaw is significantly different
+            #     print(f"\n% [line_follow_ramp_IWO] Warning: Significant yaw detected: {iwo.fused_yaw:.1f}°")
+            #     # Correct yaw 
+            #     if iwo.fused_yaw > 0:
+            #         go_to_xy(iwo.fused_x, iwo.fused_y, -5, max_speed=0.3, dist_tolerance=0.05)
+            #     else:
+            #         go_to_xy(iwo.fused_x, iwo.fused_y, 5, max_speed=0.3, dist_tolerance=0.05)
             if iwo.fused_z > 0.45:
                 # Relax arm
                 service.send("robobot/cmd/T0","servo 1 10000 0") # relax servo
@@ -1427,7 +1455,7 @@ class MissionRunner:
     
     def run_put_ball_in_hole(self, task):
         print("[PUT BALL IN HOLE] Putting Ball in Hole")
-        service.send("robobot/cmd/T0","servo 1 150 400") # (servo down)
+        #service.send("robobot/cmd/T0","servo 1 150 400") # (servo down)
         
         # Logic similar to the get ball method: 
         # Hole coordinates
@@ -1447,68 +1475,61 @@ class MissionRunner:
             scale = (dist - approach_dist) / dist
             target_x = cur_x + dx * scale
             target_y = cur_y + dy * scale
+            print("[run_put_ball_in_hole]target_x = "+ str(target_x) + ("|| target_y = " + str(target_y)))
+            print(cur_x, cur_y)
         else:            
             target_x, target_y = cur_x, cur_y
-        # 3. Drive to approach target
+        # # 3. Drive to approach target
+        # target_dist = target_x 
+        # target_angle = np.arctan2(target_y, target_x)
+        # turn_rate = max(-1.0, min(1.0, -target_angle * 3.0))
+        # fwd_speed = max(0.05, min(0.2, target_dist * 0.3))
+        # service.send("robobot/cmd/ti", f"rc {fwd_speed} {turn_rate}")
+
         go_to_xy(target_x, target_y, max_speed=0.4, dist_tolerance=0.01)
+        print("[run_put_ball_in_hole] Position Reached")
 
         #perform a sweep forward and another sweep
         speed = 0.4
-        duration = 1.5
-        """
-        # 1. Turn Left
-        service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
-        t.sleep(duration)
-
-        # 2. Swing Right (Double duration to cross center)
-        service.send("robobot/cmd/ti", f"rc 0.0 {-speed:.3f}")
-        t.sleep(duration * 2.5)
-
-        # 3. Return to Center
-        service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
-        t.sleep(duration)
-
-        # Stop
-        service.send("robobot/cmd/ti", "rc 0.0 0.0")
-        t.sleep(0.1)
-        #go forward a bit to drop the ball in the hole
-        service.send("robobot/cmd/ti", "rc 0.200 0.0")
-        t.sleep(0.5)
-        service.send("robobot/cmd/ti", "rc 0.0 0.0")
-        #sweep again to ensure ball is in hole
-
-        # 1. Turn Left
-        service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
-        t.sleep(duration)
-
-        # 2. Swing Right (Double duration to cross center)
-        service.send("robobot/cmd/ti", f"rc 0.0 {-speed:.3f}")
-        t.sleep(duration * 2)
-
-        # 3. Return to Center
-        service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
-        t.sleep(duration)
-
-        # Stop
-        service.send("robobot/cmd/ti", "rc 0.0 0.0")
-        t.sleep(0.1)
-
+        duration = 1 # 1.5
         
-        """
         # While ball detected
+        t.sleep(1)
         d1, d2 = get_ball_location()
-        while d1 is not None and d2 is not None:
+
+        # If ball is not detected 
+        if d1 is None:
+            print("[PUT BALL IN] No ball detected, going to next task!")
+            go_to_xy(iwo.fused_x, iwo.fused_y, 160, max_speed=0.4, dist_tolerance=0.01)
+            self.next_task()
+        
+        sweep_count = 0
+        yaw_reference = iwo.fused_yaw
+        yaw_rotation = 15
+        while d1 is not None and d2 is not None and sweep_count < 5: # do at least 5 sweeps to ensure we aren't just losing the ball due to noise
+            sweep_count += 1
             # Sweep Left
-            service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference+yaw_rotation, max_speed=0.4, dist_tolerance=0.01)
+            #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference+yaw_rotation, "just_yaw": True})
+            #service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
+            print("yaw: " + str(iwo.fused_yaw))
             t.sleep(duration)
 
             # Sweep Right
-            service.send("robobot/cmd/ti", f"rc 0.0 {-speed:.3f}")
-            t.sleep(duration * 2)
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference-yaw_rotation, max_speed=0.4, dist_tolerance=0.01)
+            #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference-2*yaw_rotation, "just_yaw": True})
+            #service.send("robobot/cmd/ti", f"rc 0.0 {-speed:.3f}")
+            print("yaw: " + str(iwo.fused_yaw))
+            t.sleep(duration)
 
             # Return to Center
-            service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
+            go_to_xy(iwo.fused_x, iwo.fused_y, yaw_reference, max_speed=0.4, dist_tolerance=0.01)
+            #self.drive_to_xyyaw_IWO({"type": "drive_to_xyyaw_IWO", "target_yaw": yaw_reference+yaw_rotation, "just_yaw": True})
+            #service.send("robobot/cmd/ti", f"rc 0.0 {speed:.3f}")
+            print("yaw: " + str(iwo.fused_yaw))
             t.sleep(duration)
+            service.send("robobot/cmd/ti", f"rc 0.0 0.0")
+            t.sleep(1)
             
             d1, d2 = get_ball_location()
             if d1 is not None and d2 is not None:
@@ -1544,18 +1565,18 @@ class MissionRunner:
         timeout = task.get("timeout", 30)
 
         if self.task_state == 0:
-            print(f"% [drive_until_line_detection] Starting — driving backwards until line is detected")
+            print(f"% [drive_until_line_detection] Starting — driving until line is detected")
             service.send("robobot/cmd/ti", f"rc {speed:.3f} 0.0")
             self.task_state = 1
 
         elif self.task_state == 1:
             if edge.lineValidCnt > 4:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                print(f"% [drive_until_line_detection] Line detected at {pose.tripB:.3f}m while driving backwards.")
+                print(f"% [drive_until_line_detection] Line detected at {pose.tripB:.3f}m while driving.")
                 self.task_state = 2
             elif pose.tripBtimePassed() > timeout:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
-                print(f"% [drive_until_line_detection] Timeout reached while driving backwards.")
+                print(f"% [drive_until_line_detection] Timeout reached while driving.")
                 self.task_state = 2
 
         elif self.task_state == 2:
@@ -1593,49 +1614,53 @@ class MissionRunner:
         # 1. Get local body-frame coordinates
         d1, d2 = get_ball_location()
         if d1 is None or d2 is None:
-            print("Ball not detected, skipping task")
-            self.next_task()
-            return
-        x_body = d2
-        y_body = -d1
-        
-        # 2. Get global robot state
-        cur_x = iwo.fused_x
-        cur_y = iwo.fused_y
-        cur_yaw = iwo.fused_yaw # in degrees
-
-        # 3. Transform ball position to Global Frame
-        # Rotation matrix: [cos -sin; sin cos]
-        ball_global_x = cur_x + (x_body * np.cos(np.radians(cur_yaw)) - y_body * np.sin(np.radians(cur_yaw)))
-        ball_global_y = cur_y + (x_body * np.sin(np.radians(cur_yaw)) + y_body * np.cos(np.radians(cur_yaw)))
-
-        # 4. Calculate approach target (0.25m away from global ball position)
-        dx = ball_global_x - cur_x
-        dy = ball_global_y - cur_y
-        dist = np.hypot(dx, dy)
-        
-        approach_dist = 0.25
-        # Only move if we aren't already within the approach distance
-        if dist > approach_dist:
-            scale = (dist - approach_dist) / dist
-            target_x = cur_x + dx * scale
-            target_y = cur_y + dy * scale
+            print("[GET BALL] Ball not detected, using default coordinates to search")
+            go_to_xy(6.08, 2.76, -165, max_speed=0.2, dist_tolerance=0.01)
+            service.send("robobot/cmd/T0", "servo 1 150 400") # Arm down
+            # self.next_task()
+            # return
         else:
-            target_x, target_y = cur_x, cur_y
+            x_body = d2
+            y_body = -d1
+            
+            # 2. Get global robot state
+            cur_x = iwo.fused_x
+            cur_y = iwo.fused_y
+            cur_yaw = iwo.fused_yaw # in degrees
 
-        # 5. Execution
-        service.send("robobot/cmd/T0", "servo 1 -890 400") # Arm up
-        t.sleep(1)
+            # 3. Transform ball position to Global Frame
+            # Rotation matrix: [cos -sin; sin cos]
+            ball_global_x = cur_x + (x_body * np.cos(np.radians(cur_yaw)) - y_body * np.sin(np.radians(cur_yaw)))
+            ball_global_y = cur_y + (x_body * np.sin(np.radians(cur_yaw)) + y_body * np.cos(np.radians(cur_yaw)))
 
-        # Print current position and heading and where ball was detected and where it is going
-        print(f"Current Position: ({cur_x:.2f}, {cur_y:.2f}), Yaw: {cur_yaw:.1f}°")
-        print(f"Ball detected at body-frame (x={x_body:.2f}, y={y_body:.2f}) -> global (x={ball_global_x:.2f}, y={ball_global_y:.2f})")
-        print(f"Approach target: ({target_x:.2f}, {target_y:.2f})")
-        
-        go_to_xy(target_x, target_y, max_speed=0.6, dist_tolerance=0.01)
-        
-        service.send("robobot/cmd/T0", "servo 1 150 400") # Arm down
-        t.sleep(1)
+            # 4. Calculate approach target (0.25m away from global ball position)
+            dx = ball_global_x - cur_x
+            dy = ball_global_y - cur_y
+            dist = np.hypot(dx, dy)
+            
+            approach_dist = 0.25
+            # Only move if we aren't already within the approach distance
+            if dist > approach_dist:
+                scale = (dist - approach_dist) / dist
+                target_x = cur_x + dx * scale
+                target_y = cur_y + dy * scale
+            else:
+                target_x, target_y = cur_x, cur_y
+
+            # 5. Execution
+            service.send("robobot/cmd/T0", "servo 1 -890 400") # Arm up
+            t.sleep(1)
+
+            # Print current position and heading and where ball was detected and where it is going
+            print(f"Current Position: ({cur_x:.2f}, {cur_y:.2f}), Yaw: {cur_yaw:.1f}°")
+            print(f"Ball detected at body-frame (x={x_body:.2f}, y={y_body:.2f}) -> global (x={ball_global_x:.2f}, y={ball_global_y:.2f})")
+            print(f"Approach target: ({target_x:.2f}, {target_y:.2f})")
+            
+            go_to_xy(target_x, target_y, max_speed=0.6, dist_tolerance=0.01)
+            
+            service.send("robobot/cmd/T0", "servo 1 150 400") # Arm down
+            t.sleep(1)
+        print(f"Final Position: ({iwo.fused_x:.2f}, {iwo.fused_y:.2f}), Yaw: {iwo.fused_yaw:.1f}°")
         self.next_task()
 
     def run_luggage_catch(self, task):
@@ -1647,15 +1672,30 @@ class MissionRunner:
         shuttle_id = 5  
         timeout = task.get("timeout", 45)
         
+        
         client = aruco.get_client()
         client.set_enabled(True)
+        print("LUGGAGE CATCH START")
         
-        print("% [Luggage] Lowering arm (midway). Watching for conveyor...")
-        service.send("robobot/cmd/T0", "servo 1 -330 400")
-        
+        mission_state = "wait_for_conveyor_1"
+        go_to_xy(iwo.fused_x, iwo.fused_y, 180)
+        while mission_state == "wait_for_conveyor_1":
+                data = client.get_data()
+                markers = data["markers"] if (data and data.get("markers")) else []
+                print("Waiting for conveyor 1 !")
+                for m in markers:
+                    if int(m["id"]) in [shuttle_id, target_id]:
+                        print("% [Luggage] Conveyor passing")
+                        t.sleep(3.5) 
+                        
+                        mission_state = "wait_for_conveyor"
+                        service.send("robobot/cmd/T0", "servo 1 -370 400")
+                        #mission_state = "wait_for_conveyor"
+                        break 
+        box_offset_x = 0.0
         start_time = t.time()
-        mission_state = "wait_for_conveyor"
-        box_offset_x = 0.0 
+        print(start_time)
+        shuttle_threshold = 0.0 
         
         while (t.time() - start_time) < timeout and not self.stop and not service.stop:
             data = client.get_data()
@@ -1664,9 +1704,9 @@ class MissionRunner:
             # wait for conveyor aruco before backing up 
             if mission_state == "wait_for_conveyor":
                 for m in markers:
-                    if int(m["id"]) in [shuttle_id, target_id]:
+                    if int(m["id"]) in [shuttle_id, target_id] or t.time() > (start_time + 30): #and abs(m["x"] / 1000.0) < 0.1:
                         print("% [Luggage] Conveyor passing")
-                        t.sleep(2.0) 
+                        t.sleep(3.5) 
                         
                         print("% [Luggage] Backing up...")
                         service.send("robobot/cmd/ti", "rc -0.25 0.0") # back up 25cm
@@ -1751,6 +1791,8 @@ class MissionRunner:
                             service.send("robobot/cmd/ti", "rc 0.0 0.0")
                             service.send("robobot/cmd/T0", "servo 1 150 400") # lower arm
                             t.sleep(0.5)
+                            service.send("robobot/cmd/ti", "rc 0.1 0.0")
+                            t.sleep(0.05)
                             print("% [Luggage] Box caught!")
                             return True
                         else:
@@ -1916,6 +1958,85 @@ class MissionRunner:
                 service.send("robobot/cmd/ti", "rc 0.0 0.0")
                 t.sleep(0.1)  # Extra pause to ensure stop
                 self.next_task()
+
+    def run_get_ball_sorting(self, task):
+        import numpy as np
+        from sfuse import iwo
+        
+        # Extract the target color from the JSON (defaults to red to be safe)
+        target_color = task.get("color", "red")
+        print(f"[%] Initiating search and capture for {target_color.upper()} ball...")
+
+        # Move arm up
+        service.send("robobot/cmd/T0", "servo 1 -890 400") 
+        t.sleep(1) 
+        
+        # 1. Get local body-frame coordinates
+        d1, d2 = get_ball_location_sorting(color=target_color) 
+        
+        if d1 is None or d2 is None:
+            print(f"[GET BALL] {target_color.upper()} ball not detected initially. Skipping.")
+            service.send("robobot/cmd/T0", "servo 1 150 400")
+            self.task_index += 1
+            return False
+            
+        x_body, y_body = d2, -d1
+        cur_x, cur_y, cur_yaw = iwo.fused_x, iwo.fused_y, iwo.fused_yaw
+
+        ball_global_x = cur_x + (x_body * np.cos(np.radians(cur_yaw)) - y_body * np.sin(np.radians(cur_yaw)))
+        ball_global_y = cur_y + (x_body * np.sin(np.radians(cur_yaw)) + y_body * np.cos(np.radians(cur_yaw)))
+
+        dist_to_ball = np.hypot(ball_global_x - cur_x, ball_global_y - cur_y)
+        
+        if dist_to_ball > 0.60:
+            print(f"[%] Ball is far ({dist_to_ball:.2f}m). Executing intermediate approach...")
+            
+            # Calculate a waypoint exactly 0.5m away from the initially detected ball
+            scale = (dist_to_ball - 0.50) / dist_to_ball
+            mid_x = cur_x + (ball_global_x - cur_x) * scale
+            mid_y = cur_y + (ball_global_y - cur_y) * scale
+            
+            go_to_xy(mid_x, mid_y, max_speed=0.6, dist_tolerance=0.01)
+            
+            print("[%] Midpoint reached. Pausing 1.0s to clear camera blur...")
+            t.sleep(1.0)
+            
+            # Take a second, highly accurate picture
+            d1, d2 = get_ball_location_sorting(color=target_color)
+            if d1 is None or d2 is None:
+                print(f"[GET BALL] Lost sight of {target_color.upper()} ball at midpoint! Aborting.")
+                service.send("robobot/cmd/T0", "servo 1 150 400")
+                self.task_index += 1
+                return False
+                
+            # Recalculate global position with the clean, close-range data
+            x_body, y_body = d2, -d1
+            cur_x, cur_y, cur_yaw = iwo.fused_x, iwo.fused_y, iwo.fused_yaw
+            
+            ball_global_x = cur_x + (x_body * np.cos(np.radians(cur_yaw)) - y_body * np.sin(np.radians(cur_yaw)))
+            ball_global_y = cur_y + (x_body * np.sin(np.radians(cur_yaw)) + y_body * np.cos(np.radians(cur_yaw)))
+            print(f"[%] Secondary Lock Acquired! Corrected Global: ({ball_global_x:.2f}, {ball_global_y:.2f})")
+
+        # Re-poll current position in case we drifted or executed Phase 2
+        cur_x, cur_y = iwo.fused_x, iwo.fused_y
+        dist_to_ball = np.hypot(ball_global_x - cur_x, ball_global_y - cur_y)
+        
+        approach_dist = 0.25
+        if dist_to_ball > approach_dist:
+            scale = (dist_to_ball - approach_dist) / dist_to_ball
+            target_x = cur_x + (ball_global_x - cur_x) * scale
+            target_y = cur_y + (ball_global_y - cur_y) * scale
+        else:
+            target_x, target_y = cur_x, cur_y
+
+        print(f"[%] Final approach to: ({target_x:.2f}, {target_y:.2f})")
+        go_to_xy(target_x, target_y, max_speed=0.6, dist_tolerance=0.01)
+        
+        service.send("robobot/cmd/T0", "servo 1 150 400") 
+        t.sleep(1)
+        
+        self.task_index += 1
+        return True
 
    
             

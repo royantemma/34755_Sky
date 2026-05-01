@@ -6,6 +6,10 @@
 # Run this script, then point a web browser at http:<this-ip-address>:7123
 # Note: needs simplejpeg to be installed (pip3 install simplejpeg).
 
+# ps aux | grep stream_server
+# kill xxx
+# python robobot/stream_server/stream_server.py
+
 import io
 import logging
 import socketserver
@@ -341,6 +345,16 @@ def process_frames():
     picam2 = Picamera2()
     picam2.configure(picam2.create_video_configuration(main={"size": (820, 616)},controls={'FrameDurationLimits': (50000, 50000)}))
     picam2.start()
+    # config = picam2.create_video_configuration(
+    #         main={"size": (820, 616), "format": "BGR888"}, 
+    #         controls={
+    #             "ExposureTime": 15000, 
+    #             "AnalogueGain": 4.0, 
+    #             "FrameDurationLimits": (33333, 33333)
+    #         }
+    # )
+    # picam2.configure(config)
+    # picam2.start()
     
     while True:
         frame = picam2.capture_array()

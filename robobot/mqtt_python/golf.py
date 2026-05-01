@@ -8,6 +8,70 @@ from uservice import service
 from scam import cam
 from spose import pose
 
+def detect_blue_ball_test(img):
+    """
+    Converts image to HSV, masks red pixels, finds the ball, 
+    and returns a dictionary of all intermediate images for debugging.
+    """
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    
+    # Light Blue HSV ranges
+    lower_blue = np.array([90, 50, 50])
+    upper_blue = np.array([120, 255, 255])
+    
+    # Step 1: Single Mask (Blue doesn't wrap around the 180 mark like Red does)
+    mask1 = cv.inRange(hsv, lower_blue, upper_blue)
+    
+    # Step 2: Skip combined_mask, just use mask1 for the cleanup
+    eroded_mask = cv.erode(mask1, None, iterations=5)
+    final_mask = cv.dilate(eroded_mask, None, iterations=5)
+    
+    # Pack all steps into a dictionary to send back to the test function
+    debug_images = {
+        "01_original_blue": img.copy(),
+        "02_mask1_low_blue": mask1,
+        "03_final_cleaned_mask_blue": final_mask
+    }
+    
+    # Find Contours
+    contours, _ = cv.findContours(final_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    
+    best_contour = None
+    best_radius = 0
+    best_center = (0, 0)
+    max_area = 0
+    
+    for contour in contours:
+        area = cv.contourArea(contour)
+        if area > 10:  # Minimum area to filter noise
+            print(f"Contour area: {cv.contourArea(contour)}")
+            ((x, y), radius) = cv.minEnclosingCircle(contour)
+            print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
+            circle_area = np.pi * (radius ** 2)
+            
+            if circle_area > 10:
+                area_ratio = area / circle_area
+                print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
+                # Area of the contour divided by the area of its minimum enclosing
+                # circle is a simple circularity measure. A perfect circle is ~1.0.
+                img_height = img.shape[0]
+                if area_ratio > 0.7 and area > max_area: # and y > img_height / 4:
+                #if area_ratio > 0.8 and area > max_area:
+                    max_area = area
+                    best_contour = contour
+                    best_radius = radius
+                    best_center = (x, y)
+    
+    if best_contour is not None and best_radius > 3:
+        x, y = best_center
+        # Draw a green circle and a red dot at the center on the debug image
+        cv.circle(debug_images["01_original_blue"], (int(x), int(y)), int(best_radius), (0, 255, 0), 2)
+        cv.circle(debug_images["01_original_blue"], (int(x), int(y)), 3, (0, 0, 255), -1)
+
+        return True, int(x), int(y), best_radius, debug_images
+            
+    return False, 0, 0, 0, debug_images
+
 def detect_red_ball_test(img):
     """
     Converts image to HSV, masks red pixels, finds the ball, 
@@ -53,18 +117,19 @@ def detect_red_ball_test(img):
     for contour in contours:
         area = cv.contourArea(contour)
         if area > 500:  # Minimum area to filter noise
-            #print(f"Contour area: {cv.contourArea(contour)}")
+            print(f"Contour area: {cv.contourArea(contour)}")
             ((x, y), radius) = cv.minEnclosingCircle(contour)
-            #print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
+            print(f"Enclosing circle: center=({x:.1f}, {y:.1f}), radius={radius:.1f}")
             circle_area = np.pi * (radius ** 2)
             
             if circle_area > 10:
                 area_ratio = area / circle_area
-                #print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
+                print(f"Area ratio (contour area / circle area): {area_ratio:.2f}")
                 # Area of the contour divided by the area of its minimum enclosing
                 # circle is a simple circularity measure. A perfect circle is ~1.0.
                 img_height = img.shape[0]
-                if area_ratio > 0.8 and area > max_area and y > img_height / 4:
+                if area_ratio > 0.7 and area > max_area and y > img_height / 4:
+                #if area_ratio > 0.8 and area > max_area:
                     max_area = area
                     best_contour = contour
                     best_radius = radius
@@ -175,11 +240,17 @@ def setup_homography(img_width, img_height):
     #     [661, 340]          # Bottom right pixel
     # ], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [243, 216],           # Middle left pixel
-        [569, 219],   # Middle right pixel
-        [76, 352],                 # Bottom left pixel
-        [739, 364]          # Bottom right pixel
+        [197, 229],           # Middle left pixel
+        [587, 232],   # Middle right pixel
+        [161, 362],                 # Bottom left pixel
+        [639, 363]          # Bottom right pixel
     ], dtype=np.float32)
+    # src_pts = np.array([ # For real measurement of the ball
+    #     [243, 216],           # Middle left pixel
+    #     [569, 219],   # Middle right pixel
+    #     [189, 350],                 # Bottom left pixel
+    #     [739, 364]          # Bottom right pixel
+    # ], dtype=np.float32)
 
     # 2. Real-world CAD coordinates (Destination) converted from mm to METERS
     # X: Left is negative, Right is positive
@@ -209,11 +280,17 @@ def setup_homography(img_width, img_height):
     #     [0.2, 0.50]   # Bottom right CAD
     # ], dtype=np.float32)
     dst_pts = np.array([ # For real measurement of the ball
-        [-0.25,1],   # Middle left CAD
-        [0.25,1],  
-        [-0.25, 0.50], # Bottom left CAD
-        [0.25, 0.50]   # Bottom right CAD
+        [-0.3,1],   # Middle left CAD
+        [0.3,1],  
+        [-0.2, 0.50], # Bottom left CAD
+        [0.2, 0.50]   # Bottom right CAD
     ], dtype=np.float32)
+    # dst_pts = np.array([ # For real measurement of the ball
+    #     [-0.25,1],   # Middle left CAD
+    #     [0.25,1],  
+    #     [-0.25, 0.50], # Bottom left CAD
+    #     [0.25, 0.50]   # Bottom right CAD
+    # ], dtype=np.float32)
 
     # 3. Calculate and return the 3x3 transformation matrix
     H_matrix = cv.getPerspectiveTransform(src_pts, dst_pts)
@@ -264,6 +341,40 @@ def get_ball_location():
     else:
         print("% Ball not found in the image.")
         return (None, None)
+
+def get_ball_location_sorting(color="red"):
+    """
+    Dedicated ball locator for the sorting mission. 
+    Leaves the original get_ball_location completely untouched.
+    """
+    ok, img, imgTime = cam.getImage() 
+
+    h, w, _ = img.shape
+    H_matrix = setup_homography(w, h)
+    
+    if color == "blue":
+        found, x, y, radius, debug = detect_blue_ball_test(img)
+    else:
+        found, x, y, radius, debug = detect_red_ball_test(img)
+
+    timestamp = imgTime.strftime('%Y%m%d_%H%M%S')
+            
+    # Save every image in the dictionary
+    os.makedirs("golf_test_results", exist_ok=True)
+    print("% Saving debug images...")
+    for name, image_data in debug.items():
+        filename = f"golf_test_results/{timestamp}_{name}.jpg"
+        cv.imwrite(filename, image_data)
+        print(f"  -> Saved {name}")
+        
+    if found:
+        target_distance, target_angle, real_x, real_y = px_to_xy_homography(x, y, H_matrix)
+        print(f"% Ball found at Px({x}, {y}), radius={radius:.1f}")
+        print(f"%   World position: x={real_x:.3f} m, y={real_y:.3f} m")
+        print(f"%   Distance={target_distance:.3f} m, Angle={np.degrees(target_angle):.1f} deg")
+        return real_x, real_y
+        
+    return None, None
 
 def find_and_catch():
     """Main mission state machine with two-phase approach"""
@@ -417,7 +528,6 @@ def find_and_catch():
             
         t.sleep(0.05)
 
-
 def find_and_print():
     """
     Takes a single picture, saves all debug masks, and prints coordinates.
@@ -441,7 +551,7 @@ def find_and_print():
             print("% Saving debug images...")
             for name, image_data in debug_images.items():
                 filename = f"golf_test_results/{timestamp}_{name}.jpg"
-                #cv.imwrite(filename, image_data)
+                cv.imwrite(filename, image_data)
                 print(f"  -> Saved {name}")
             
             if found:

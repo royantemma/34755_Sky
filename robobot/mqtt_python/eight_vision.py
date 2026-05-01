@@ -109,6 +109,7 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
         MIN_FREE_FRAMES_TO_MOVE = min_free_frames_to_move
 
         start_time = t.time()
+        t1 = t.time()
         prev_time = start_time
         centers = []
         counter_free_frames = 0
@@ -150,7 +151,10 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
                             frame_condition.notify_all()
                 else:
                     print("Warning: Failed to grab frame from main stream")
-                t.sleep(0.02) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
+                print("delay with previous frame" + str(t.time() - t1))
+                t1 = t.time()
+                sleep_time = min(t.time()-t1, 0.02)
+                t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
         finally:
             print("Thread stopping robot")
             service.send("robobot/cmd/ti", "rc 0.0 0.0")
@@ -178,7 +182,7 @@ def process_frame(img, prev_centers, percentage_height=60, percentage_width=100,
     h, w = img.shape[:2]
     h_relevant = (h * percentage_height) // 100
     h_start = h * percentage_from_bottom // 100
-
+    
     roi = img[h-h_relevant:h-h_start, :]
     gray = cv.cvtColor(roi, cv.COLOR_BGR2GRAY)
     _ , frame_gray = cv.threshold(gray, 160, 255, cv.THRESH_BINARY)

@@ -10,6 +10,9 @@ GOAL_TIME_BUFFER = 20
 
 TASKS = [
 
+    # Pre luggage challenge. Ball holder. Arrive from ramp
+    
+
     # 1. Reset Odometry at the starting point of the Luggage Challenge
     {
         "type":  "reset_IWO",
@@ -36,9 +39,9 @@ TASKS = [
     {
         "type": "drive_to_xyyaw_IWO",
         "target_x": 0.50,
-        "target_y": 3.55,
+        "target_y": 3.4,
         "target_yaw": -90, # Face East
-        "max_speed": 0.8,
+        "max_speed": 0.4,
         "timeout": 20
     },
 
@@ -58,26 +61,60 @@ TASKS = [
         "type": "luggage_intercept",
         "target_box_id": 20,
         "strike_zone_x": 30.0,
-        "timeout": 60
+        "timeout": 90
     },
 
     # 6. Transport box 20 to Quadrant A
     {
         "type": "drive_to_xyyaw_IWO_fast",
         "target_x": 0.50,  
+        "target_y": 1.50,
+        "target_yaw": -90,
+        "max_speed": 0.4,
+        "timeout": 20
+    },
+    {
+    "type": "drive_until_line_detection",
+    "speed": 0.2,
+    "timeout": 30
+}   ,
+    {
+    "type": "drive_to_xyyaw_IWO",
+    "target_yaw": 0.0, 
+    "just_yaw": True
+    },
+    {
+    "type": "linefollow_until_x_intersections",
+    "side": "left",
+    "timeout": 30,
+    "speed": 0.4,
+    },
+    {
+    "type": "drive_to_xyyaw_IWO",
+    "target_yaw": 90, 
+    "just_yaw": True
+    },
+
+
+    {
+        "type": "drive_to_xyyaw_IWO_fast",
+        "target_x": 0.90,  
         "target_y": 1.90,
-        "target_yaw": 0,
-        "max_speed": 0.8,
+        "target_yaw": 30, # need to correct the yaw?
+        "max_speed": 0.4,
         "timeout": 20
     },
     {
         "type": "drive_to_xyyaw_IWO_fast",
         "target_x": 0.90,  
         "target_y": 1.90,
-        "target_yaw": 25, # need to correct the yaw?
-        "max_speed": 0.8,
+        "target_yaw": 30, # need to correct the yaw?
+        "max_speed": 0.4,
         "timeout": 20
     },
 
     # 7. drop off box 20 in quadrant A
+    {
+        "type": "servo_up"
+    },
 ]

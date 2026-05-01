@@ -135,7 +135,9 @@ class SImu:
             from sfuse import iwo
             if iwo.wheelVelocityCnt > 0:
               dt = (t1 - t0).total_seconds()
-              if 0 < dt < 0.5: # Handle if t0 lies in the past
+              if 0 < dt:# < 0.5: # Handle if t0 lies in the past
+                  if dt > 0.5:
+                    print(f"% Warning: large dt={dt:.3f} sec between gyro updates!")
                   aruco_pose = self._get_aruco_pose()
                   pos_meas = None
                   att_meas = None
@@ -144,6 +146,7 @@ class SImu:
                   #  #pos_meas = [aruco_pose['x'], aruco_pose['y'], aruco_pose['z']]
                   #  att_meas = [np.deg2rad(aruco_pose['yaw'])]
                   iwo.fuse(self.acc, self.gyro, dt, pos_meas=pos_meas, att_meas=att_meas)
+                  #print(f"Fused with dt={dt:.3f} sec, gyro={self.gyro}, acc={self.acc}, aruco_pose={aruco_pose}, fused_x={iwo.fused_x:.3f}, fused_y={iwo.fused_y:.3f}, fused_yaw={iwo.fused_yaw:.2f}")
 
 
         elif topic == "T0/acc":

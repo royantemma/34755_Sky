@@ -95,7 +95,9 @@ def line_follow_vision(junctions = 'straight',
                        min_pixels_to_detect_line=-1,
                        percentage_height = 50,
                        final_heading = None,
-                       time_after_turn=None): # BE CAUTIOUS, these parameters are initialised in MISSION RUNNER
+                       time_after_turn=None,
+                       time_before_ramp_pitch=None,
+                       time_before_ramp_heading=None): # BE CAUTIOUS, these parameters are initialised in MISSION RUNNER
     #print("Starting camera test stream...")
 
     # 1. Connect to the robot's main camera stream
@@ -123,6 +125,7 @@ def line_follow_vision(junctions = 'straight',
         MAX_FAILED_RECOGNITIONS = 3
         speed = start_speed
         start_time = t.time()
+        t1 = t.time()
 
         # Variables for line following after the roundabout
         TURN_DETECTED = 0
@@ -166,6 +169,22 @@ def line_follow_vision(junctions = 'straight',
                             stop_event.set()
                             threading.Thread(target=httpd.shutdown, daemon=True).start()
                             break   # IMPORTANT: exit immediately
+
+                    #print("iwo pitch: " + str(iwo.fused_pitch) + ", heading = " + str(heading))
+                    # Handles the ramp
+                    if time_before_ramp_pitch is not None and t.time() - start_time > time_before_ramp_pitch:
+                        if abs(iwo.fused_pitch) < 4:
+                            print("End of the ramp detected - Robot stopping")
+                            service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                            stop_event.set()
+                            threading.Thread(target=httpd.shutdown, daemon=True).start()
+                    elif time_before_ramp_heading is not None and t.time() - start_time > time_before_ramp_heading:
+                        if heading > 100:
+                            print("End of the ramp detected - Robot stopping")
+                            service.send("robobot/cmd/ti", "rc 0.0 0.0")
+                            stop_event.set()
+                            threading.Thread(target=httpd.shutdown, daemon=True).start()
+
                         
                     
                     #image, heading = process_frame2(frame, 'left', percentage_width=80, percentage_height=40)
@@ -222,7 +241,10 @@ def line_follow_vision(junctions = 'straight',
                 # current_time = t.perf_counter()
                 # print(f"Elapsed time: {current_time - prev_time:.6f}")
                 # prev_time = current_time
-                t.sleep(0.02) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
+                print("delay with previous frame" + str(t.time() - t1))
+                t1 = t.time()
+                sleep_time = min(t.time()-t1, 0.02)
+                t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
         finally:
             print("Thread stopping robot")
             if stop_speed <= 0:

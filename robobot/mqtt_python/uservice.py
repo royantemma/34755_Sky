@@ -21,10 +21,15 @@
 #* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #* THE SOFTWARE. */
 
+import sys
+
 ## function to handle ctrl-C and reasonable shutdown
 def signal_handler(sig, frame):
     print('UService:: You pressed Ctrl+C!')
+    service.send("robobot/cmd/ti","rc 0 0") # stop robot control loop
+    service.send("robobot/cmd/T0","servo 1 10000 0")
     service.stop = True
+    sys.exit(0)  # Forces the Python process to safely terminate immediately
 
 import signal
 import argparse
@@ -140,6 +145,8 @@ class UService:
     self.parser.add_argument('--mission_gates', action='store_true', 
                              help='Run the mission from start to goal with gates')
     self.parser.add_argument('--mission_half', action='store_true')
+    self.parser.add_argument('--mission_safe', action='store_true')
+    self.parser.add_argument('--mission_home', action='store_true')
     self.parser.add_argument('--mission_golf', action='store_true')
     self.parser.add_argument('--mission_half_HALF', action='store_true')
     self.parser.add_argument('--line_vision', action='store_true',
@@ -152,6 +159,7 @@ class UService:
     self.parser.add_argument('--mission_stairs_down', action='store_true',
                              help='Go down stairs by detecting pitch and following line')
     self.parser.add_argument('--mission_all_v1_0', action='store_true')
+    self.parser.add_argument('--mission_ball_sorting', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):
@@ -220,7 +228,11 @@ class UService:
         self.stop = True
         print(f"this is the stop button")
       if gpio.get_value(19) == 1:
-        print(f"start button is pressed $$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        pass
+      if gpio.test_start_button() == 1:
+        from missions.mission_all_v0_8 import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+        from mission_runner import MissionRunner
+        MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
       t.sleep(0.05)
       loop += 1
     pass
