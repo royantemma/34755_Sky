@@ -1,0 +1,2 @@
+dt,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,fused_x,fused_y,fused_z,roll,pitch,yaw,pose_x,pose_y,pose_yaw
+0.244462,0,0,0,0.671692,0.231384,0.039825,0.0,0.0,0.0,4.118189684694739,-12.277240724958451,-0.4136751910232886,0.004,0.0,0.0113

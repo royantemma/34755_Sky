@@ -151,7 +151,7 @@ def wait_for_police(percentage_height, time_between_checks, min_distance_for_mov
                             frame_condition.notify_all()
                 else:
                     print("Warning: Failed to grab frame from main stream")
-                print("delay with previous frame" + str(t.time() - t1))
+                #print("delay with previous frame" + str(t.time() - t1))
                 t1 = t.time()
                 sleep_time = min(t.time()-t1, 0.02)
                 t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames

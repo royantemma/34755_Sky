@@ -154,7 +154,7 @@ def drive_roundabout(nominal_speed, start_speed, stop_speed, time_to_full_speed,
                         frame_condition.notify_all()
                 else:
                     print("Warning: Failed to grab frame from main stream")
-                print("delay with previous frame" + str(t.time() - t1))
+                # print("delay with previous frame" + str(t.time() - t1))
                 t1 = t.time()
                 sleep_time = min(t.time()-t1, 0.02)
                 t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames
@@ -219,8 +219,8 @@ def process_frame(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF
     heading = ratio - PERCENTAGE_OF_WHITE / 100
 
     frame = cv.cvtColor(eroded, cv.COLOR_GRAY2BGR)
-
-    return frame, heading
+    adaptive_thresh = cv.cvtColor(adaptive_thresh, cv.COLOR_GRAY2BGR)
+    return frame, heading #adaptive_thresh, heading #
 
 
 def process_frame2(img, percentage_height=60, percentage_width=100, PERCENTAGE_OF_WHITE=30):

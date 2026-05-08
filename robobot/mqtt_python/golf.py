@@ -246,10 +246,10 @@ def setup_homography(img_width, img_height):
     #     [639, 363]          # Bottom right pixel
     # ], dtype=np.float32)
     src_pts = np.array([ # For real measurement of the ball
-        [200, 251],           # Middle left pixel
-        [600, 255],   # Middle right pixel
-        [144, 389],                 # Bottom left pixel
-        [647, 390]          # Bottom right pixel
+        [214, 246],           # Middle left pixel
+        [613, 254],   # Middle right pixel
+        [154, 381],                 # Bottom left pixel
+        [646, 385]          # Bottom right pixel
     ], dtype=np.float32)
     # src_pts = np.array([ # For real measurement of the ball
     #     [243, 216],           # Middle left pixel

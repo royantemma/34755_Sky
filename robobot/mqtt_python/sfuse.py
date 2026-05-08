@@ -3,7 +3,7 @@ from datetime import *
 from threading import Thread
 import numpy as np
 
-ENABLE_LOGGING = False
+ENABLE_LOGGING = True
 
 class SFuse:
     #
@@ -62,7 +62,10 @@ class SFuse:
     fused_z = 0
 
     # Logging
-    log_file_name = "robot_data.csv"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    log_file_name = f"robot_data_{timestamp}.csv"
+    #log_file_name = "robot_data.csv"
     log_initialized = False
 
     def predict(self, vb, omega, dt):

@@ -248,7 +248,7 @@ def line_follow_vision(junctions = 'straight',
                 # current_time = t.perf_counter()
                 # print(f"Elapsed time: {current_time - prev_time:.6f}")
                 # prev_time = current_time
-                print("delay with previous frame" + str(t.time() - t1))
+                # print("delay with previous frame" + str(t.time() - t1))
                 t1 = t.time()
                 sleep_time = min(t.time()-t1, 0.02)
                 t.sleep(sleep_time) # this period should always be lower than the fps of the camera, otherwise the controller will work on older frames

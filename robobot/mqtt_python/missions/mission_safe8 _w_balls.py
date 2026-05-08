@@ -344,6 +344,16 @@ TASKS = [
     "speed": 0.3,
     },
     {
+        "type":  "reset_IWO",
+        "x": 2.48,
+        "y": 3.48,
+        "z": 0.0,
+        "roll": 0,
+        "pitch": 0,
+        "yaw": 180  # Starting facing South
+    },
+
+    {
     "type": "drive_to_xyyaw_IWO",
     "target_yaw": 270.0, 
     "just_yaw": True
@@ -396,6 +406,11 @@ TASKS = [
         "timeout": 15
     },
 
+    # servo down to prepare for ball capture
+    {
+        "type": "servo_down"
+    },
+
     # {
     #     "type": "run_get_ball_sorting",
     #     "color": "blue"
@@ -406,10 +421,20 @@ TASKS = [
     {
         "type": "drive_to_xyyaw_IWO",
         "target_x": 0.50,
-        "target_y": 3.6, # marker is at 3.8
-        "target_yaw": -40, # Face East
+        "target_y": 3.4, # marker is at 3.8
+        "target_yaw": 180, # Face East
         "max_speed": 0.4,
         "timeout": 20
+    },
+
+    {
+        "type": "servo_up"
+    },
+
+    {
+        "type": "drive_to_xyyaw_IWO",
+        "target_yaw": -40, # 0 is good for small speeds, but -5 is for when the robot overshoots
+        "just_yaw": True
     },
 
 
@@ -428,12 +453,12 @@ TASKS = [
         "color": "blue"
     },
 
-    # {
-    #     "type": "drive_straight",
-    #     "speed": -0.1,
-    #     "distance": -0.6
+    {
+        "type": "drive_until_line_detection",
+        "speed": -0.1,
+        "timeout": 2
 
-    # },
+    },
 
     {
         "type": "drive_to_xyyaw_IWO_fast",
@@ -473,11 +498,11 @@ TASKS = [
     # Back out and turn around to face the scatter zone again
     {
         "type": "drive_to_xyyaw_IWO_fast",
-        "target_x": 0.65, # Back up safely before turning
-        "target_y": 3.40,
+        "target_x": 1.3, # Back up safely before turning
+        "target_y": 3.30,
         # "target_x": 0.50,
         # "target_y": 3.40,
-        "target_yaw": -30, # Look back at the balls
+        "target_yaw": -80, # Look back at the balls
         "max_speed": 0.4,
         "timeout": 15
     },
@@ -519,6 +544,16 @@ TASKS = [
     {
         "type": "servo_up"
     },
+
+    # {
+    #     "type":  "reset_IWO",
+    #     "x": 1.76,
+    #     "y": 2.23,
+    #     "z": 0.0,
+    #     "roll": 0,
+    #     "pitch": 0,
+    #     "yaw": 180  # Starting facing South
+    # },
 
     ##### DRIVE CLOSE TO EXTERNAL LINE #####
     {
@@ -582,6 +617,5 @@ TASKS = [
      "timeout": 7,
      "speed": 0.3,
     },
-
 
     ]   
