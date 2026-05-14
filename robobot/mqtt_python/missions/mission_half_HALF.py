@@ -48,7 +48,7 @@ TASKS = [
     # 4. Navigate down to the Conveyor intercept Point
     {
         "type": "drive_to_xyyaw_IWO_fast",
-        "target_x": 0.2,
+        "target_x": 0.15,
         "target_y": 2.33,
         "target_yaw": 180, # Perpendicular to conveyor (Facing South)
         "max_speed": 0.6,

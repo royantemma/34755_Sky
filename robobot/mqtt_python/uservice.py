@@ -162,6 +162,7 @@ class UService:
     self.parser.add_argument('--mission_all_v1_0', action='store_true')
     self.parser.add_argument('--mission_ball_sorting', action='store_true')
     self.parser.add_argument('--mission_seesaw', action='store_true')
+    self.parser.add_argument('--mission_pid', action='store_true')
 
     self.args = self.parser.parse_args()
     # if not isinstance(self.args.usestate, int):

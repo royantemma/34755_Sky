@@ -1677,27 +1677,29 @@ class MissionRunner:
         client.set_enabled(True)
         print("LUGGAGE CATCH START")
         
-        mission_state = "wait_for_conveyor_1"
-        go_to_xy(iwo.fused_x, iwo.fused_y, 180)
-        while mission_state == "wait_for_conveyor_1":
-                data = client.get_data()
-                markers = data["markers"] if (data and data.get("markers")) else []
-                print("Waiting for conveyor 1 !")
-                for m in markers:
-                    if int(m["id"]) in [shuttle_id, target_id]:
-                        print("% [Luggage] Conveyor passing")
-                        t.sleep(3.5) 
+        mission_state = "wait_for_conveyor"
+        # go_to_xy(iwo.fused_x, iwo.fused_y, 180)
+        # while mission_state == "wait_for_conveyor_1":
+        #         data = client.get_data()
+        #         markers = data["markers"] if (data and data.get("markers")) else []
+        #         print("Waiting for conveyor 1 !")
+        #         for m in markers:
+        #             if int(m["id"]) in [shuttle_id, target_id]:
+        #                 print("% [Luggage] Conveyor passing")
+        #                 t.sleep(3.5) 
                         
-                        mission_state = "wait_for_conveyor"
-                        service.send("robobot/cmd/T0", "servo 1 -370 400")
-                        #mission_state = "wait_for_conveyor"
-                        break 
+        #                 mission_state = "wait_for_conveyor"
+        #                 service.send("robobot/cmd/T0", "servo 1 -370 400")
+        #                 #mission_state = "wait_for_conveyor"
+        #                 break 
+        service.send("robobot/cmd/T0", "servo 1 -370 400")
         box_offset_x = 0.0
         start_time = t.time()
         print(start_time)
         shuttle_threshold = 0.0 
         
         while (t.time() - start_time) < timeout and not self.stop and not service.stop:
+            print("am I working?")
             data = client.get_data()
             markers = data["markers"] if (data and data.get("markers")) else []
                 

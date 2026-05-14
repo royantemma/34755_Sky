@@ -200,7 +200,7 @@ def driveTurnPi():
       break
     print(f"# turn {state}, now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds; left {edge.posLeft}, right {edge.posRight}")
     t.sleep(0.05)
-  pass
+
   service.send("robobot/cmd/T0","leds 16 0 0 0") #end
   print("% Driving a Pi turn ------------------------- end")
 
@@ -469,6 +469,11 @@ if __name__ == "__main__":
         elif service.args.mission_ball_sorting:
           from missions.mission_ball_sorting import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
           from mission_runner import MissionRunner
+          MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
+        elif service.args.mission_pid:
+          from missions.mission_pid import TASKS, TOTAL_TIME, GOAL_TIME_BUFFER
+          from mission_runner import MissionRunner
+          print("%%%%%%%%%%%%%%%% Running mission_pid")
           MissionRunner(TASKS, TOTAL_TIME, GOAL_TIME_BUFFER).run()
         else:
           loop()

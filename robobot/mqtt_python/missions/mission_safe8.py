@@ -21,7 +21,7 @@ TASKS = [
     {
         "type": "line_follow_vision", # controlling speed ? stops ? crossings ?
         "timeout": 20,
-        "junction": 'left',
+        "junction": 'left', # This MUST BE LEFT
         "start_speed": 0,
         "nominal_speed": 0.6,
         "stop_speed": 0.25,
