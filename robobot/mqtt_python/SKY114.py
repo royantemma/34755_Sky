@@ -244,6 +244,12 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
 
 def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
+
+    # Initialize file manually
+    log_filename = "pid_performance.csv"
+    f = open(log_filename, "w")
+    f.write("time,velocity,dist_error\n")
+
     yaw_goal = np.deg2rad(yaw_goal) if yaw_goal is not None else None
     # PID Gains
     Kp_lin = 0.4; Ki_lin = 0.0; Kd_lin = 0.02
@@ -260,6 +266,7 @@ def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0
         # Get current state
         curr_x, curr_y, curr_yaw = iwo.fused_x, iwo.fused_y, np.deg2rad(iwo.fused_yaw)
         dt = t.time() - last_time
+        dt_1 = dt
         if dt <= 0: dt = 0.001 # Prevent division by zero
 
         if not xy_reached:
@@ -303,11 +310,15 @@ def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0
         w = max(min(w, 1.5), -1.5)
         service.send("robobot/cmd/ti", f"rc {v:.3f} {w:.3f}")
 
+        # LOGGING DATA
+        f.write(f"{dt_1:.3f},{v:.3f},{dist_error:.4f}\n")
+
         last_time = t.time()
         #t.sleep(0.1)
         t.sleep(0.05)
 
     # Final Stop
+    f.close()
     service.send("robobot/cmd/ti", "rc 0.0 0.0")
         
 
