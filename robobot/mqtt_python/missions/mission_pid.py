@@ -24,7 +24,7 @@ TASKS = [
         "type":     "drive_to_xyyaw_IWO_fast",
         "target_x": 1,
         "target_y": 0,
-        "target_yaw": 90,
+        "target_yaw": 0,
         "max_speed":  0.5,
         "timeout":  30
     },
@@ -41,18 +41,61 @@ TASKS = [
         "type":     "drive_to_xyyaw_IWO_fast",
         "target_x": 1,
         "target_y": 1,
-        "target_yaw": 0,
+        "target_yaw": 90,
         "max_speed":  0.5,
         "timeout":  30
     },
 
     {
         "type":      "turn_to_heading_iwo",
-        "heading_deg": 90, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+        "heading_deg": 180, # 0 is the heading at the beginning ot the mission, so this is a relative turn
         "speed":     1.2,
         "tolerance_deg": 2,
         "timeout":   200,
     },
+
+    {
+        "type":     "drive_to_xyyaw_IWO_fast",
+        "target_x": 0,
+        "target_y": 1,
+        "target_yaw": 180,
+        "max_speed":  0.5,
+        "timeout":  30
+    },
+
+    {
+        "type":      "turn_to_heading_iwo",
+        "heading_deg": 270, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+        "speed":     1.2,
+        "tolerance_deg": 2,
+        "timeout":   200,
+    },
+
+    {
+        "type":     "drive_to_xyyaw_IWO_fast",
+        "target_x": 0,
+        "target_y": 0,
+        "target_yaw": 270,
+        "max_speed":  0.5,
+        "timeout":  30
+    },
+
+    {
+        "type":      "turn_to_heading_iwo",
+        "heading_deg": 360, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+        "speed":     1.2,
+        "tolerance_deg": 2,
+        "timeout":   200,
+    },
+
+
+    # {
+    #     "type":      "turn_to_heading_iwo",
+    #     "heading_deg": 90, # 0 is the heading at the beginning ot the mission, so this is a relative turn
+    #     "speed":     1.2,
+    #     "tolerance_deg": 2,
+    #     "timeout":   200,
+    # },
 
 
 
