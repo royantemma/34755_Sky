@@ -246,7 +246,7 @@ def go_to_xy(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 def go_to_xy_fast(x_goal, y_goal, yaw_goal=None, max_speed=0.8, dist_tolerance=0.02):
 
     # Initialize file manually
-    log_filename = "pid_performance.csv"
+    log_filename = f"pid_performance_{t.time()}.csv"
     f = open(log_filename, "w")
     f.write("time,velocity,dist_error\n")
 
